@@ -1,0 +1,18 @@
+@font-face{font-family:"sakura";src:url("./sakura.min.ttf")format("truetype")}
+body{margin:0;user-select:none}
+.main{scroll-behavior:smooth;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;width:100vw}
+.main .avatar{width:100%;text-align:center}
+.main .avatar .avatar-img{width:150px;border-radius:50%}
+.main .name{width:100%;margin-top:10px;text-align:center;font-size:2vw;font-family:'sakura';color:rgb(255,200,245)}
+.main .btns{margin-top:20px;font-size:1.6vw;font-family:'sakura';display:flex;flex-direction:row;align-items:center;justify-content:center;width:100vw}
+.main .btns .btn{width:6%;height:32px;text-align:center;margin:0 10px;padding:0 1%;border:2px solid rgb(255,200,245);border-radius:25px;transition:all.4s;opacity:.85;float:left}
+.main .btns .btn a{color:rgb(255,200,245);text-decoration:none}
+.main .btns .btn:hover{background-color:hsla(0,0%,100%,.4);transform:scale(1.1)}
+.background{z-index:-1;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg, #ffc8f5, #ffffff)}
+.background .startrack{width:100vw;height:100vh}
+@media screen and (max-width:700px){
+    .main .avatar .avatar-img{width:120px}
+    .main .name{font-size:5vw}
+    .main .btns{font-size:4vw;flex-direction:column}
+    .main .btns .btn{width:20%;height:30px;margin:5px 0}
+}
