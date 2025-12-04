@@ -8,27 +8,34 @@
 <body>
     
     <div class="background">
-        <canvas class="startrack" id="startrack"></canvas>
-        <div class="overlay"></div>
+        <canvas id="startrack"></canvas>
+        <div class="vignette"></div>
     </div>
 
     <div class="main">
-        <div class="glass-container" id="tilt-card">
-            <div class="avatar">
+        <div class="glass-card" id="tilt-card">
+            <div class="avatar-container">
+                <div class="orbit-ring"></div>
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" alt="头像">
             </div>
-            <div class="name">嘎嘎sama | 今予</div>
-            <div class="description">Mechanical Engineering @ ZJU</div>
             
+            <div class="text-content">
+                <div class="name">嘎嘎sama | 今予</div>
+                <div class="role">Zhejiang University <span class="separator">|</span> Mechanical Engineering</div>
+            </div>
+
             <div class="btns">
-                <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn">
-                    <span>博客</span>
+                <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn shimmer-effect">
+                    <span class="btn-text">博客</span>
+                    <span class="btn-shine"></span>
                 </a>
-                <a href="https://github.com/JYbestow" target="_blank" class="btn">
-                    <span>Github</span>
+                <a href="https://github.com/JYbestow" target="_blank" class="btn shimmer-effect">
+                    <span class="btn-text">Github</span>
+                    <span class="btn-shine"></span>
                 </a>
-                <a href="https://space.bilibili.com/402611949?spm_id_from=333.1007.0.0" target="_blank" class="btn">
-                    <span>bilibili</span>
+                <a href="https://space.bilibili.com/402611949?spm_id_from=333.1007.0.0" target="_blank" class="btn shimmer-effect">
+                    <span class="btn-text">bilibili</span>
+                    <span class="btn-shine"></span>
                 </a>
             </div>
         </div>
@@ -36,26 +43,5 @@
 
     <script src="./zepto.min.js"></script>
     <script src="./index.min.js"></script>
-    
-    <script>
-        document.addEventListener('mousemove', function(e) {
-            const card = document.getElementById('tilt-card');
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            const x = (e.clientX - width / 2) / width;
-            const y = (e.clientY - height / 2) / height;
-            // 限制旋转角度
-            const rotateY = x * 20; 
-            const rotateX = y * -20;
-            
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        });
-        
-        // 鼠标移出时复位
-        document.addEventListener('mouseleave', function() {
-            const card = document.getElementById('tilt-card');
-            card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
-        });
-    </script>
 </body>
 </html>
