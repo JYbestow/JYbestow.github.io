@@ -3,22 +3,18 @@
     src: url("./sakura.min.ttf") format("truetype");
 }
 
-:root {
-    --primary-color: #ffc8f5;
-    --glass-bg: rgba(20, 25, 45, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --neon-glow: 0 0 10px rgba(255, 200, 245, 0.5), 0 0 20px rgba(255, 200, 245, 0.3);
-}
-
-body {
+/* 全局重置，强制全屏黑底 */
+html, body {
     margin: 0;
-    user-select: none;
-    overflow: hidden;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 禁止滚动 */
+    background-color: #000; /* 兜底背景色 */
     font-family: 'sakura', sans-serif;
-    background: #000;
 }
 
-/* 背景与遮罩 */
+/* 修复 Canvas 尺寸问题：强制铺满屏幕 */
 .background {
     position: fixed;
     top: 0;
@@ -26,179 +22,166 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+    background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%);
 }
 
-#startrack {
-    width: 100%;
-    height: 100%;
+canvas#startrack {
+    display: block; /* 防止产生多余边距 */
+    width: 100vw;
+    height: 100vh;
 }
 
-/* 暗角效果，让视觉集中 */
+/* 视觉聚焦暗角 */
 .vignette {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+    box-shadow: inset 0 0 200px rgba(0,0,0,0.9);
     pointer-events: none;
+    z-index: 0;
 }
 
-/* 主容器 */
+/* 主布局容器 */
 .main {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    width: 100vw;
+    z-index: 10;
     perspective: 1200px;
 }
 
-/* 玻璃卡片 */
+/* 玻璃卡片 - 修复透明度和背景 */
 .glass-card {
     position: relative;
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 60px 80px;
+    background: rgba(25, 30, 50, 0.5); /* 半透明深蓝 */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 50px 70px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    transition: transform 0.1s ease, box-shadow 0.3s ease;
-    animation: cardFloat 3s ease-in-out infinite alternate;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    transition: transform 0.1s;
 }
 
-.glass-card:hover {
-    box-shadow: 0 30px 60px -12px rgba(255, 200, 245, 0.15);
-}
-
-/* 头像与轨道动画 */
+/* 头像区域 - 修复圆形 */
 .avatar-container {
     position: relative;
-    width: 140px;
-    height: 140px;
+    width: 130px;
+    height: 130px;
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 20px;
 }
 
 .avatar-img {
     width: 120px;
     height: 120px;
-    border-radius: 50%;
+    border-radius: 50%; /* 强制圆形 */
     object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 25px rgba(255, 200, 245, 0.6);
     z-index: 2;
-    border: 3px solid rgba(255,255,255,0.8);
-    box-shadow: var(--neon-glow);
+    background-color: #fff; /* 防止图片加载前背景透出 */
 }
 
+/* 旋转光环 */
 .orbit-ring {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    border: 2px dashed rgba(255, 200, 245, 0.4);
-    animation: spin 10s linear infinite;
+    border: 2px dashed rgba(255, 200, 245, 0.5);
+    animation: spin 15s linear infinite;
     z-index: 1;
 }
 
-/* 文本排版 */
+/* 文字内容 - 修复颜色不可见问题 */
 .text-content {
     text-align: center;
-    margin-top: 25px;
     color: #fff;
+    margin-bottom: 30px;
 }
 
 .name {
-    font-size: 2.8rem;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-    letter-spacing: 3px;
-    margin-bottom: 8px;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 200, 245, 0.9);
+    margin: 10px 0;
 }
 
 .role {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(200, 220, 255, 0.8); /* 亮灰蓝色，提高可读性 */
     text-transform: uppercase;
-    letter-spacing: 2px;
-    font-weight: 300;
+    letter-spacing: 1px;
+    font-family: sans-serif;
 }
 
 .separator {
-    color: var(--primary-color);
-    margin: 0 8px;
+    color: #ffc8f5;
+    margin: 0 5px;
 }
 
 /* 按钮组 */
 .btns {
-    margin-top: 40px;
     display: flex;
-    gap: 25px;
+    gap: 20px;
 }
 
-/* 高级按钮样式 */
+/* 按钮样式 */
 .btn {
     position: relative;
-    text-decoration: none;
-    padding: 12px 36px;
+    display: block;
+    padding: 10px 30px;
     border-radius: 50px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--primary-color);
-    font-size: 1.3rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffc8f5;
+    text-decoration: none;
+    font-size: 1.1rem;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    cursor: pointer;
+    transition: all 0.3s;
 }
 
 .btn:hover {
-    background: rgba(255, 200, 245, 0.15);
-    border-color: var(--primary-color);
+    background: rgba(255, 200, 245, 0.2);
+    box-shadow: 0 0 15px rgba(255, 200, 245, 0.5);
     color: #fff;
-    box-shadow: 0 0 20px rgba(255, 200, 245, 0.4);
     transform: translateY(-2px);
 }
 
-.btn:active {
-    transform: scale(0.95);
-}
-
-/* 按钮流光特效 */
+/* 按钮流光动画 */
 .btn-shine {
     position: absolute;
     top: 0;
     left: -100%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(
-        to right,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,0.4) 50%,
-        rgba(255,255,255,0) 100%
-    );
-    transform: skewX(-25deg);
-    animation: shine 6s infinite;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+    transform: skewX(-20deg);
+    animation: shine 4s infinite;
 }
 
-/* 动画定义 */
 @keyframes spin { 100% { transform: rotate(360deg); } }
 @keyframes shine {
     0% { left: -100%; }
     20% { left: 200%; }
     100% { left: 200%; }
 }
-@keyframes cardFloat {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-15px); }
-}
 
+/* 移动端适配 */
 @media screen and (max-width: 700px) {
-    .glass-card { padding: 40px 20px; width: 85%; }
-    .btns { flex-direction: column; width: 100%; gap: 15px; }
-    .btn { width: 100%; box-sizing: border-box; text-align: center; }
+    .glass-card { padding: 30px; width: 80%; }
+    .btns { flex-direction: column; width: 100%; }
+    .btn { text-align: center; }
 }
