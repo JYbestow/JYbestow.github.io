@@ -12,48 +12,41 @@
             src: url("./sakura.min.ttf") format("truetype");
         }
 
-        /* --- 核心 CSS 修复 --- */
+        /* --- 基础设置 --- */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            background-color: #050810; /* 深空黑蓝底色 */
+            overflow: hidden; /* 禁止滚动 */
+            background-color: #020205; /* 兜底极深色 */
             font-family: 'sakura', sans-serif;
         }
 
-        /* 修复 Canvas 尺寸：绝对定位铺满 */
-        #canvas-container {
+        /* Canvas 全屏铺满 */
+        #startrack {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             z-index: -1;
-            /* 这里设置背景渐变，JS 中会通过特殊的清理方式让它透出来 */
-            background: radial-gradient(circle at bottom center, #2b1a3d 0%, #050810 80%);
+            /* 移除 CSS 背景，改为 JS 绘制，防止黑屏 */
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* 视觉暗角 */
+        /* 视觉暗角，增加深邃感 */
         .vignette {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            box-shadow: inset 0 0 150px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 250px rgba(0,0,0,0.9);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* 主内容层 */
+        /* --- 主内容卡片 --- */
         .main {
             position: relative;
             width: 100%;
@@ -62,30 +55,30 @@
             justify-content: center;
             align-items: center;
             z-index: 10;
-            perspective: 1000px; /* 开启 3D 视角 */
+            perspective: 1000px;
         }
 
-        /* 玻璃卡片 */
         .glass-card {
             position: relative;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            /* 玻璃质感：半透明白 + 模糊 */
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px;
-            padding: 50px 80px;
+            padding: 60px 90px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            transition: transform 0.1s;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            transition: transform 0.05s ease-out; /* 快速响应鼠标 */
         }
 
-        /* 头像修复：强制圆形 */
+        /* --- 头像区域（强制圆形修复） --- */
         .avatar-container {
             position: relative;
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             margin-bottom: 25px;
             display: flex;
             justify-content: center;
@@ -93,114 +86,124 @@
         }
 
         .avatar-img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%; /* 确保圆形 */
+            width: 130px;
+            height: 130px;
+            border-radius: 50% !important; /* 强制最高优先级 */
             object-fit: cover;
-            border: 2px solid rgba(255, 200, 245, 0.8);
-            box-shadow: 0 0 20px rgba(255, 200, 245, 0.4);
-            position: relative;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 30px rgba(255, 100, 200, 0.5); /* 粉色光晕 */
             z-index: 2;
+            background-color: #222; /* 图片加载前的占位色 */
         }
 
-        /* 行星轨道动画 */
+        /* 行星光环 */
         .orbit-ring {
             position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
             border-radius: 50%;
-            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border: 2px dashed rgba(255, 200, 245, 0.3);
             animation: spin 20s linear infinite;
             z-index: 1;
         }
 
-        /* 文本区域 */
+        /* --- 文本排版 --- */
         .name {
-            font-size: 2.5rem;
+            font-size: 3rem;
             color: #fff;
-            text-shadow: 0 0 15px rgba(255, 200, 245, 0.8);
-            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(255, 100, 200, 0.9);
+            margin-bottom: 8px;
             text-align: center;
+            letter-spacing: 2px;
         }
 
         .role {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 1px;
+            font-size: 0.95rem;
+            color: rgba(200, 220, 255, 0.7);
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            font-family: Arial, sans-serif;
-            margin-bottom: 35px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-bottom: 40px;
             text-align: center;
         }
 
-        /* 按钮组 */
+        .separator { margin: 0 8px; color: #ff64c8; }
+
+        /* --- 按钮组 --- */
         .btns {
             display: flex;
-            gap: 20px;
+            gap: 25px;
         }
 
         .btn {
             position: relative;
-            padding: 10px 30px;
+            padding: 12px 35px;
             border-radius: 50px;
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #ffc8f5;
             text-decoration: none;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             overflow: hidden;
             transition: all 0.3s;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn:hover {
-            background: rgba(255, 200, 245, 0.2);
-            box-shadow: 0 0 20px rgba(255, 200, 245, 0.4);
-            color: #fff;
+            border-color: #ffc8f5;
+            background: rgba(255, 200, 245, 0.15);
+            box-shadow: 0 0 25px rgba(255, 100, 200, 0.6);
             transform: translateY(-3px);
+            color: #fff;
         }
 
-        /* 流光特效 */
-        .btn::after {
+        /* 扫光动画 */
+        .btn::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
-            width: 100%;
+            width: 50%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transform: skewX(-20deg);
-            animation: shine 4s infinite;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent);
+            transform: skewX(-25deg);
+            transition: 0.5s;
+        }
+        .btn:hover::before {
+            left: 150%;
+            transition: 0.7s;
         }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
-        
+
+        /* 移动端适配 */
         @media (max-width: 700px) {
             .glass-card { width: 85%; padding: 40px 20px; }
+            .name { font-size: 2rem; }
             .btns { flex-direction: column; width: 100%; }
-            .btn { text-align: center; }
+            .btn { width: 100%; box-sizing: border-box; }
         }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container">
-        <canvas id="startrack"></canvas>
-    </div>
+    <canvas id="startrack"></canvas>
     <div class="vignette"></div>
 
     <div class="main">
         <div class="glass-card" id="tilt-card">
             <div class="avatar-container">
                 <div class="orbit-ring"></div>
-                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" alt="头像">
+                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" alt="头像" style="border-radius: 50%;">
             </div>
             
             <div class="name">嘎嘎sama | 今予</div>
-            <div class="role">Zhejiang University | Mechanical Engineering</div>
+            <div class="role">Zhejiang University <span class="separator">|</span> Mechanical Engineering</div>
 
             <div class="btns">
                 <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn">博客</a>
@@ -213,7 +216,6 @@
     <script src="./zepto.min.js"></script>
 
     <script>
-        // 兼容性动画帧
         window.requestAnimFrame = (function() {
             return window.requestAnimationFrame || function(callback) {
                 window.setTimeout(callback, 1000 / 60);
@@ -224,8 +226,9 @@
             const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
             
-            // 修复1: 强制使用窗口大小，不依赖 CSS 渲染状态
             let cw, ch;
+
+            // 初始化函数
             function resize() {
                 cw = window.innerWidth;
                 ch = window.innerHeight;
@@ -236,55 +239,57 @@
             window.addEventListener('resize', resize);
 
             let mx = 0, my = 0;
-            // 鼠标移动监听：视差 + 卡片倾斜
+            
+            // 鼠标视差 + 3D卡片
             document.addEventListener('mousemove', (e) => {
                 mx = (e.clientX - cw / 2) / cw;
                 my = (e.clientY - ch / 2) / ch;
                 
                 const card = document.getElementById('tilt-card');
                 if (card) {
-                    card.style.transform = `perspective(1000px) rotateX(${-my * 10}deg) rotateY(${mx * 10}deg)`;
+                    // 限制最大旋转角度为 15 度
+                    card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
                 }
             });
 
-            // 鼠标移出复位
             document.addEventListener('mouseleave', () => {
                 const card = document.getElementById('tilt-card');
                 if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
             });
 
-            // --- 粒子与物理系统 ---
-            
+            // --- 粒子系统 ---
+
             class Star {
                 constructor() {
                     this.reset();
-                    // 初始化时随机分布在轨道上，避免一开始聚成一团
+                    // 初始位置随机分布
                     this.angle = Math.random() * Math.PI * 2;
                 }
 
                 reset() {
-                    // 修复: 避免半径过小导致速度无穷大
-                    this.r = Math.random() * Math.max(cw, ch) * 0.6 + 80; 
+                    // 半径范围
+                    this.r = Math.random() * Math.max(cw, ch) * 0.7 + 60; 
                     
-                    // 开普勒模拟: 越近越快
-                    this.omega = (Math.random() * 0.4 + 0.6) * 800 / Math.pow(this.r, 1.5);
-                    this.size = Math.random() * 1.5 + 0.5;
+                    // 越近越快 (模拟开普勒)
+                    this.omega = (Math.random() * 0.5 + 0.5) * 800 / Math.pow(this.r, 1.5);
+                    this.size = Math.random() * 2 + 0.5;
                     
-                    // 颜色逻辑：根据半径调整色温，中心蓝，边缘红/白
-                    const t = Math.min(1, (this.r - 80) / 600);
+                    // 颜色：中心偏白蓝，外围偏紫红
+                    const ratio = (this.r - 60) / (Math.max(cw, ch) * 0.5);
                     const blue = 255;
-                    const red = 150 + t * 100;
-                    const alpha = Math.random() * 0.5 + 0.5;
-                    this.color = `rgba(${red}, 200, ${blue}, ${alpha})`;
+                    const red = 100 + Math.floor(155 * ratio);
+                    const alpha = Math.random() * 0.8 + 0.2;
+                    this.color = `rgba(${red}, 180, ${blue}, ${alpha})`;
                 }
 
                 update() {
-                    this.angle += this.omega * 0.05; // 速度系数
+                    this.angle += this.omega * 0.05;
+                    // 如果因为某种原因出界，可以重置（这里圆周运动一般不需要）
                 }
 
                 draw() {
-                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 40; // 视差系数
-                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 40;
+                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30;
+                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30;
                     
                     ctx.beginPath();
                     ctx.arc(x, y, this.size, 0, Math.PI * 2);
@@ -293,17 +298,18 @@
                 }
             }
 
-            // 点击爆炸粒子
+            // 爆炸粒子
             class Particle {
                 constructor(x, y) {
                     this.x = x;
                     this.y = y;
-                    const a = Math.random() * Math.PI * 2;
-                    const s = Math.random() * 5 + 2;
-                    this.vx = Math.cos(a) * s;
-                    this.vy = Math.sin(a) * s;
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 6 + 2;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
                     this.life = 1;
-                    this.hue = Math.random() * 50 + 280; // 紫粉色
+                    // 粒子颜色：洋红/青色
+                    this.colorVal = Math.random() > 0.5 ? "255, 100, 200" : "100, 200, 255"; 
                 }
                 update() {
                     this.x += this.vx;
@@ -313,7 +319,7 @@
                 }
                 draw() {
                     ctx.globalAlpha = this.life;
-                    ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 1)`;
+                    ctx.fillStyle = `rgba(${this.colorVal}, 1)`;
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
                     ctx.fill();
@@ -323,32 +329,37 @@
 
             const stars = [];
             const particles = [];
-            for (let i = 0; i < 1000; i++) stars.push(new Star());
+            for (let i = 0; i < 1200; i++) stars.push(new Star());
 
             document.addEventListener('mousedown', (e) => {
-                for (let i = 0; i < 20; i++) particles.push(new Particle(e.clientX, e.clientY));
+                for (let i = 0; i < 15; i++) particles.push(new Particle(e.clientX, e.clientY));
             });
 
+            // 主循环
             function loop() {
-                // 修复背景黑屏的关键：
-                // 不要用 fillRect 填充颜色，而是用 globalCompositeOperation 制造拖尾
-                // 或者用极其透明的层。这里使用 "destination-out" 慢慢擦除上一帧
-                // 这样底部的 CSS 渐变色就能透出来！
+                // 【核心修复】：不再用 CSS 背景，而是直接画出渐变背景
+                // 创建一个从底部向上发射的紫光渐变
+                const gradient = ctx.createRadialGradient(cw / 2, ch * 1.2, 0, cw / 2, ch * 1.2, cw);
                 
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // 0.1 的透明度决定拖尾长度
-                ctx.fillRect(0, 0, cw, ch);
-                
-                // 切换回正常绘制模式
-                ctx.globalCompositeOperation = 'lighter'; // 变亮叠加模式，让星星发光
+                // 0.2 的透明度是拖尾的关键：每一帧覆盖一层半透明背景
+                gradient.addColorStop(0, "rgba(70, 20, 80, 0.25)");   // 底部亮紫色
+                gradient.addColorStop(0.4, "rgba(10, 15, 30, 0.25)");  // 中间深蓝
+                gradient.addColorStop(1, "rgba(0, 0, 0, 0.25)");      // 远处纯黑
 
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, cw, ch);
+
+                // 星星叠加发光
+                ctx.globalCompositeOperation = 'lighter';
+                
                 stars.forEach(s => {
                     s.update();
                     s.draw();
                 });
 
-                ctx.globalCompositeOperation = 'source-over'; // 粒子不需要叠加发光
-
+                // 恢复默认绘制模式画爆炸粒子
+                ctx.globalCompositeOperation = 'source-over';
+                
                 for (let i = particles.length - 1; i >= 0; i--) {
                     particles[i].update();
                     particles[i].draw();
