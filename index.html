@@ -1,16 +1,196 @@
+<!DOCTYPE html>
 <html lang="zh-cn">
 <head>
+    <meta charset="UTF-8">
     <title>今予's Homepage</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
-    <link rel="stylesheet" href="./index.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <style>
+        @font-face {
+            font-family: "sakura";
+            src: url("./sakura.min.ttf") format("truetype");
+        }
+
+        /* --- 核心 CSS 修复 --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050810; /* 深空黑蓝底色 */
+            font-family: 'sakura', sans-serif;
+        }
+
+        /* 修复 Canvas 尺寸：绝对定位铺满 */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            /* 这里设置背景渐变，JS 中会通过特殊的清理方式让它透出来 */
+            background: radial-gradient(circle at bottom center, #2b1a3d 0%, #050810 80%);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 视觉暗角 */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 主内容层 */
+        .main {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            perspective: 1000px; /* 开启 3D 视角 */
+        }
+
+        /* 玻璃卡片 */
+        .glass-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 50px 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+        }
+
+        /* 头像修复：强制圆形 */
+        .avatar-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%; /* 确保圆形 */
+            object-fit: cover;
+            border: 2px solid rgba(255, 200, 245, 0.8);
+            box-shadow: 0 0 20px rgba(255, 200, 245, 0.4);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 行星轨道动画 */
+        .orbit-ring {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            animation: spin 20s linear infinite;
+            z-index: 1;
+        }
+
+        /* 文本区域 */
+        .name {
+            font-size: 2.5rem;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 200, 245, 0.8);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .role {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: Arial, sans-serif;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        /* 按钮组 */
+        .btns {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            position: relative;
+            padding: 10px 30px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffc8f5;
+            text-decoration: none;
+            font-size: 1.1rem;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: rgba(255, 200, 245, 0.2);
+            box-shadow: 0 0 20px rgba(255, 200, 245, 0.4);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+
+        /* 流光特效 */
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg);
+            animation: shine 4s infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+        
+        @media (max-width: 700px) {
+            .glass-card { width: 85%; padding: 40px 20px; }
+            .btns { flex-direction: column; width: 100%; }
+            .btn { text-align: center; }
+        }
+    </style>
 </head>
 <body>
-    
-    <div class="background">
+
+    <div id="canvas-container">
         <canvas id="startrack"></canvas>
-        <div class="vignette"></div>
     </div>
+    <div class="vignette"></div>
 
     <div class="main">
         <div class="glass-card" id="tilt-card">
@@ -19,29 +199,167 @@
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" alt="头像">
             </div>
             
-            <div class="text-content">
-                <div class="name">嘎嘎sama | 今予</div>
-                <div class="role">Zhejiang University <span class="separator">|</span> Mechanical Engineering</div>
-            </div>
+            <div class="name">嘎嘎sama | 今予</div>
+            <div class="role">Zhejiang University | Mechanical Engineering</div>
 
             <div class="btns">
-                <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn shimmer-effect">
-                    <span class="btn-text">博客</span>
-                    <span class="btn-shine"></span>
-                </a>
-                <a href="https://github.com/JYbestow" target="_blank" class="btn shimmer-effect">
-                    <span class="btn-text">Github</span>
-                    <span class="btn-shine"></span>
-                </a>
-                <a href="https://space.bilibili.com/402611949?spm_id_from=333.1007.0.0" target="_blank" class="btn shimmer-effect">
-                    <span class="btn-text">bilibili</span>
-                    <span class="btn-shine"></span>
-                </a>
+                <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn">博客</a>
+                <a href="https://github.com/JYbestow" target="_blank" class="btn">Github</a>
+                <a href="https://space.bilibili.com/402611949?spm_id_from=333.1007.0.0" target="_blank" class="btn">bilibili</a>
             </div>
         </div>
     </div>
 
     <script src="./zepto.min.js"></script>
-    <script src="./index.min.js"></script>
+
+    <script>
+        // 兼容性动画帧
+        window.requestAnimFrame = (function() {
+            return window.requestAnimationFrame || function(callback) {
+                window.setTimeout(callback, 1000 / 60);
+            };
+        })();
+
+        $(function() {
+            const canvas = document.getElementById('startrack');
+            const ctx = canvas.getContext('2d');
+            
+            // 修复1: 强制使用窗口大小，不依赖 CSS 渲染状态
+            let cw, ch;
+            function resize() {
+                cw = window.innerWidth;
+                ch = window.innerHeight;
+                canvas.width = cw;
+                canvas.height = ch;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            let mx = 0, my = 0;
+            // 鼠标移动监听：视差 + 卡片倾斜
+            document.addEventListener('mousemove', (e) => {
+                mx = (e.clientX - cw / 2) / cw;
+                my = (e.clientY - ch / 2) / ch;
+                
+                const card = document.getElementById('tilt-card');
+                if (card) {
+                    card.style.transform = `perspective(1000px) rotateX(${-my * 10}deg) rotateY(${mx * 10}deg)`;
+                }
+            });
+
+            // 鼠标移出复位
+            document.addEventListener('mouseleave', () => {
+                const card = document.getElementById('tilt-card');
+                if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
+            });
+
+            // --- 粒子与物理系统 ---
+            
+            class Star {
+                constructor() {
+                    this.reset();
+                    // 初始化时随机分布在轨道上，避免一开始聚成一团
+                    this.angle = Math.random() * Math.PI * 2;
+                }
+
+                reset() {
+                    // 修复: 避免半径过小导致速度无穷大
+                    this.r = Math.random() * Math.max(cw, ch) * 0.6 + 80; 
+                    
+                    // 开普勒模拟: 越近越快
+                    this.omega = (Math.random() * 0.4 + 0.6) * 800 / Math.pow(this.r, 1.5);
+                    this.size = Math.random() * 1.5 + 0.5;
+                    
+                    // 颜色逻辑：根据半径调整色温，中心蓝，边缘红/白
+                    const t = Math.min(1, (this.r - 80) / 600);
+                    const blue = 255;
+                    const red = 150 + t * 100;
+                    const alpha = Math.random() * 0.5 + 0.5;
+                    this.color = `rgba(${red}, 200, ${blue}, ${alpha})`;
+                }
+
+                update() {
+                    this.angle += this.omega * 0.05; // 速度系数
+                }
+
+                draw() {
+                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 40; // 视差系数
+                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 40;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            // 点击爆炸粒子
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    const a = Math.random() * Math.PI * 2;
+                    const s = Math.random() * 5 + 2;
+                    this.vx = Math.cos(a) * s;
+                    this.vy = Math.sin(a) * s;
+                    this.life = 1;
+                    this.hue = Math.random() * 50 + 280; // 紫粉色
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.2; // 重力
+                    this.life -= 0.02;
+                }
+                draw() {
+                    ctx.globalAlpha = this.life;
+                    ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 1)`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            const stars = [];
+            const particles = [];
+            for (let i = 0; i < 1000; i++) stars.push(new Star());
+
+            document.addEventListener('mousedown', (e) => {
+                for (let i = 0; i < 20; i++) particles.push(new Particle(e.clientX, e.clientY));
+            });
+
+            function loop() {
+                // 修复背景黑屏的关键：
+                // 不要用 fillRect 填充颜色，而是用 globalCompositeOperation 制造拖尾
+                // 或者用极其透明的层。这里使用 "destination-out" 慢慢擦除上一帧
+                // 这样底部的 CSS 渐变色就能透出来！
+                
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // 0.1 的透明度决定拖尾长度
+                ctx.fillRect(0, 0, cw, ch);
+                
+                // 切换回正常绘制模式
+                ctx.globalCompositeOperation = 'lighter'; // 变亮叠加模式，让星星发光
+
+                stars.forEach(s => {
+                    s.update();
+                    s.draw();
+                });
+
+                ctx.globalCompositeOperation = 'source-over'; // 粒子不需要叠加发光
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    particles[i].draw();
+                    if (particles[i].life <= 0) particles.splice(i, 1);
+                }
+
+                requestAnimFrame(loop);
+            }
+
+            loop();
+        });
+    </script>
 </body>
 </html>
