@@ -7,86 +7,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <style>
-        /* 引入字体 */
+        /* --- 字体与基础设置 --- */
         @font-face {
             font-family: "sakura";
             src: url("./sakura.min.ttf") format("truetype");
         }
 
-        /* --- 关键修复：背景颜色设置在 body 上，绝对不会黑屏 --- */
         body {
             margin: 0;
             padding: 0;
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            /* 绚丽的深空渐变背景：从底部的紫色过渡到顶部的深邃蓝 */
+            /* 绚丽深空背景 */
             background: radial-gradient(circle at bottom center, #4b2a45 0%, #1b2735 40%, #090a0f 100%);
             font-family: 'sakura', sans-serif;
         }
 
-        /* Canvas 必须透明，且覆盖全屏 */
         canvas#startrack {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* 在背景之上，内容之下 */
-            pointer-events: none; /* 让鼠标事件能穿透到按钮 */
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none;
         }
 
-        /* 主内容区域，层级最高 */
         .main {
             position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10; /* 保证内容在最上层 */
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10;
             perspective: 1200px;
         }
 
-        /* 玻璃卡片 - 增强通透感 */
+        /* --- 玻璃卡片 --- */
         .glass-card {
             position: relative;
-            background: rgba(255, 255, 255, 0.05); /* 极淡的白色 */
-            backdrop-filter: blur(12px); /* 毛玻璃模糊 */
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15); /* 亮边框 */
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
             padding: 50px 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); /* 浮起阴影 */
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s ease-out;
+            max-width: 90%; /* 防止在大屏上太宽，也防止在小屏溢出 */
+            box-sizing: border-box; /* 确保 padding 不会撑破宽度 */
         }
 
-        /* 头像容器 - 修复圆角 */
+        /* --- 头像区域 --- */
         .avatar-container {
             position: relative;
-            width: 130px;
-            height: 130px;
+            width: 130px; height: 130px;
             margin-bottom: 25px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* 强制圆形头像 */
         .avatar-img {
-            width: 130px;
-            height: 130px;
+            width: 130px; height: 130px;
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); /* 粉色发光 */
+            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6);
             z-index: 2;
         }
 
-        /* 旋转光环 */
         .orbit-ring {
             position: absolute;
             top: -15px; left: -15px; right: -15px; bottom: -15px;
@@ -95,7 +79,7 @@
             animation: spin 20s linear infinite;
         }
 
-        /* 文字样式 */
+        /* --- 文字排版 --- */
         .name {
             font-size: 2.8rem;
             color: #fff;
@@ -104,8 +88,10 @@
             text-align: center;
             font-weight: bold;
             letter-spacing: 2px;
+            white-space: nowrap; /* 防止名字换行 */
         }
 
+        /* 这里的结构是为了配合移动端换行 */
         .role {
             font-size: 0.9rem;
             color: rgba(220, 230, 255, 0.8);
@@ -113,14 +99,27 @@
             text-transform: uppercase;
             font-family: -apple-system, sans-serif;
             margin-bottom: 35px;
+            text-align: center;
+            
+            /* 桌面端：Flex横向排列，居中 */
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* 文字间距 */
         }
         
-        .separator { color: #ff64c8; margin: 0 8px; }
+        .separator { color: #ff64c8; }
 
-        /* 按钮组 */
-        .btns { display: flex; gap: 25px; pointer-events: auto; }
+        /* --- 按钮组 --- */
+        .btns {
+            display: flex;
+            gap: 25px;
+            pointer-events: auto;
+            /* 桌面端默认横向 */
+            flex-direction: row; 
+        }
 
-        /* 按钮美化 */
         .btn {
             position: relative;
             padding: 12px 36px;
@@ -133,6 +132,8 @@
             overflow: hidden;
             transition: all 0.3s;
             cursor: pointer;
+            white-space: nowrap; /* 按钮文字不换行 */
+            display: flex; justify-content: center; align-items: center;
         }
 
         .btn:hover {
@@ -143,7 +144,6 @@
             color: #fff;
         }
 
-        /* 按钮流光动画 */
         .btn::after {
             content: '';
             position: absolute;
@@ -157,12 +157,42 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
 
-        /* 移动端适配 */
+        /* --- 📱 关键修改：移动端适配 (小于 700px) --- */
         @media (max-width: 700px) {
-            .glass-card { width: 85%; padding: 40px 20px; }
-            .name { font-size: 2rem; }
-            .btns { flex-direction: column; width: 100%; }
-            .btn { width: 100%; text-align: center; }
+            /* 1. 卡片调整 */
+            .glass-card {
+                width: 85%; /* 稍微留点边距 */
+                padding: 40px 20px;
+                max-height: 90vh; /* 防止太高超出屏幕 */
+                overflow-y: auto; /* 极端情况下可滚动 */
+            }
+
+            /* 2. 名字字体缩小，避免撑破 */
+            .name {
+                font-size: 2rem;
+            }
+
+            /* 3. 学校/专业 分成两行 */
+            .role {
+                flex-direction: column; /* 纵向排列 */
+                gap: 5px; /* 行间距 */
+                margin-bottom: 25px; /* 调整底部间距 */
+            }
+            .separator {
+                display: none; /* 隐藏竖线 | */
+            }
+            
+            /* 4. 按钮改成竖排，占满宽度 */
+            .btns {
+                flex-direction: column; /* 纵向堆叠 */
+                width: 100%; /* 占满容器 */
+                gap: 15px; /* 按钮间距 */
+            }
+            .btn {
+                width: 100%; /* 按钮本身占满 */
+                box-sizing: border-box; /* 包含 padding */
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -178,7 +208,12 @@
             </div>
             
             <div class="name">嘎嘎sama | 今予</div>
-            <div class="role">Zhejiang University <span class="separator">|</span> Mechanical Engineering</div>
+            
+            <div class="role">
+                <span>Zhejiang University</span>
+                <span class="separator">|</span>
+                <span>Mechanical Engineering</span>
+            </div>
 
             <div class="btns">
                 <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn">博客</a>
@@ -191,7 +226,6 @@
     <script src="./zepto.min.js"></script>
 
     <script>
-        // 动画帧兼容
         window.requestAnimFrame = (function() {
             return window.requestAnimationFrame || function(callback) {
                 window.setTimeout(callback, 1000 / 60);
@@ -201,10 +235,8 @@
         $(function() {
             const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
-            
             let cw, ch;
 
-            // 1. 初始化 Canvas 尺寸 (强制铺满)
             function resize() {
                 cw = window.innerWidth;
                 ch = window.innerHeight;
@@ -215,65 +247,42 @@
             window.addEventListener('resize', resize);
 
             let mx = 0, my = 0;
-
-            // 2. 鼠标交互
             document.addEventListener('mousemove', (e) => {
                 mx = (e.clientX - cw / 2) / cw;
                 my = (e.clientY - ch / 2) / ch;
-                
-                // 卡片 3D 倾斜
                 const card = document.getElementById('tilt-card');
                 if (card) {
                     card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
                 }
             });
-            
-            // 鼠标移出复位
             document.addEventListener('mouseleave', () => {
                 const card = document.getElementById('tilt-card');
                 if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
             });
 
-            // 3. 星星类
             class Star {
-                constructor() {
-                    this.reset();
-                    // 初始随机分布
-                    this.angle = Math.random() * Math.PI * 2;
-                }
-
+                constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
-                    this.r = Math.random() * cw * 0.6 + 50; // 半径
-                    this.omega = (Math.random() * 0.5 + 0.5) * 800 / Math.pow(this.r, 1.5); // 开普勒角速度
+                    this.r = Math.random() * cw * 0.6 + 50;
+                    this.omega = (Math.random() * 0.5 + 0.5) * 800 / Math.pow(this.r, 1.5);
                     this.size = Math.random() * 2 + 0.5;
-                    
-                    // 颜色：中心蓝白，边缘紫红
                     const ratio = (this.r - 50) / (cw * 0.5);
                     const r = 200 + Math.floor(55 * ratio);
                     const g = 200 - Math.floor(100 * ratio);
                     const b = 255;
                     this.color = `rgba(${r}, ${g}, ${b}, ${Math.random() * 0.8 + 0.2})`;
                 }
-
-                update() {
-                    this.angle += this.omega * 0.05;
-                }
-
+                update() { this.angle += this.omega * 0.05; }
                 draw() {
                     const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30;
                     const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30;
-                    
-                    ctx.beginPath();
-                    ctx.arc(x, y, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color; ctx.fill();
                 }
             }
-
             const stars = [];
             for (let i = 0; i < 1000; i++) stars.push(new Star());
 
-            // 4. 点击爆炸特效
             const particles = [];
             class Particle {
                 constructor(x, y) {
@@ -282,54 +291,33 @@
                     const speed = Math.random() * 5 + 2;
                     this.vx = Math.cos(angle) * speed;
                     this.vy = Math.sin(angle) * speed;
-                    this.life = 1;
-                    this.hue = Math.random() * 60 + 260; // 紫色系
+                    this.life = 1; this.hue = Math.random() * 60 + 260;
                 }
-                update() {
-                    this.x += this.vx; this.y += this.vy;
-                    this.vy += 0.2; this.life -= 0.02;
-                }
+                update() { this.x += this.vx; this.y += this.vy; this.vy += 0.2; this.life -= 0.02; }
                 draw() {
                     ctx.globalAlpha = this.life;
                     ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 1)`;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                    ctx.fill(); ctx.globalAlpha = 1;
                 }
             }
-            
             document.addEventListener('mousedown', (e) => {
                 for(let i=0; i<15; i++) particles.push(new Particle(e.clientX, e.clientY));
             });
 
-            // 5. 核心渲染循环
             function loop() {
-                // 【核心修复】使用 destination-out 擦除画布，而不是 source-over 覆盖
-                // 这会让星星的轨迹变透明，从而露出 CSS 设置的紫色背景！
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // 0.1 控制拖尾长度
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 ctx.fillRect(0, 0, cw, ch);
-
-                // 切换回正常绘制模式，使用 lighter 让星星叠加发光
                 ctx.globalCompositeOperation = 'lighter';
-
-                stars.forEach(s => {
-                    s.update();
-                    s.draw();
-                });
-
-                // 绘制粒子
+                stars.forEach(s => { s.update(); s.draw(); });
                 ctx.globalCompositeOperation = 'source-over';
                 for (let i = particles.length - 1; i >= 0; i--) {
-                    particles[i].update();
-                    particles[i].draw();
+                    particles[i].update(); particles[i].draw();
                     if (particles[i].life <= 0) particles.splice(i, 1);
                 }
-
                 requestAnimFrame(loop);
             }
-
             loop();
         });
     </script>
