@@ -14,177 +14,208 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            /* 【视觉升级】回归纯粹深空 
-               不再使用动态流光，而是使用极其细腻的径向渐变，模拟宇宙深处的黑暗
-            */
-            background: radial-gradient(ellipse at bottom center, #1b2735 0%, #131825 30%, #050608 100%);
+            /* 极光背景 */
+            background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
+            background-size: 400% 400%;
+            animation: aurora 15s ease infinite;
             font-family: 'sakura', sans-serif;
+            /* 禁用系统默认右键菜单 */
             user-select: none; -webkit-user-select: none;
         }
 
-        /* 画布 */
+        @keyframes aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         canvas#startrack {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1; pointer-events: none;
-        }
-
-        /* 强烈的电影暗角，增加深邃感 */
-        .vignette {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            box-shadow: inset 0 0 300px rgba(0,0,0,0.95);
-            pointer-events: none; z-index: 2;
         }
 
         .main {
             position: relative; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
             z-index: 10; perspective: 1200px;
-            opacity: 0; transition: opacity 1.5s ease-in-out; /* 更优雅的淡入 */
+            opacity: 0; transition: opacity 1s ease-in;
         }
         .main.loaded { opacity: 1; }
 
-        /* --- 极简玻璃卡片 --- */
+        /* --- 玻璃卡片 --- */
         .glass-card {
             position: relative;
-            /* 更高的透明度，更纯净 */
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            /* 极细的边框 */
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px; padding: 50px 80px;
             display: flex; flex-direction: column; align-items: center;
-            /* 更加柔和弥散的阴影 */
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s ease-out;
             max-width: 90%; box-sizing: border-box;
         }
 
         .avatar-container {
-            position: relative; width: 130px; height: 130px; margin-bottom: 30px;
+            position: relative; width: 130px; height: 130px; margin-bottom: 25px;
             display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .avatar-container:hover { transform: scale(1.03); }
-        .avatar-container:active { transform: scale(0.97); }
+        .avatar-container:hover { transform: scale(1.05); }
+        .avatar-container:active { transform: scale(0.95); }
 
         .avatar-img {
             width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.8); /* 边框变细 */
-            /* 更加克制的光晕，显得更高级 */
-            box-shadow: 0 0 25px rgba(200, 220, 255, 0.3); z-index: 2;
-            transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); z-index: 2;
+            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
-        .spin-warp { animation: warpSpin 0.8s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
+        .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
 
         .orbit-ring {
             position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
-            border-radius: 50%; 
-            /* 极细的轨道线 */
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            animation: spin 30s linear infinite; transition: all 0.5s;
+            border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3);
+            animation: spin 20s linear infinite; transition: all 0.5s;
         }
         .warp-active .orbit-ring {
-            border-color: #50ffff; box-shadow: 0 0 30px rgba(80, 255, 255, 0.5);
-            border-width: 2px; animation: spin 0.5s linear infinite;
+            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
+            animation: spin 0.5s linear infinite;
         }
-        .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 40px rgba(80, 255, 255, 0.6); }
+        .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; }
 
         .name {
-            font-size: 2.8rem; color: #fff; 
-            /* 字体发光更加收敛 */
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            margin-bottom: 12px; text-align: center; font-weight: bold; letter-spacing: 3px;
+            font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8);
+            margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px;
             white-space: nowrap;
         }
 
         .role {
-            font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); letter-spacing: 2px;
-            text-transform: uppercase; font-family: -apple-system, sans-serif; font-weight: 300;
-            margin-bottom: 40px; text-align: center;
-            display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+            font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px;
+            text-transform: uppercase; font-family: -apple-system, sans-serif;
+            margin-bottom: 35px; text-align: center;
+            display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px;
         }
-        .separator { color: rgba(255, 255, 255, 0.3); font-weight: 100; }
+        .separator { color: #ff64c8; }
 
         .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
         .btn {
             position: relative; padding: 12px 36px; border-radius: 50px;
-            background: rgba(255, 255, 255, 0.03); 
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.9); text-decoration: none; font-size: 1.1rem; overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; white-space: nowrap;
-            display: flex; justify-content: center; align-items: center; letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffc8f5; text-decoration: none; font-size: 1.2rem; overflow: hidden;
+            transition: all 0.3s; cursor: pointer; white-space: nowrap;
+            display: flex; justify-content: center; align-items: center;
         }
         .btn:hover {
-            background: rgba(255, 255, 255, 0.15); box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-            border-color: #fff; transform: translateY(-2px); color: #fff;
+            background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5);
+            border-color: #ffc8f5; transform: translateY(-3px); color: #fff;
         }
-        /* 移除流光动画，改为更加稳重的淡入 */
-        
-        /* UI 组件 */
+        .btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg); animation: shine 4s infinite;
+        }
+
+        /* --- UI 组件 --- */
         #toast {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
-            background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff; padding: 10px 20px; border-radius: 4px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-            opacity: 0; transition: all 0.4s ease;
-            z-index: 100; pointer-events: none; backdrop-filter: blur(5px);
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
+            color: #50ffff; padding: 12px 24px; border-radius: 8px;
+            font-family: 'Courier New', monospace; font-weight: bold;
+            opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 100; box-shadow: 0 0 20px rgba(80, 255, 255, 0.3); pointer-events: none;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* 极简风 HUD */
         .speed-hud {
-            position: fixed; bottom: 30px; left: 40px; z-index: 50;
-            font-family: -apple-system, monospace; color: rgba(255,255,255,0.4);
-            font-size: 11px; pointer-events: none;
-            display: flex; flex-direction: column; gap: 6px; opacity: 0; transition: opacity 1s;
+            position: fixed; bottom: 20px; left: 25px; z-index: 50;
+            font-family: 'Courier New', monospace; color: rgba(255,255,255,0.5);
+            font-size: 12px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 5px; opacity: 0; transition: opacity 1s;
         }
         .speed-hud.show { opacity: 1; }
-        .speed-bar-container { width: 120px; height: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
-        .speed-bar { height: 100%; background: #fff; width: 50%; transition: width 0.1s linear; }
 
-        /* 极简风右键菜单 */
+        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
+        .hud-text { font-weight: bold; letter-spacing: 1px; }
+
+        /* 键盘提示 (右下角) */
+        .hint-corner {
+            position: fixed; bottom: 20px; right: 25px;
+            z-index: 50; display: flex; align-items: center; justify-content: flex-end;
+            cursor: help; opacity: 0; transition: opacity 1s;
+        }
+        .hint-corner.show { opacity: 1; }
+
+        .hint-icon { font-size: 24px; color: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .hint-box {
+            position: absolute; right: 35px; background: rgba(0, 20, 40, 0.85); border: 1px solid rgba(80, 255, 255, 0.3);
+            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
+            opacity: 0; transform: translateX(20px); transition: all 0.3s; white-space: nowrap; pointer-events: none;
+        }
+        .hint-corner:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
+        .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
+
+        kbd {
+            background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px;
+            padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
+        }
+        kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
+
+        /* --- 🌟 右键战术菜单 --- */
         #context-menu {
-            position: fixed; top: 0; left: 0; width: 140px; height: 140px;
-            pointer-events: none; z-index: 999;
-            opacity: 0; transform: scale(0.8); transition: all 0.2s ease-out;
+            position: fixed; top: 0; left: 0; width: 160px; height: 160px;
+            border-radius: 50%; pointer-events: none; z-index: 999;
+            opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; justify-content: center; align-items: center;
         }
         #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
         
+        /* 菜单中心十字 */
+        .ctx-center {
+            position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%;
+            box-shadow: 0 0 10px #50ffff;
+        }
+        /* 菜单背景环 */
         .ctx-ring {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            /* 极细的虚线 */
-            border: 1px dashed rgba(255, 255, 255, 0.2); 
-            animation: spin 20s linear infinite;
+            border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite;
         }
+        /* 扇形按钮布局 */
         .ctx-item {
-            position: absolute; width: 40px; height: 40px;
+            position: absolute; width: 50px; height: 50px;
             display: flex; justify-content: center; align-items: center;
-            background: #000; border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%; color: #fff; font-family: sans-serif; font-size: 9px; letter-spacing: 1px;
-            cursor: pointer; transition: all 0.2s; 
+            background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4);
+            border-radius: 50%; color: #50ffff; font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-        .ctx-item:hover { background: #fff; color: #000; border-color: #fff; transform: scale(1.1); }
+        .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
+        
+        /* 四个方向定位 */
         .ctx-top { top: 0; left: 50%; transform: translateX(-50%); }
         .ctx-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
         .ctx-left { left: 0; top: 50%; transform: translateY(-50%); }
         .ctx-right { right: 0; top: 50%; transform: translateY(-50%); }
 
-        /* 引导文字 */
+        /* 引导层 */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999;
-            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
         }
         .terminal-text {
-            color: #ddd; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.6;
-            max-width: 600px; padding: 20px; opacity: 0.8;
+            color: #50ffff; font-size: 16px; line-height: 1.8; text-shadow: 0 0 5px #50ffff; max-width: 600px; padding: 20px;
         }
         .cmd-line { display: block; min-height: 20px; }
-        .highlight { color: #fff; font-weight: bold; border-bottom: 1px solid #555; padding-bottom: 2px; }
-        .system-off { opacity: 0; transition: opacity 0.8s ease; pointer-events: none; }
+        .highlight { color: #ffc8f5; font-weight: bold; }
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
+        @keyframes tvOff {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            40% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
+            100% { transform: scaleY(0.005) scaleX(0); opacity: 0; }
+        }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
         @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
 
         @media (max-width: 700px) {
@@ -196,26 +227,23 @@
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
             .hint-corner, .speed-hud { display: none; }
             .terminal-text { font-size: 12px; }
+            /* 移动端禁用自定义右键菜单 */
             #context-menu { display: none; }
         }
-        
-        /* 键盘提示隐藏 */
-        .hint-corner { display: none; } /* 为了极致纯净，默认隐藏，仅在输入时触发显示逻辑 */
     </style>
 </head>
 <body>
 
     <canvas id="startrack"></canvas>
-    <div class="vignette"></div>
     
     <div id="boot-screen">
         <div class="terminal-text" id="terminal-content"></div>
     </div>
 
-    <div id="toast">System: Ready</div>
+    <div id="toast">SYSTEM: Warp Drive Engaged!</div>
 
     <div class="speed-hud" id="ui-hud">
-        <div class="hud-text" id="speed-text">SPEED: 1.00x</div>
+        <div class="hud-text" id="speed-text">TIME: 1.0x</div>
         <div class="speed-bar-container">
             <div class="speed-bar" id="speed-bar"></div>
         </div>
@@ -223,10 +251,11 @@
 
     <div id="context-menu">
         <div class="ctx-ring"></div>
+        <div class="ctx-center"></div>
         <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
         <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
         <div class="ctx-item ctx-bottom" id="ctx-reset">RESET</div>
-        <div class="ctx-item ctx-left" id="ctx-freeze">STOP</div>
+        <div class="ctx-item ctx-left" id="ctx-freeze">FREEZE</div>
     </div>
 
     <div class="main" id="main-content">
@@ -252,31 +281,42 @@
         </div>
     </div>
 
+    <div class="hint-corner" id="ui-hint">
+        <div class="hint-box" id="konami-hint">
+            Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
+        </div>
+        <div class="hint-icon">⌨️</div>
+    </div>
+
     <script src="./zepto.min.js"></script>
 
     <script>
-        console.log("%c ZJU ENGINEER \n%c System Optimized.", "font-size: 16px; color: #fff; font-weight: bold;", "font-size: 12px; color: #888;");
+        console.log("%c Hello ZJU Engineer! \n%c System Ready.", "font-size: 20px; color: #ffc8f5;", "font-size: 14px; color: #50ffff;");
 
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
         $(function() {
-            // --- 引导文字 (更简洁) ---
+            // --- 引导系统 ---
             const lines = [
-                "SYSTEM BOOT...",
-                "LOADING ASTROPHYSICS ENGINE... [OK]",
+                "INITIALIZING SYSTEM CORE...",
+                "LOADING ASSETS... [OK]",
+                "CONNECTING TO NEURAL NETWORK... [OK]",
                 "--------------------------------",
-                "INTERACTIONS:",
-                "> SCROLL : TIME DILATION",
-                "> HOLD   : GRAVITY WELL",
-                "> R-CLICK: TACTICAL MENU",
+                "AVAILABLE COMMANDS:",
+                "> [SCROLL WHEEL]  : CONTROL TIME",
+                "> [LONG PRESS]    : GENERATE SINGULARITY",
+                "> [RIGHT CLICK]   : TACTICAL MENU",
+                "> [CLICK AVATAR]  : ENGAGE WARP DRIVE",
+                "> [KEYBOARD]      : UNLOCK HIDDEN MODES",
                 "--------------------------------",
-                "CLICK TO START"
+                "SYSTEM ONLINE. CLICK TO START <span class='blink'>_</span>"
             ];
             
             const termContent = document.getElementById('terminal-content');
             const bootScreen = document.getElementById('boot-screen');
             const mainContent = document.getElementById('main-content');
             const uiHud = document.getElementById('ui-hud');
+            const uiHint = document.getElementById('ui-hint');
             
             let lineIndex = 0; let charIndex = 0;
             function typeWriter() {
@@ -298,17 +338,17 @@
                         const currentDiv = document.getElementById('line-' + lineIndex);
                         currentDiv.textContent += currentLine.charAt(charIndex);
                         charIndex++;
-                        if (charIndex < currentLine.length) setTimeout(typeWriter, 10);
-                        else { charIndex = 0; lineIndex++; setTimeout(typeWriter, 50); }
+                        if (charIndex < currentLine.length) setTimeout(typeWriter, 15);
+                        else { charIndex = 0; lineIndex++; setTimeout(typeWriter, 80); }
                     }
                 }
             }
-            setTimeout(typeWriter, 200);
+            setTimeout(typeWriter, 500);
 
             function closeBoot() {
                 bootScreen.classList.add('system-off');
                 mainContent.classList.add('loaded');
-                setTimeout(() => { uiHud.classList.add('show'); }, 800);
+                setTimeout(() => { uiHud.classList.add('show'); uiHint.classList.add('show'); }, 800);
             }
             bootScreen.addEventListener('click', closeBoot);
             bootScreen.addEventListener('touchstart', closeBoot);
@@ -325,7 +365,7 @@
                 rawMx = e.clientX; rawMy = e.clientY;
                 mx = (e.clientX - cw / 2) / cw; my = (e.clientY - ch / 2) / ch;
                 const card = document.getElementById('tilt-card');
-                if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 10}deg) rotateY(${mx * 10}deg)`;
+                if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
             });
             document.addEventListener('mouseleave', () => {
                 const card = document.getElementById('tilt-card');
@@ -335,12 +375,14 @@
             let globalSpeed = 1.0; let warpSpeed = 1.0;
             let isWarping = false; let rainbowMode = false; let isSucking = false;
             
+            // UI 更新函数
             const speedText = document.getElementById('speed-text');
             const speedBar = document.getElementById('speed-bar');
             function updateSpeedUI() {
-                speedText.innerText = `SPEED: ${globalSpeed.toFixed(2)}x`;
+                speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
                 let pct = (globalSpeed + 2) / 7 * 100;
                 speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+                speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
             }
 
             document.addEventListener('wheel', (e) => {
@@ -350,35 +392,63 @@
                 updateSpeedUI();
             }, { passive: false });
 
-            // --- 右键菜单 ---
+            // --- 右键菜单逻辑 ---
             const ctxMenu = document.getElementById('context-menu');
+            
             document.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                let x = e.clientX; let y = e.clientY;
-                ctxMenu.style.left = (x - 70) + 'px'; 
-                ctxMenu.style.top = (y - 70) + 'px';
+                // 确保菜单不超出屏幕
+                let x = e.clientX;
+                let y = e.clientY;
+                // 显示菜单
+                ctxMenu.style.left = (x - 80) + 'px'; // 减去半径
+                ctxMenu.style.top = (y - 80) + 'px';
                 ctxMenu.classList.add('visible');
             });
-            document.addEventListener('click', (e) => { if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible'); });
 
-            // 菜单逻辑
-            function menuAction(msg) {
-                showToast(msg); ctxMenu.classList.remove('visible');
-            }
-            document.getElementById('ctx-warp').addEventListener('click', () => { document.getElementById('avatar-btn').click(); menuAction("Warp Engaged"); });
-            document.getElementById('ctx-rgb').addEventListener('click', () => { rainbowMode = !rainbowMode; menuAction(rainbowMode ? "RGB: On" : "RGB: Off"); });
-            document.getElementById('ctx-freeze').addEventListener('click', () => { globalSpeed = 0; updateSpeedUI(); menuAction("Time Frozen"); });
-            document.getElementById('ctx-reset').addEventListener('click', () => { globalSpeed = 1.0; rainbowMode = false; updateSpeedUI(); menuAction("Reset"); });
+            // 点击其他地方关闭菜单
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
+            });
 
-            // --- 视觉类 ---
+            // 菜单功能绑定
+            document.getElementById('ctx-warp').addEventListener('click', () => {
+                // 模拟点击头像
+                document.getElementById('avatar-btn').click();
+                ctxMenu.classList.remove('visible');
+            });
+            document.getElementById('ctx-rgb').addEventListener('click', () => {
+                rainbowMode = !rainbowMode;
+                showToast(rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF");
+                ctxMenu.classList.remove('visible');
+            });
+            document.getElementById('ctx-freeze').addEventListener('click', () => {
+                globalSpeed = 0;
+                updateSpeedUI();
+                showToast("❄️ TIME FROZEN");
+                ctxMenu.classList.remove('visible');
+            });
+            document.getElementById('ctx-reset').addEventListener('click', () => {
+                globalSpeed = 1.0;
+                rainbowMode = false;
+                warpSpeed = 1.0;
+                updateSpeedUI();
+                showToast("♻️ SYSTEM RESET");
+                ctxMenu.classList.remove('visible');
+            });
+
+
+            // --- 类定义 ---
             class Shockwave {
-                constructor(x, y) { this.x = x; this.y = y; this.r = 1; this.life = 1.0; }
+                constructor(x, y) {
+                    this.x = x; this.y = y; this.r = 1; this.life = 1.0;
+                }
                 update() { this.r += 15; this.life -= 0.02; }
                 draw() {
                     if(this.life <= 0) return;
                     ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 0.1})`; // 更加微弱的冲击波
-                    ctx.lineWidth = 1; ctx.stroke();
+                    ctx.strokeStyle = `rgba(80, 255, 255, ${this.life * 0.3})`;
+                    ctx.lineWidth = 2; ctx.stroke();
                 }
             }
             const shockwaves = [];
@@ -387,11 +457,11 @@
                 constructor() { this.reset(); }
                 reset() {
                     this.x = Math.random() * cw; this.y = Math.random() * ch;
-                    this.len = Math.random() * 80 + 20;
-                    this.speed = Math.random() * 10 + 10; // 更快
-                    this.size = Math.random() * 0.8 + 0.1; // 更细
-                    this.life = 0; this.waitTime = Math.random() * 200; // 更稀有
-                    this.active = false; this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.2; 
+                    this.len = Math.random() * 80 + 10;
+                    this.speed = Math.random() * 10 + 6;
+                    this.size = Math.random() * 1 + 0.1;
+                    this.life = 0; this.waitTime = Math.random() * 100;
+                    this.active = false; this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5; 
                 }
                 update() {
                     if (this.waitTime > 0) { this.waitTime--; return; }
@@ -406,40 +476,28 @@
                     const endX = this.x - Math.cos(this.angle) * this.len;
                     const endY = this.y - Math.sin(this.angle) * this.len;
                     const grad = ctx.createLinearGradient(this.x, this.y, endX, endY);
-                    grad.addColorStop(0, "rgba(255, 255, 255, 0.8)");
+                    grad.addColorStop(0, "rgba(255, 255, 255, 1)");
                     grad.addColorStop(1, "rgba(255, 255, 255, 0)");
                     ctx.strokeStyle = grad; ctx.lineWidth = this.size;
                     ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(endX, endY); ctx.stroke();
                 }
             }
-            const meteors = []; for(let i=0; i<4; i++) meteors.push(new ShootingStar());
+            const meteors = []; for(let i=0; i<3; i++) meteors.push(new ShootingStar());
 
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
                     this.r = Math.random() * cw * 0.6 + 50;
                     this.baseOmega = (Math.random() * 0.5 + 0.5) * 800 / Math.pow(this.r, 1.5);
-                    this.size = Math.random() * 1.5 + 0.2;
-                    // 【配色升级】天体物理色调：钻石白、冰川蓝、极少量淡金
-                    const rand = Math.random();
-                    let colorStr;
-                    if(rand > 0.9) colorStr = "200, 220, 255"; // 蓝巨星
-                    else if(rand > 0.6) colorStr = "255, 255, 255"; // 主序星
-                    else colorStr = "255, 245, 230"; // 老年恒星
-                    
-                    this.baseColor = colorStr;
-                    this.alpha = Math.random() * 0.5 + 0.3;
+                    this.size = Math.random() * 2 + 0.5;
+                    const ratio = (this.r - 50) / (cw * 0.5);
+                    const r = 200 + Math.floor(55 * ratio); const g = 200 - Math.floor(100 * ratio); const b = 255;
+                    this.baseColor = {r, g, b, a: Math.random() * 0.8 + 0.2};
                     this.hue = Math.random() * 360; this.ox = 0; this.oy = 0;
-                    // 呼吸闪烁参数
-                    this.blinkSpeed = Math.random() * 0.05;
-                    this.blinkVal = Math.random() * Math.PI;
                 }
                 update() {
                     this.angle += this.baseOmega * 0.05 * warpSpeed * globalSpeed; 
-                    this.blinkVal += this.blinkSpeed;
                     if(rainbowMode) this.hue += 2;
-                    
-                    // 物理计算
                     const curX = cw / 2 + Math.cos(this.angle) * this.r + this.ox;
                     const curY = ch / 2 + Math.sin(this.angle) * this.r + this.oy;
                     
@@ -454,7 +512,7 @@
                         const dx = curX - wave.x; const dy = curY - wave.y;
                         const dist = Math.sqrt(dx*dx + dy*dy);
                         if (Math.abs(dist - wave.r) < 30) {
-                            const pushForce = 5 * wave.life; // 减弱推力，更优雅
+                            const pushForce = 10 * wave.life;
                             this.ox += (dx / dist) * pushForce;
                             this.oy += (dy / dist) * pushForce;
                         }
@@ -462,45 +520,43 @@
                     this.ox *= 0.92; this.oy *= 0.92;
                 }
                 draw() {
-                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 20 + this.ox; // 减弱视差
-                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 20 + this.oy;
+                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30 + this.ox;
+                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30 + this.oy;
+                    
+                    // 已移除鼠标连线
                     
                     ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
-                    
-                    // 呼吸效果
-                    let blinkAlpha = this.alpha + Math.sin(this.blinkVal) * 0.2;
-                    
-                    if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 0.8)`;
+                    if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     else if (isWarping) ctx.fillStyle = `rgba(200, 255, 255, 0.9)`;
-                    else ctx.fillStyle = `rgba(${this.baseColor}, ${Math.max(0.1, blinkAlpha)})`;
-                    
+                    else ctx.fillStyle = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${this.baseColor.a})`;
                     ctx.fill();
                 }
             }
-            const stars = []; for (let i = 0; i < 1200; i++) stars.push(new Star());
+            const stars = []; for (let i = 0; i < 1000; i++) stars.push(new Star());
 
             const particles = [];
             class Particle {
                 constructor(x, y) {
                     this.x = x; this.y = y;
-                    const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 3 + 1; // 减慢爆炸速度
+                    const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 5 + 2;
                     this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
-                    this.life = 1; 
+                    this.life = 1; this.hue = Math.random() * 60 + 260;
                 }
-                update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life -= 0.03; }
+                update() { this.x += this.vx; this.y += this.vy; this.vy += 0.2; this.life -= 0.02; }
                 draw() {
-                    ctx.globalAlpha = this.life; ctx.fillStyle = `rgba(255, 255, 255, 0.8)`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+                    ctx.globalAlpha = this.life; ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 1)`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
                     ctx.fill(); ctx.globalAlpha = 1;
                 }
             }
 
             document.addEventListener('mousedown', (e) => {
                 if(e.target.closest('#avatar-btn') || e.target.closest('#context-menu')) return;
+                // 仅左键触发黑洞
                 if(e.button === 0) {
                     shockwaves.push(new Shockwave(e.clientX, e.clientY));
                     isSucking = true;
-                    for(let i=0; i<4; i++) particles.push(new Particle(e.clientX, e.clientY));
+                    for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
                 }
             });
             document.addEventListener('mouseup', () => { isSucking = false; });
@@ -510,15 +566,16 @@
             const toast = document.getElementById('toast');
             
             function showToast(msg) {
-                toast.innerText = msg; toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
+                toast.innerText = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
             }
 
             avatarBtn.addEventListener('click', (e) => {
                 e.stopPropagation(); if(isWarping) return;
                 isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
                 let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
-                showToast("Warp Drive Engaged");
+                showToast("⚡ WARP DRIVE ENGAGED ⚡");
                 setTimeout(() => {
                     clearInterval(accelInterval);
                     const decelInterval = setInterval(() => {
@@ -528,27 +585,30 @@
                             clearInterval(decelInterval);
                         }
                     }, 50);
-                }, 2000);
+                }, 2500);
             });
 
-            // Konami Code 逻辑保留但UI隐藏，作为真·彩蛋
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             let konamiIndex = 0;
+            const hintBox = document.getElementById('konami-hint');
+            const kbdElements = hintBox.querySelectorAll('kbd');
+            function resetKonami() { konamiIndex = 0; kbdElements.forEach(el => el.classList.remove('active')); hintBox.classList.remove('typing-active'); }
             document.addEventListener('keydown', (e) => {
                 if (e.key === konamiCode[konamiIndex]) {
+                    if (konamiIndex === 0) hintBox.classList.add('typing-active');
+                    if (kbdElements[konamiIndex]) kbdElements[konamiIndex].classList.add('active');
                     konamiIndex++;
                     if (konamiIndex === konamiCode.length) {
                         rainbowMode = !rainbowMode;
-                        showToast(rainbowMode ? "RGB: On" : "RGB: Off");
-                        konamiIndex = 0;
+                        showToast(rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF");
+                        setTimeout(resetKonami, 800);
                     }
-                } else { konamiIndex = 0; }
+                } else { if (konamiIndex > 0) resetKonami(); if (e.key === konamiCode[0]) { konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active'); } }
             });
 
             function loop() {
-                // 【核心优化】使用 destination-out 制造极其干净的拖尾
                 ctx.globalCompositeOperation = 'destination-out';
-                let alpha = (isWarping || Math.abs(globalSpeed) > 3) ? 0.05 : 0.2; // 平时拖尾短，干净；加速时拖尾长
+                let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.1;
                 ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
                 ctx.fillRect(0, 0, cw, ch);
 
