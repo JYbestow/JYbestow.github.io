@@ -14,21 +14,21 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            /* 动态背景：使用 400% 大小的背景图进行平移，模拟极光流动 */
+            /* 极光背景 */
             background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
             background-size: 400% 400%;
-            animation: aurora 15s ease infinite; /* 15秒循环一次 */
+            animation: aurora 15s ease infinite;
             font-family: 'sakura', sans-serif;
+            /* 禁用系统默认右键菜单 */
+            user-select: none; -webkit-user-select: none;
         }
 
-        /* 背景流光动画 */
         @keyframes aurora {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* 画布 */
         canvas#startrack {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1; pointer-events: none;
@@ -114,7 +114,7 @@
             transform: skewX(-20deg); animation: shine 4s infinite;
         }
 
-        /* HUD & UI */
+        /* --- UI 组件 --- */
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
@@ -133,17 +133,11 @@
         }
         .speed-hud.show { opacity: 1; }
 
-        .speed-bar-container {
-            width: 150px; height: 4px; background: rgba(255,255,255,0.1);
-            border-radius: 2px; overflow: hidden;
-        }
-        .speed-bar {
-            height: 100%; background: #50ffff; width: 50%;
-            transition: width 0.1s linear, background 0.3s;
-            box-shadow: 0 0 5px #50ffff;
-        }
+        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
         .hud-text { font-weight: bold; letter-spacing: 1px; }
 
+        /* 键盘提示 (右下角) */
         .hint-corner {
             position: fixed; bottom: 20px; right: 25px;
             z-index: 50; display: flex; align-items: center; justify-content: flex-end;
@@ -151,46 +145,67 @@
         }
         .hint-corner.show { opacity: 1; }
 
-        .hint-icon {
-            font-size: 24px; color: rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
+        .hint-icon { font-size: 24px; color: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .hint-box {
-            position: absolute; right: 35px;
-            background: rgba(0, 20, 40, 0.85);
-            border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px;
-            color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transform: translateX(20px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            white-space: nowrap; box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            pointer-events: none;
+            position: absolute; right: 35px; background: rgba(0, 20, 40, 0.85); border: 1px solid rgba(80, 255, 255, 0.3);
+            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
+            opacity: 0; transform: translateX(20px); transition: all 0.3s; white-space: nowrap; pointer-events: none;
         }
         .hint-corner:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
         .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
 
         kbd {
-            background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
+            background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px;
+            padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
         }
         kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
 
+        /* --- 🌟 右键战术菜单 --- */
+        #context-menu {
+            position: fixed; top: 0; left: 0; width: 160px; height: 160px;
+            border-radius: 50%; pointer-events: none; z-index: 999;
+            opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; justify-content: center; align-items: center;
+        }
+        #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+        
+        /* 菜单中心十字 */
+        .ctx-center {
+            position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%;
+            box-shadow: 0 0 10px #50ffff;
+        }
+        /* 菜单背景环 */
+        .ctx-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite;
+        }
+        /* 扇形按钮布局 */
+        .ctx-item {
+            position: absolute; width: 50px; height: 50px;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4);
+            border-radius: 50%; color: #50ffff; font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
+        
+        /* 四个方向定位 */
+        .ctx-top { top: 0; left: 50%; transform: translateX(-50%); }
+        .ctx-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+        .ctx-left { left: 0; top: 50%; transform: translateY(-50%); }
+        .ctx-right { right: 0; top: 50%; transform: translateY(-50%); }
+
         /* 引导层 */
         #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 999;
-            display: flex; justify-content: center; align-items: center;
-            font-family: 'Courier New', monospace; cursor: pointer;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999;
+            display: flex; justify-content: center; align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
         }
         .terminal-text {
-            color: #50ffff; font-size: 16px; line-height: 1.8;
-            text-shadow: 0 0 5px #50ffff;
-            max-width: 600px; padding: 20px;
+            color: #50ffff; font-size: 16px; line-height: 1.8; text-shadow: 0 0 5px #50ffff; max-width: 600px; padding: 20px;
         }
         .cmd-line { display: block; min-height: 20px; }
         .highlight { color: #ffc8f5; font-weight: bold; }
         .blink { animation: blink 1s infinite; }
-        
         @keyframes blink { 50% { opacity: 0; } }
         .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
         @keyframes tvOff {
@@ -212,6 +227,8 @@
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
             .hint-corner, .speed-hud { display: none; }
             .terminal-text { font-size: 12px; }
+            /* 移动端禁用自定义右键菜单 */
+            #context-menu { display: none; }
         }
     </style>
 </head>
@@ -230,6 +247,15 @@
         <div class="speed-bar-container">
             <div class="speed-bar" id="speed-bar"></div>
         </div>
+    </div>
+
+    <div id="context-menu">
+        <div class="ctx-ring"></div>
+        <div class="ctx-center"></div>
+        <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
+        <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
+        <div class="ctx-item ctx-bottom" id="ctx-reset">RESET</div>
+        <div class="ctx-item ctx-left" id="ctx-freeze">FREEZE</div>
     </div>
 
     <div class="main" id="main-content">
@@ -279,6 +305,7 @@
                 "AVAILABLE COMMANDS:",
                 "> [SCROLL WHEEL]  : CONTROL TIME",
                 "> [LONG PRESS]    : GENERATE SINGULARITY",
+                "> [RIGHT CLICK]   : TACTICAL MENU",
                 "> [CLICK AVATAR]  : ENGAGE WARP DRIVE",
                 "> [KEYBOARD]      : UNLOCK HIDDEN MODES",
                 "--------------------------------",
@@ -348,17 +375,68 @@
             let globalSpeed = 1.0; let warpSpeed = 1.0;
             let isWarping = false; let rainbowMode = false; let isSucking = false;
             
+            // UI 更新函数
             const speedText = document.getElementById('speed-text');
             const speedBar = document.getElementById('speed-bar');
-            document.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                globalSpeed -= e.deltaY * 0.001; 
-                if(globalSpeed > 5) globalSpeed = 5; if(globalSpeed < -2) globalSpeed = -2;
+            function updateSpeedUI() {
                 speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
                 let pct = (globalSpeed + 2) / 7 * 100;
                 speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
                 speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
+            }
+
+            document.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                globalSpeed -= e.deltaY * 0.001; 
+                if(globalSpeed > 5) globalSpeed = 5; if(globalSpeed < -2) globalSpeed = -2;
+                updateSpeedUI();
             }, { passive: false });
+
+            // --- 右键菜单逻辑 ---
+            const ctxMenu = document.getElementById('context-menu');
+            
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                // 确保菜单不超出屏幕
+                let x = e.clientX;
+                let y = e.clientY;
+                // 显示菜单
+                ctxMenu.style.left = (x - 80) + 'px'; // 减去半径
+                ctxMenu.style.top = (y - 80) + 'px';
+                ctxMenu.classList.add('visible');
+            });
+
+            // 点击其他地方关闭菜单
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
+            });
+
+            // 菜单功能绑定
+            document.getElementById('ctx-warp').addEventListener('click', () => {
+                // 模拟点击头像
+                document.getElementById('avatar-btn').click();
+                ctxMenu.classList.remove('visible');
+            });
+            document.getElementById('ctx-rgb').addEventListener('click', () => {
+                rainbowMode = !rainbowMode;
+                showToast(rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF");
+                ctxMenu.classList.remove('visible');
+            });
+            document.getElementById('ctx-freeze').addEventListener('click', () => {
+                globalSpeed = 0;
+                updateSpeedUI();
+                showToast("❄️ TIME FROZEN");
+                ctxMenu.classList.remove('visible');
+            });
+            document.getElementById('ctx-reset').addEventListener('click', () => {
+                globalSpeed = 1.0;
+                rainbowMode = false;
+                warpSpeed = 1.0;
+                updateSpeedUI();
+                showToast("♻️ SYSTEM RESET");
+                ctxMenu.classList.remove('visible');
+            });
+
 
             // --- 类定义 ---
             class Shockwave {
@@ -375,7 +453,6 @@
             }
             const shockwaves = [];
 
-            // 流星类
             class ShootingStar {
                 constructor() { this.reset(); }
                 reset() {
@@ -383,10 +460,8 @@
                     this.len = Math.random() * 80 + 10;
                     this.speed = Math.random() * 10 + 6;
                     this.size = Math.random() * 1 + 0.1;
-                    this.life = 0; this.waitTime = Math.random() * 100; // 延迟发射
-                    this.active = false;
-                    // 角度：偏向右下
-                    this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5; 
+                    this.life = 0; this.waitTime = Math.random() * 100;
+                    this.active = false; this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5; 
                 }
                 update() {
                     if (this.waitTime > 0) { this.waitTime--; return; }
@@ -398,14 +473,11 @@
                 }
                 draw() {
                     if (!this.active) return;
-                    // 绘制流星尾巴 (渐变)
                     const endX = this.x - Math.cos(this.angle) * this.len;
                     const endY = this.y - Math.sin(this.angle) * this.len;
-                    
                     const grad = ctx.createLinearGradient(this.x, this.y, endX, endY);
                     grad.addColorStop(0, "rgba(255, 255, 255, 1)");
                     grad.addColorStop(1, "rgba(255, 255, 255, 0)");
-                    
                     ctx.strokeStyle = grad; ctx.lineWidth = this.size;
                     ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(endX, endY); ctx.stroke();
                 }
@@ -429,7 +501,6 @@
                     const curX = cw / 2 + Math.cos(this.angle) * this.r + this.ox;
                     const curY = ch / 2 + Math.sin(this.angle) * this.r + this.oy;
                     
-                    // 黑洞
                     if (isSucking) {
                         const dx = rawMx - curX; const dy = rawMy - curY;
                         const distSq = dx*dx + dy*dy;
@@ -437,7 +508,6 @@
                         this.ox += (dx / Math.sqrt(distSq)) * force * 5;
                         this.oy += (dy / Math.sqrt(distSq)) * force * 5;
                     }
-                    // 冲击波
                     shockwaves.forEach(wave => {
                         const dx = curX - wave.x; const dy = curY - wave.y;
                         const dist = Math.sqrt(dx*dx + dy*dy);
@@ -453,15 +523,8 @@
                     const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30 + this.ox;
                     const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30 + this.oy;
                     
-                    // 星座连线：计算与鼠标的距离
-                    const dx = x - rawMx; const dy = y - rawMy;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < 150) { // 如果在鼠标附近，画线
-                        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(rawMx, rawMy);
-                        ctx.strokeStyle = `rgba(80, 255, 255, ${1 - dist/150})`;
-                        ctx.lineWidth = 0.5; ctx.stroke();
-                    }
-
+                    // 已移除鼠标连线
+                    
                     ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
                     if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     else if (isWarping) ctx.fillStyle = `rgba(200, 255, 255, 0.9)`;
@@ -488,28 +551,38 @@
             }
 
             document.addEventListener('mousedown', (e) => {
-                if(e.target.closest('#avatar-btn')) return;
-                shockwaves.push(new Shockwave(e.clientX, e.clientY));
-                isSucking = true;
-                for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
+                if(e.target.closest('#avatar-btn') || e.target.closest('#context-menu')) return;
+                // 仅左键触发黑洞
+                if(e.button === 0) {
+                    shockwaves.push(new Shockwave(e.clientX, e.clientY));
+                    isSucking = true;
+                    for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
+                }
             });
             document.addEventListener('mouseup', () => { isSucking = false; });
 
             const avatarBtn = document.getElementById('avatar-btn');
             const avatarImg = document.getElementById('avatar-img');
             const toast = document.getElementById('toast');
+            
+            function showToast(msg) {
+                toast.innerText = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            }
+
             avatarBtn.addEventListener('click', (e) => {
                 e.stopPropagation(); if(isWarping) return;
                 isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
                 let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
-                toast.innerText = "⚡ WARP DRIVE ENGAGED ⚡"; toast.classList.add('show');
+                showToast("⚡ WARP DRIVE ENGAGED ⚡");
                 setTimeout(() => {
                     clearInterval(accelInterval);
                     const decelInterval = setInterval(() => {
                         if(warpSpeed > 1) { warpSpeed -= 1; } else {
                             warpSpeed = 1; isWarping = false;
                             avatarBtn.classList.remove('warp-active'); avatarImg.classList.remove('spin-warp');
-                            toast.classList.remove('show'); clearInterval(decelInterval);
+                            clearInterval(decelInterval);
                         }
                     }, 50);
                 }, 2500);
@@ -527,8 +600,8 @@
                     konamiIndex++;
                     if (konamiIndex === konamiCode.length) {
                         rainbowMode = !rainbowMode;
-                        toast.innerText = rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF";
-                        toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); setTimeout(resetKonami, 800);
+                        showToast(rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF");
+                        setTimeout(resetKonami, 800);
                     }
                 } else { if (konamiIndex > 0) resetKonami(); if (e.key === konamiCode[0]) { konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active'); } }
             });
