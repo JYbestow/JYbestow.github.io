@@ -14,9 +14,18 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            background: radial-gradient(circle at bottom center, #4b2a45 0%, #1b2735 40%, #090a0f 100%);
+            /* 动态背景：使用 400% 大小的背景图进行平移，模拟极光流动 */
+            background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
+            background-size: 400% 400%;
+            animation: aurora 15s ease infinite; /* 15秒循环一次 */
             font-family: 'sakura', sans-serif;
-            transition: filter 0.5s;
+        }
+
+        /* 背景流光动画 */
+        @keyframes aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* 画布 */
@@ -29,8 +38,7 @@
             position: relative; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
             z-index: 10; perspective: 1200px;
-            opacity: 0; /* 初始隐藏，等待引导结束 */
-            transition: opacity 1s ease-in;
+            opacity: 0; transition: opacity 1s ease-in;
         }
         .main.loaded { opacity: 1; }
 
@@ -106,7 +114,7 @@
             transform: skewX(-20deg); animation: shine 4s infinite;
         }
 
-        /* --- HUD & UI --- */
+        /* HUD & UI */
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
@@ -136,7 +144,6 @@
         }
         .hud-text { font-weight: bold; letter-spacing: 1px; }
 
-        /* 键盘提示 */
         .hint-corner {
             position: fixed; bottom: 20px; right: 25px;
             z-index: 50; display: flex; align-items: center; justify-content: flex-end;
@@ -168,13 +175,12 @@
         }
         kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
 
-        /* --- 🌟 全屏引导层 --- */
+        /* 引导层 */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 999;
             display: flex; justify-content: center; align-items: center;
-            font-family: 'Courier New', monospace;
-            cursor: pointer;
+            font-family: 'Courier New', monospace; cursor: pointer;
         }
         .terminal-text {
             color: #50ffff; font-size: 16px; line-height: 1.8;
@@ -186,12 +192,7 @@
         .blink { animation: blink 1s infinite; }
         
         @keyframes blink { 50% { opacity: 0; } }
-        
-        /* 引导层关闭动画 */
-        .system-off {
-            animation: tvOff 0.6s ease-in-out forwards;
-            pointer-events: none;
-        }
+        .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
         @keyframes tvOff {
             0% { transform: scale(1); opacity: 1; filter: blur(0); }
             40% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
@@ -269,14 +270,14 @@
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
         $(function() {
-            // --- 引导系统逻辑 (Typewriter) ---
+            // --- 引导系统 ---
             const lines = [
                 "INITIALIZING SYSTEM CORE...",
                 "LOADING ASSETS... [OK]",
                 "CONNECTING TO NEURAL NETWORK... [OK]",
                 "--------------------------------",
                 "AVAILABLE COMMANDS:",
-                "> [SCROLL WHEEL]  : CONTROL TIME DILATION",
+                "> [SCROLL WHEEL]  : CONTROL TIME",
                 "> [LONG PRESS]    : GENERATE SINGULARITY",
                 "> [CLICK AVATAR]  : ENGAGE WARP DRIVE",
                 "> [KEYBOARD]      : UNLOCK HIDDEN MODES",
@@ -290,13 +291,10 @@
             const uiHud = document.getElementById('ui-hud');
             const uiHint = document.getElementById('ui-hint');
             
-            let lineIndex = 0;
-            let charIndex = 0;
-            
+            let lineIndex = 0; let charIndex = 0;
             function typeWriter() {
                 if (lineIndex < lines.length) {
                     const currentLine = lines[lineIndex];
-                    // 如果是最后一行，直接渲染 HTML
                     if (lineIndex === lines.length - 1) {
                         const div = document.createElement('div');
                         div.className = 'cmd-line highlight';
@@ -304,61 +302,41 @@
                         termContent.appendChild(div);
                         lineIndex++;
                     } else {
-                        // 普通打字效果
                         if (charIndex === 0) {
                             const div = document.createElement('div');
                             div.className = 'cmd-line';
                             div.id = 'line-' + lineIndex;
                             termContent.appendChild(div);
                         }
-                        
                         const currentDiv = document.getElementById('line-' + lineIndex);
                         currentDiv.textContent += currentLine.charAt(charIndex);
                         charIndex++;
-                        
-                        if (charIndex < currentLine.length) {
-                            setTimeout(typeWriter, 20); // 打字速度
-                        } else {
-                            charIndex = 0;
-                            lineIndex++;
-                            setTimeout(typeWriter, 100); // 换行延迟
-                        }
+                        if (charIndex < currentLine.length) setTimeout(typeWriter, 15);
+                        else { charIndex = 0; lineIndex++; setTimeout(typeWriter, 80); }
                     }
                 }
             }
-            
-            // 启动引导
             setTimeout(typeWriter, 500);
 
-            // 关闭引导
             function closeBoot() {
                 bootScreen.classList.add('system-off');
                 mainContent.classList.add('loaded');
-                setTimeout(() => {
-                    uiHud.classList.add('show');
-                    uiHint.classList.add('show');
-                }, 800); // 延迟显示 UI
+                setTimeout(() => { uiHud.classList.add('show'); uiHint.classList.add('show'); }, 800);
             }
-
             bootScreen.addEventListener('click', closeBoot);
-            // 移动端也支持触摸跳过
             bootScreen.addEventListener('touchstart', closeBoot);
 
-
-            // --- 主逻辑 ---
+            // --- 核心系统 ---
             const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
             let cw, ch;
             function resize() { cw = window.innerWidth; ch = window.innerHeight; canvas.width = cw; canvas.height = ch; }
             resize(); window.addEventListener('resize', resize);
 
-            let mx = 0, my = 0;
-            let rawMx = 0, rawMy = 0;
-
+            let mx = 0, my = 0; let rawMx = 0, rawMy = 0;
             document.addEventListener('mousemove', (e) => {
                 rawMx = e.clientX; rawMy = e.clientY;
-                mx = (e.clientX - cw / 2) / cw; 
-                my = (e.clientY - ch / 2) / ch;
+                mx = (e.clientX - cw / 2) / cw; my = (e.clientY - ch / 2) / ch;
                 const card = document.getElementById('tilt-card');
                 if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
             });
@@ -367,50 +345,73 @@
                 if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
             });
 
-            let globalSpeed = 1.0;
-            let warpSpeed = 1.0;
-            let isWarping = false;
-            let rainbowMode = false;
-            let isSucking = false;
+            let globalSpeed = 1.0; let warpSpeed = 1.0;
+            let isWarping = false; let rainbowMode = false; let isSucking = false;
             
-            // --- 滚轮时间控制 ---
             const speedText = document.getElementById('speed-text');
             const speedBar = document.getElementById('speed-bar');
             document.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 globalSpeed -= e.deltaY * 0.001; 
-                if(globalSpeed > 5) globalSpeed = 5;
-                if(globalSpeed < -2) globalSpeed = -2;
+                if(globalSpeed > 5) globalSpeed = 5; if(globalSpeed < -2) globalSpeed = -2;
                 speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
                 let pct = (globalSpeed + 2) / 7 * 100;
                 speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
                 speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
             }, { passive: false });
 
-            // --- 冲击波类 (Shockwave) ---
+            // --- 类定义 ---
             class Shockwave {
                 constructor(x, y) {
-                    this.x = x; this.y = y;
-                    this.r = 1;
-                    this.life = 1.0;
-                    this.maxR = Math.max(cw, ch) * 0.3; // 最大半径
+                    this.x = x; this.y = y; this.r = 1; this.life = 1.0;
                 }
-                update() {
-                    this.r += 15; // 扩散速度
-                    this.life -= 0.02;
-                }
+                update() { this.r += 15; this.life -= 0.02; }
                 draw() {
                     if(this.life <= 0) return;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
                     ctx.strokeStyle = `rgba(80, 255, 255, ${this.life * 0.3})`;
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    ctx.lineWidth = 2; ctx.stroke();
                 }
             }
             const shockwaves = [];
 
-            // --- 星星类 ---
+            // 流星类
+            class ShootingStar {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * cw; this.y = Math.random() * ch;
+                    this.len = Math.random() * 80 + 10;
+                    this.speed = Math.random() * 10 + 6;
+                    this.size = Math.random() * 1 + 0.1;
+                    this.life = 0; this.waitTime = Math.random() * 100; // 延迟发射
+                    this.active = false;
+                    // 角度：偏向右下
+                    this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5; 
+                }
+                update() {
+                    if (this.waitTime > 0) { this.waitTime--; return; }
+                    this.active = true;
+                    this.x += Math.cos(this.angle) * this.speed;
+                    this.y += Math.sin(this.angle) * this.speed;
+                    this.life++;
+                    if (this.x > cw + 100 || this.y > ch + 100) this.reset();
+                }
+                draw() {
+                    if (!this.active) return;
+                    // 绘制流星尾巴 (渐变)
+                    const endX = this.x - Math.cos(this.angle) * this.len;
+                    const endY = this.y - Math.sin(this.angle) * this.len;
+                    
+                    const grad = ctx.createLinearGradient(this.x, this.y, endX, endY);
+                    grad.addColorStop(0, "rgba(255, 255, 255, 1)");
+                    grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+                    
+                    ctx.strokeStyle = grad; ctx.lineWidth = this.size;
+                    ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(endX, endY); ctx.stroke();
+                }
+            }
+            const meteors = []; for(let i=0; i<3; i++) meteors.push(new ShootingStar());
+
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
@@ -420,45 +421,47 @@
                     const ratio = (this.r - 50) / (cw * 0.5);
                     const r = 200 + Math.floor(55 * ratio); const g = 200 - Math.floor(100 * ratio); const b = 255;
                     this.baseColor = {r, g, b, a: Math.random() * 0.8 + 0.2};
-                    this.hue = Math.random() * 360;
-                    this.ox = 0; this.oy = 0; // 物理偏移
+                    this.hue = Math.random() * 360; this.ox = 0; this.oy = 0;
                 }
                 update() {
                     this.angle += this.baseOmega * 0.05 * warpSpeed * globalSpeed; 
                     if(rainbowMode) this.hue += 2;
-
-                    // 计算星星当前位置
                     const curX = cw / 2 + Math.cos(this.angle) * this.r + this.ox;
                     const curY = ch / 2 + Math.sin(this.angle) * this.r + this.oy;
-
-                    // 1. 黑洞引力
+                    
+                    // 黑洞
                     if (isSucking) {
                         const dx = rawMx - curX; const dy = rawMy - curY;
-                        const distSq = dx*dx + dy*dy; const dist = Math.sqrt(distSq);
+                        const distSq = dx*dx + dy*dy;
                         const force = 5000 / (distSq + 1000); 
-                        this.ox += (dx / dist) * force * 5;
-                        this.oy += (dy / dist) * force * 5;
-                    } 
-                    
-                    // 2. 冲击波推力 (Ripple Effect)
+                        this.ox += (dx / Math.sqrt(distSq)) * force * 5;
+                        this.oy += (dy / Math.sqrt(distSq)) * force * 5;
+                    }
+                    // 冲击波
                     shockwaves.forEach(wave => {
                         const dx = curX - wave.x; const dy = curY - wave.y;
                         const dist = Math.sqrt(dx*dx + dy*dy);
-                        // 如果星星在波环附近
                         if (Math.abs(dist - wave.r) < 30) {
                             const pushForce = 10 * wave.life;
                             this.ox += (dx / dist) * pushForce;
                             this.oy += (dy / dist) * pushForce;
                         }
                     });
-
-                    // 弹性复位
-                    this.ox *= 0.92;
-                    this.oy *= 0.92;
+                    this.ox *= 0.92; this.oy *= 0.92;
                 }
                 draw() {
                     const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30 + this.ox;
                     const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30 + this.oy;
+                    
+                    // 星座连线：计算与鼠标的距离
+                    const dx = x - rawMx; const dy = y - rawMy;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 150) { // 如果在鼠标附近，画线
+                        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(rawMx, rawMy);
+                        ctx.strokeStyle = `rgba(80, 255, 255, ${1 - dist/150})`;
+                        ctx.lineWidth = 0.5; ctx.stroke();
+                    }
+
                     ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
                     if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     else if (isWarping) ctx.fillStyle = `rgba(200, 255, 255, 0.9)`;
@@ -468,7 +471,6 @@
             }
             const stars = []; for (let i = 0; i < 1000; i++) stars.push(new Star());
 
-            // --- 粒子 ---
             const particles = [];
             class Particle {
                 constructor(x, y) {
@@ -487,56 +489,37 @@
 
             document.addEventListener('mousedown', (e) => {
                 if(e.target.closest('#avatar-btn')) return;
-                // 点击产生冲击波
                 shockwaves.push(new Shockwave(e.clientX, e.clientY));
-                // 开启黑洞模式
                 isSucking = true;
-                // 产生火花
                 for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
             });
-
             document.addEventListener('mouseup', () => { isSucking = false; });
 
-            // --- 头像 Warp ---
             const avatarBtn = document.getElementById('avatar-btn');
             const avatarImg = document.getElementById('avatar-img');
             const toast = document.getElementById('toast');
-            
             avatarBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if(isWarping) return;
-                isWarping = true;
-                avatarBtn.classList.add('warp-active');
-                avatarImg.classList.add('spin-warp');
+                e.stopPropagation(); if(isWarping) return;
+                isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
                 let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
-                toast.innerText = "⚡ WARP DRIVE ENGAGED ⚡";
-                toast.classList.add('show');
+                toast.innerText = "⚡ WARP DRIVE ENGAGED ⚡"; toast.classList.add('show');
                 setTimeout(() => {
                     clearInterval(accelInterval);
                     const decelInterval = setInterval(() => {
                         if(warpSpeed > 1) { warpSpeed -= 1; } else {
                             warpSpeed = 1; isWarping = false;
-                            avatarBtn.classList.remove('warp-active');
-                            avatarImg.classList.remove('spin-warp');
-                            toast.classList.remove('show');
-                            clearInterval(decelInterval);
+                            avatarBtn.classList.remove('warp-active'); avatarImg.classList.remove('spin-warp');
+                            toast.classList.remove('show'); clearInterval(decelInterval);
                         }
                     }, 50);
                 }, 2500);
             });
 
-            // --- Konami ---
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             let konamiIndex = 0;
             const hintBox = document.getElementById('konami-hint');
             const kbdElements = hintBox.querySelectorAll('kbd');
-
-            function resetKonami() {
-                konamiIndex = 0;
-                kbdElements.forEach(el => el.classList.remove('active'));
-                hintBox.classList.remove('typing-active');
-            }
-
+            function resetKonami() { konamiIndex = 0; kbdElements.forEach(el => el.classList.remove('active')); hintBox.classList.remove('typing-active'); }
             document.addEventListener('keydown', (e) => {
                 if (e.key === konamiCode[konamiIndex]) {
                     if (konamiIndex === 0) hintBox.classList.add('typing-active');
@@ -545,16 +528,9 @@
                     if (konamiIndex === konamiCode.length) {
                         rainbowMode = !rainbowMode;
                         toast.innerText = rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF";
-                        toast.classList.add('show');
-                        setTimeout(() => toast.classList.remove('show'), 3000);
-                        setTimeout(resetKonami, 800);
+                        toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); setTimeout(resetKonami, 800);
                     }
-                } else {
-                    if (konamiIndex > 0) resetKonami();
-                    if (e.key === konamiCode[0]) {
-                        konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active');
-                    }
-                }
+                } else { if (konamiIndex > 0) resetKonami(); if (e.key === konamiCode[0]) { konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active'); } }
             });
 
             function loop() {
@@ -565,13 +541,8 @@
 
                 ctx.globalCompositeOperation = 'lighter';
                 stars.forEach(s => { s.update(); s.draw(); });
-                
-                // 绘制冲击波
-                shockwaves.forEach((wave, index) => {
-                    wave.update();
-                    wave.draw();
-                    if(wave.life <= 0) shockwaves.splice(index, 1);
-                });
+                meteors.forEach(m => { m.update(); m.draw(); });
+                shockwaves.forEach((wave, i) => { wave.update(); wave.draw(); if(wave.life<=0) shockwaves.splice(i,1); });
 
                 ctx.globalCompositeOperation = 'source-over';
                 for (let i = particles.length - 1; i >= 0; i--) {
