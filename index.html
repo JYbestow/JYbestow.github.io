@@ -19,6 +19,7 @@
             transition: filter 0.5s;
         }
 
+        /* 画布 */
         canvas#startrack {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1; pointer-events: none;
@@ -30,6 +31,7 @@
             z-index: 10; perspective: 1200px;
         }
 
+        /* --- 玻璃卡片 --- */
         .glass-card {
             position: relative;
             background: rgba(255, 255, 255, 0.05);
@@ -101,6 +103,7 @@
             transform: skewX(-20deg); animation: shine 4s infinite;
         }
 
+        /* --- HUD & UI --- */
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
@@ -111,7 +114,25 @@
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* --- 提示符样式 --- */
+        /* 左下角：速度仪表盘 */
+        .speed-hud {
+            position: fixed; bottom: 20px; left: 25px; z-index: 50;
+            font-family: 'Courier New', monospace; color: rgba(255,255,255,0.5);
+            font-size: 12px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .speed-bar-container {
+            width: 150px; height: 4px; background: rgba(255,255,255,0.1);
+            border-radius: 2px; overflow: hidden;
+        }
+        .speed-bar {
+            height: 100%; background: #50ffff; width: 50%;
+            transition: width 0.1s linear, background 0.3s;
+            box-shadow: 0 0 5px #50ffff;
+        }
+        .hud-text { font-weight: bold; letter-spacing: 1px; }
+
+        /* 右下角：键盘提示 */
         .hint-corner {
             position: fixed; bottom: 20px; right: 25px;
             z-index: 50; display: flex; align-items: center; justify-content: flex-end;
@@ -130,13 +151,9 @@
             opacity: 0; transform: translateX(20px);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             white-space: nowrap; box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            pointer-events: none; /* 默认不挡鼠标 */
+            pointer-events: none;
         }
-        /* 两种情况显示提示框：悬停 或 正在输入代码 */
-        .hint-corner:hover .hint-box, 
-        .hint-box.typing-active {
-            opacity: 1; transform: translateX(0);
-        }
+        .hint-corner:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
         .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
 
         kbd {
@@ -146,15 +163,7 @@
             margin: 0 2px; font-family: monospace; font-weight: bold;
             transition: all 0.1s;
         }
-        
-        /* 按键高亮状态 */
-        kbd.active {
-            background-color: #50ffff;
-            color: #000;
-            border-color: #50ffff;
-            box-shadow: 0 0 10px #50ffff;
-            transform: scale(1.1);
-        }
+        kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
@@ -167,7 +176,7 @@
             .separator { display: none; }
             .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
-            .hint-corner { display: none; }
+            .hint-corner, .speed-hud { display: none; } /* 移动端隐藏复杂操作提示 */
         }
     </style>
 </head>
@@ -177,9 +186,16 @@
     
     <div id="toast">SYSTEM: Warp Drive Engaged!</div>
 
+    <div class="speed-hud">
+        <div class="hud-text" id="speed-text">TIME: 1.0x</div>
+        <div class="speed-bar-container">
+            <div class="speed-bar" id="speed-bar"></div>
+        </div>
+    </div>
+
     <div class="main">
         <div class="glass-card" id="tilt-card">
-            <div class="avatar-container" id="avatar-btn" title="Click to engage Warp Drive">
+            <div class="avatar-container" id="avatar-btn" title="Click: Warp Drive | Wheel: Time Control">
                 <div class="orbit-ring" id="orbit-ring"></div>
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
             </div>
@@ -202,7 +218,7 @@
 
     <div class="hint-corner">
         <div class="hint-box" id="konami-hint">
-            Try: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
+            Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
         </div>
         <div class="hint-icon">⌨️</div>
     </div>
@@ -210,7 +226,7 @@
     <script src="./zepto.min.js"></script>
 
     <script>
-        console.log("%c Hello ZJU Engineer! \n%c Detected User: Huang Jingyu", "font-size: 20px; color: #ffc8f5; font-weight: bold;", "font-size: 14px; color: #50ffff;");
+        console.log("%c Hello ZJU Engineer! \n%c System Ready.", "font-size: 20px; color: #ffc8f5;", "font-size: 14px; color: #50ffff;");
 
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
@@ -221,9 +237,14 @@
             function resize() { cw = window.innerWidth; ch = window.innerHeight; canvas.width = cw; canvas.height = ch; }
             resize(); window.addEventListener('resize', resize);
 
+            // 鼠标位置
             let mx = 0, my = 0;
+            let rawMx = 0, rawMy = 0; // 绝对坐标用于引力计算
+
             document.addEventListener('mousemove', (e) => {
-                mx = (e.clientX - cw / 2) / cw; my = (e.clientY - ch / 2) / ch;
+                rawMx = e.clientX; rawMy = e.clientY;
+                mx = (e.clientX - cw / 2) / cw; 
+                my = (e.clientY - ch / 2) / ch;
                 const card = document.getElementById('tilt-card');
                 if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
             });
@@ -232,7 +253,39 @@
                 if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
             });
 
-            let warpSpeed = 1; let isWarping = false; let rainbowMode = false;
+            // --- 全局控制变量 ---
+            let globalSpeed = 1.0; // 时间倍率
+            let warpSpeed = 1.0;   // 曲率驱动倍率 (叠加)
+            let isWarping = false;
+            let rainbowMode = false;
+            let isSucking = false; // 是否开启黑洞模式
+            
+            // --- 功能 1: 滚轮控制时间 (Time Dilation) ---
+            const speedText = document.getElementById('speed-text');
+            const speedBar = document.getElementById('speed-bar');
+            
+            document.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                // 滚轮向下(-)，变慢/倒流；滚轮向上(+)，加速
+                // 注意：不同浏览器 deltaY 正负可能不同，通常向下拉是正数
+                globalSpeed -= e.deltaY * 0.001; 
+                
+                // 限制一下最大最小速度，防止失控
+                if(globalSpeed > 5) globalSpeed = 5;
+                if(globalSpeed < -2) globalSpeed = -2;
+
+                // 更新 UI
+                speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
+                // 简单的进度条映射：0x = 0%, 5x = 100%, -2x = 红色警告?
+                let pct = (globalSpeed + 2) / 7 * 100; // 映射 -2~5 到 0~100
+                speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+                
+                if(globalSpeed < 0) speedBar.style.backgroundColor = '#ff5050'; // 倒流变红
+                else speedBar.style.backgroundColor = '#50ffff';
+            }, { passive: false });
+
+
+            // --- 星星类 (加入物理引擎) ---
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
@@ -243,11 +296,45 @@
                     const r = 200 + Math.floor(55 * ratio); const g = 200 - Math.floor(100 * ratio); const b = 255;
                     this.baseColor = {r, g, b, a: Math.random() * 0.8 + 0.2};
                     this.hue = Math.random() * 360;
+                    // 物理偏移量 (被黑洞吸走时用)
+                    this.ox = 0; 
+                    this.oy = 0;
                 }
-                update() { this.angle += this.baseOmega * 0.05 * warpSpeed; if(rainbowMode) this.hue += 2; }
+                update() {
+                    // 1. 基础公转 (受时间倍率 globalSpeed 影响)
+                    this.angle += this.baseOmega * 0.05 * warpSpeed * globalSpeed; 
+                    
+                    if(rainbowMode) this.hue += 2;
+
+                    // 2. 黑洞引力逻辑 (Gravity Well)
+                    if (isSucking) {
+                        // 计算星星当前位置
+                        const x = cw / 2 + Math.cos(this.angle) * this.r + this.ox;
+                        const y = ch / 2 + Math.sin(this.angle) * this.r + this.oy;
+                        
+                        // 计算到鼠标(黑洞)的向量
+                        const dx = rawMx - x;
+                        const dy = rawMy - y;
+                        const distSq = dx*dx + dy*dy;
+                        const dist = Math.sqrt(distSq);
+                        
+                        // 引力公式 F = G/r^2 (这里简化模拟)
+                        // 距离越近吸力越强，但限制最小值防止飞出屏幕
+                        const force = 5000 / (distSq + 1000); 
+                        
+                        this.ox += (dx / dist) * force * 5;
+                        this.oy += (dy / dist) * force * 5;
+                    } else {
+                        // 弹性复位：如果没有引力，星星慢慢回到轨道
+                        this.ox *= 0.92;
+                        this.oy *= 0.92;
+                    }
+                }
                 draw() {
-                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30;
-                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30;
+                    // 叠加偏移量
+                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30 + this.ox;
+                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30 + this.oy;
+                    
                     ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
                     if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     else if (isWarping) ctx.fillStyle = `rgba(200, 255, 255, 0.9)`;
@@ -257,6 +344,7 @@
             }
             const stars = []; for (let i = 0; i < 1000; i++) stars.push(new Star());
 
+            // --- 粒子系统 ---
             const particles = [];
             class Particle {
                 constructor(x, y) {
@@ -272,12 +360,24 @@
                     ctx.fill(); ctx.globalAlpha = 1;
                 }
             }
+
+            // --- 功能 2: 长按生成黑洞 (Mouse Hold) ---
+            let pressTimer = null;
             document.addEventListener('mousedown', (e) => {
-                if(e.target.closest('#avatar-btn')) return;
-                for(let i=0; i<15; i++) particles.push(new Particle(e.clientX, e.clientY));
+                if(e.target.closest('#avatar-btn')) return; // 点头像不触发黑洞
+
+                // 设置一个定时器，如果按下超过 200ms 算长按（黑洞），否则算点击（爆炸）
+                isSucking = true; // 立即开启引力，提升手感
+                
+                // 爆炸效果还是保留，每次按下都有一点火花
+                for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
             });
 
-            // --- 交互逻辑 ---
+            document.addEventListener('mouseup', () => {
+                isSucking = false; // 释放黑洞
+            });
+
+            // --- 交互: 头像 Warp Drive ---
             const avatarBtn = document.getElementById('avatar-btn');
             const avatarImg = document.getElementById('avatar-img');
             const toast = document.getElementById('toast');
@@ -288,13 +388,11 @@
                 isWarping = true;
                 avatarBtn.classList.add('warp-active');
                 avatarImg.classList.add('spin-warp');
-                const rect = avatarBtn.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                for(let i=0; i<30; i++) particles.push(new Particle(centerX, centerY));
+                
                 let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
                 toast.innerText = "⚡ WARP DRIVE ENGAGED ⚡";
                 toast.classList.add('show');
+                
                 setTimeout(() => {
                     clearInterval(accelInterval);
                     const decelInterval = setInterval(() => {
@@ -309,60 +407,49 @@
                 }, 2500);
             });
 
-            // --- Konami Code 增强版 ---
+            // --- 交互: Konami Code ---
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             let konamiIndex = 0;
             const hintBox = document.getElementById('konami-hint');
-            const kbdElements = hintBox.querySelectorAll('kbd'); // 获取所有按键元素
+            const kbdElements = hintBox.querySelectorAll('kbd');
 
             function resetKonami() {
                 konamiIndex = 0;
-                kbdElements.forEach(el => el.classList.remove('active')); // 清除高亮
-                hintBox.classList.remove('typing-active'); // 隐藏提示框
+                kbdElements.forEach(el => el.classList.remove('active'));
+                hintBox.classList.remove('typing-active');
             }
 
             document.addEventListener('keydown', (e) => {
-                // 判断按键是否匹配当前序列
                 if (e.key === konamiCode[konamiIndex]) {
-                    // 1. 让提示框显现（即使用户鼠标没放上去）
                     if (konamiIndex === 0) hintBox.classList.add('typing-active');
-                    
-                    // 2. 点亮对应的 <kbd>
-                    if (kbdElements[konamiIndex]) {
-                        kbdElements[konamiIndex].classList.add('active');
-                    }
-
+                    if (kbdElements[konamiIndex]) kbdElements[konamiIndex].classList.add('active');
                     konamiIndex++;
-
-                    // 3. 检查是否完成
                     if (konamiIndex === konamiCode.length) {
                         rainbowMode = !rainbowMode;
-                        toast.innerText = rainbowMode ? "🌈 RGB GAMER MODE: ON" : "🌑 RGB GAMER MODE: OFF";
+                        toast.innerText = rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF";
                         toast.classList.add('show');
                         setTimeout(() => toast.classList.remove('show'), 3000);
-                        
-                        // 完成后延迟一下再重置，让用户看到全亮的效果
                         setTimeout(resetKonami, 800);
                     }
                 } else {
-                    // 按错键：立即重置
                     if (konamiIndex > 0) resetKonami();
-                    
-                    // 边缘情况处理：如果按错了，但按的键恰好是第一个键(ArrowUp)，则重新开始而不是彻底重置
                     if (e.key === konamiCode[0]) {
-                        konamiIndex = 1;
-                        hintBox.classList.add('typing-active');
-                        kbdElements[0].classList.add('active');
+                        konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active');
                     }
                 }
             });
 
+            // --- 渲染循环 ---
             function loop() {
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.fillStyle = isWarping ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.1)';
+                // 拖尾长度随速度变化，防止高速时画面太乱
+                let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.1;
+                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
                 ctx.fillRect(0, 0, cw, ch);
+
                 ctx.globalCompositeOperation = 'lighter';
                 stars.forEach(s => { s.update(); s.draw(); });
+
                 ctx.globalCompositeOperation = 'source-over';
                 for (let i = particles.length - 1; i >= 0; i--) {
                     particles[i].update(); particles[i].draw();
