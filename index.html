@@ -14,11 +14,12 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
+            /* 极光背景 */
             background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
             background-size: 400% 400%;
             animation: aurora 20s ease infinite;
             font-family: 'sakura', sans-serif;
-            user-select: none; -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none; /* 禁止选中文字 */
         }
 
         @keyframes aurora {
@@ -357,7 +358,7 @@
             let rainbowMode = false; 
             let isSucking = false;
             
-            // --- 3. 交互逻辑 (滚轮、右键) ---
+            // --- 3. 交互逻辑 ---
             const speedText = document.getElementById('speed-text');
             const speedBar = document.getElementById('speed-bar');
             function updateSpeedUI() {
@@ -394,19 +395,16 @@
             document.getElementById('ctx-freeze').addEventListener('click', () => { globalSpeed = 0; updateSpeedUI(); showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); });
             document.getElementById('ctx-reset').addEventListener('click', () => { globalSpeed=1; rainbowMode=false; updateSpeedUI(); showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); });
 
-            // --- 4. 物理引擎 (牛顿+相对论) ---
+            // --- 4. 物理引擎 ---
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
                     this.r = Math.random() * cw * 0.6 + 50;
-                    // 基础轨道速度 (开普勒模拟)
                     this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
                     this.size = Math.random() * 2 + 0.5;
                     this.x = cw/2 + Math.cos(this.angle) * this.r;
                     this.y = ch/2 + Math.sin(this.angle) * this.r;
-                    // 物理属性：位置(pos), 速度(vel), 加速度(acc)
-                    this.vx = 0; this.vy = 0;
-                    // 记录原始轨道颜色
+                    this.vx = 0; this.vy = 0; // 惯性向量
                     const ratio = (this.r - 50) / (cw * 0.5);
                     this.baseColor = {
                         r: 200 + Math.floor(55 * ratio),
@@ -417,57 +415,57 @@
                     this.hue = Math.random() * 360;
                 }
                 update() {
-                    // 1. 计算理想轨道位置
-                    // 角度随时间变化
+                    // 1. 目标轨道运动
                     let dt = this.orbitalSpeed * warpSpeed * globalSpeed;
                     this.angle += dt;
                     let targetX = cw / 2 + Math.cos(this.angle) * this.r;
                     let targetY = ch / 2 + Math.sin(this.angle) * this.r;
 
-                    // 2. 惯性与力场
-                    // 默认力：将星星拉回其轨道 (弹性)
+                    // 2. 受力分析
+                    // 弹力：拉回轨道
                     let ax = (targetX - this.x) * 0.02; 
                     let ay = (targetY - this.y) * 0.02;
 
-                    // 黑洞引力 (Gravity)
+                    // 黑洞引力
                     if (isSucking) {
                         let dx = rawMx - this.x; let dy = rawMy - this.y;
                         let distSq = dx*dx + dy*dy;
-                        let force = 2000 / (distSq + 100); // F = G*M / r^2
+                        let force = 2000 / (distSq + 100);
                         ax += dx * force; ay += dy * force;
                     }
 
-                    // 3. 牛顿运动定律更新
+                    // 3. 运动更新
                     this.vx += ax; this.vy += ay;
-                    // 阻力 (Friction)
-                    this.vx *= 0.92; this.vy *= 0.92;
-                    // 更新位置
+                    this.vx *= 0.92; this.vy *= 0.92; // 阻力
                     this.x += this.vx; this.y += this.vy;
 
-                    // 4. 多普勒效应 (Doppler Effect - Visual)
-                    // 速度越快，颜色越偏蓝(Blueshift)或红(Redshift)
-                    // 这里简化为：速度快就变亮/变白/变青
                     this.speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+
+                    // --- 关键修复：边界检测与重置 ---
+                    // 如果星星被甩出屏幕太远（或者坐标 NaN），强制重置
+                    if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) {
+                        this.reset();
+                    }
                 }
                 draw() {
-                    // 视差移动
                     let dx = this.x - mx * 30;
                     let dy = this.y - my * 30;
 
-                    // 视界 (Event Horizon): 如果离黑洞太近，就不画了（被吞噬）
+                    // 视界检测（如果掉进黑洞）
                     if (isSucking) {
                         let d2Hole = (dx - rawMx)**2 + (dy - rawMy)**2;
-                        if (d2Hole < 400) return; // 吞噬半径 20
+                        if (d2Hole < 400) {
+                            this.reset(); // 吞噬重置
+                            return;
+                        }
                     }
 
                     ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
                     
-                    // 颜色计算
                     if (rainbowMode) {
                         this.hue += 2;
                         ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     } else if (isWarping || this.speed > 3) {
-                        // 高速/曲率模式：蓝移
                         ctx.fillStyle = `rgba(200, 255, 255, 1)`;
                     } else {
                         ctx.fillStyle = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${this.baseColor.a})`;
@@ -477,7 +475,7 @@
             }
             const stars = []; for (let i = 0; i < 1200; i++) stars.push(new Star());
 
-            // --- 粒子与特效 ---
+            // --- 粒子特效 ---
             class Shockwave {
                 constructor(x, y) { this.x = x; this.y = y; this.r = 1; this.life = 1.0; }
                 update() { this.r += 15; this.life -= 0.02; }
@@ -506,18 +504,14 @@
             // --- 事件绑定 ---
             document.addEventListener('mousedown', (e) => {
                 if(e.target.closest('#avatar-btn') || e.target.closest('#context-menu')) return;
-                if(e.button === 0) { // 左键
+                if(e.button === 0) { 
                     shockwaves.push(new Shockwave(e.clientX, e.clientY));
                     isSucking = true;
                     for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
-                    // 施加给星星一个瞬间斥力（模拟爆炸冲击波）
                     stars.forEach(s => {
                         let dx = s.x - e.clientX; let dy = s.y - e.clientY;
                         let dist = Math.sqrt(dx*dx + dy*dy);
-                        if(dist < 300) {
-                            let f = 1000 / dist;
-                            s.vx += (dx/dist)*f; s.vy += (dy/dist)*f;
-                        }
+                        if(dist < 300) { let f = 1000 / dist; s.vx += (dx/dist)*f; s.vy += (dy/dist)*f; }
                     });
                 }
             });
@@ -542,7 +536,6 @@
                 }, 2500);
             });
 
-            // Konami Code
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             let kIndex = 0;
             const hBox = document.getElementById('konami-hint');
@@ -564,7 +557,6 @@
             // --- 循环 ---
             function loop() {
                 ctx.globalCompositeOperation = 'destination-out';
-                // 拖尾控制：速度越快拖尾越长（alpha越小）
                 let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.15;
                 ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
                 ctx.fillRect(0, 0, cw, ch);
@@ -573,7 +565,6 @@
                 stars.forEach(s => { s.update(); s.draw(); });
                 shockwaves.forEach((w,i)=>{ w.update(); w.draw(); if(w.life<=0) shockwaves.splice(i,1); });
 
-                // 绘制黑洞视界 (如果按住)
                 if(isSucking) {
                     ctx.globalCompositeOperation = 'source-over';
                     ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2);
