@@ -14,12 +14,10 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            /* 极光背景 */
             background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
             background-size: 400% 400%;
-            animation: aurora 15s ease infinite;
+            animation: aurora 20s ease infinite;
             font-family: 'sakura', sans-serif;
-            /* 禁用系统默认右键菜单 */
             user-select: none; -webkit-user-select: none;
         }
 
@@ -114,7 +112,7 @@
             transform: skewX(-20deg); animation: shine 4s infinite;
         }
 
-        /* --- UI 组件 --- */
+        /* --- UI & HUD --- */
         #toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
@@ -137,14 +135,11 @@
         .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
         .hud-text { font-weight: bold; letter-spacing: 1px; }
 
-        /* 键盘提示 (右下角) */
         .hint-corner {
-            position: fixed; bottom: 20px; right: 25px;
-            z-index: 50; display: flex; align-items: center; justify-content: flex-end;
+            position: fixed; bottom: 20px; right: 25px; z-index: 50; display: flex; align-items: center; justify-content: flex-end;
             cursor: help; opacity: 0; transition: opacity 1s;
         }
         .hint-corner.show { opacity: 1; }
-
         .hint-icon { font-size: 24px; color: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .hint-box {
             position: absolute; right: 35px; background: rgba(0, 20, 40, 0.85); border: 1px solid rgba(80, 255, 255, 0.3);
@@ -153,14 +148,13 @@
         }
         .hint-corner:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
         .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
-
         kbd {
             background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px;
             padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
         }
         kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
 
-        /* --- 🌟 右键战术菜单 --- */
+        /* --- 战术菜单 --- */
         #context-menu {
             position: fixed; top: 0; left: 0; width: 160px; height: 160px;
             border-radius: 50%; pointer-events: none; z-index: 999;
@@ -168,34 +162,21 @@
             display: flex; justify-content: center; align-items: center;
         }
         #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-        
-        /* 菜单中心十字 */
-        .ctx-center {
-            position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%;
-            box-shadow: 0 0 10px #50ffff;
-        }
-        /* 菜单背景环 */
-        .ctx-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite;
-        }
-        /* 扇形按钮布局 */
+        .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
+        .ctx-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite; }
         .ctx-item {
-            position: absolute; width: 50px; height: 50px;
-            display: flex; justify-content: center; align-items: center;
+            position: absolute; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
             background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4);
             border-radius: 50%; color: #50ffff; font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
             cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
-        
-        /* 四个方向定位 */
         .ctx-top { top: 0; left: 50%; transform: translateX(-50%); }
         .ctx-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
         .ctx-left { left: 0; top: 50%; transform: translateY(-50%); }
         .ctx-right { right: 0; top: 50%; transform: translateY(-50%); }
 
-        /* 引导层 */
+        /* --- 引导层 --- */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999;
             display: flex; justify-content: center; align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
@@ -225,10 +206,8 @@
             .separator { display: none; }
             .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
-            .hint-corner, .speed-hud { display: none; }
+            .hint-corner, .speed-hud, #context-menu { display: none; }
             .terminal-text { font-size: 12px; }
-            /* 移动端禁用自定义右键菜单 */
-            #context-menu { display: none; }
         }
     </style>
 </head>
@@ -296,18 +275,17 @@
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
         $(function() {
-            // --- 引导系统 ---
+            // --- 1. 引导层 ---
             const lines = [
-                "INITIALIZING SYSTEM CORE...",
-                "LOADING ASSETS... [OK]",
-                "CONNECTING TO NEURAL NETWORK... [OK]",
+                "INITIALIZING PHYSICS ENGINE...",
+                "LOADING NEURAL NETWORK... [OK]",
+                "CALIBRATING SENSORS... [OK]",
                 "--------------------------------",
                 "AVAILABLE COMMANDS:",
-                "> [SCROLL WHEEL]  : CONTROL TIME",
-                "> [LONG PRESS]    : GENERATE SINGULARITY",
+                "> [SCROLL WHEEL]  : CONTROL TIME (RELATIVITY)",
+                "> [LONG PRESS]    : GENERATE BLACK HOLE",
                 "> [RIGHT CLICK]   : TACTICAL MENU",
                 "> [CLICK AVATAR]  : ENGAGE WARP DRIVE",
-                "> [KEYBOARD]      : UNLOCK HIDDEN MODES",
                 "--------------------------------",
                 "SYSTEM ONLINE. CLICK TO START <span class='blink'>_</span>"
             ];
@@ -344,7 +322,7 @@
                 }
             }
             setTimeout(typeWriter, 500);
-
+            
             function closeBoot() {
                 bootScreen.classList.add('system-off');
                 mainContent.classList.add('loaded');
@@ -353,7 +331,7 @@
             bootScreen.addEventListener('click', closeBoot);
             bootScreen.addEventListener('touchstart', closeBoot);
 
-            // --- 核心系统 ---
+            // --- 2. 核心变量与初始化 ---
             const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
             let cw, ch;
@@ -372,10 +350,14 @@
                 if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
             });
 
-            let globalSpeed = 1.0; let warpSpeed = 1.0;
-            let isWarping = false; let rainbowMode = false; let isSucking = false;
+            // 物理常量
+            let globalSpeed = 1.0; 
+            let warpSpeed = 1.0;
+            let isWarping = false; 
+            let rainbowMode = false; 
+            let isSucking = false;
             
-            // UI 更新函数
+            // --- 3. 交互逻辑 (滚轮、右键) ---
             const speedText = document.getElementById('speed-text');
             const speedBar = document.getElementById('speed-bar');
             function updateSpeedUI() {
@@ -384,7 +366,6 @@
                 speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
                 speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
             }
-
             document.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 globalSpeed -= e.deltaY * 0.001; 
@@ -392,185 +373,158 @@
                 updateSpeedUI();
             }, { passive: false });
 
-            // --- 右键菜单逻辑 ---
+            // 右键菜单
             const ctxMenu = document.getElementById('context-menu');
-            
             document.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                // 确保菜单不超出屏幕
-                let x = e.clientX;
-                let y = e.clientY;
-                // 显示菜单
-                ctxMenu.style.left = (x - 80) + 'px'; // 减去半径
-                ctxMenu.style.top = (y - 80) + 'px';
+                ctxMenu.style.left = (e.clientX - 80) + 'px';
+                ctxMenu.style.top = (e.clientY - 80) + 'px';
                 ctxMenu.classList.add('visible');
             });
-
-            // 点击其他地方关闭菜单
             document.addEventListener('click', (e) => {
                 if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
             });
-
-            // 菜单功能绑定
-            document.getElementById('ctx-warp').addEventListener('click', () => {
-                // 模拟点击头像
-                document.getElementById('avatar-btn').click();
-                ctxMenu.classList.remove('visible');
-            });
-            document.getElementById('ctx-rgb').addEventListener('click', () => {
-                rainbowMode = !rainbowMode;
-                showToast(rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF");
-                ctxMenu.classList.remove('visible');
-            });
-            document.getElementById('ctx-freeze').addEventListener('click', () => {
-                globalSpeed = 0;
-                updateSpeedUI();
-                showToast("❄️ TIME FROZEN");
-                ctxMenu.classList.remove('visible');
-            });
-            document.getElementById('ctx-reset').addEventListener('click', () => {
-                globalSpeed = 1.0;
-                rainbowMode = false;
-                warpSpeed = 1.0;
-                updateSpeedUI();
-                showToast("♻️ SYSTEM RESET");
-                ctxMenu.classList.remove('visible');
-            });
-
-
-            // --- 类定义 ---
-            class Shockwave {
-                constructor(x, y) {
-                    this.x = x; this.y = y; this.r = 1; this.life = 1.0;
-                }
-                update() { this.r += 15; this.life -= 0.02; }
-                draw() {
-                    if(this.life <= 0) return;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-                    ctx.strokeStyle = `rgba(80, 255, 255, ${this.life * 0.3})`;
-                    ctx.lineWidth = 2; ctx.stroke();
-                }
+            function showToast(msg) {
+                const toast = document.getElementById('toast');
+                toast.innerText = msg; toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
             }
-            const shockwaves = [];
+            document.getElementById('ctx-warp').addEventListener('click', () => { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-rgb').addEventListener('click', () => { rainbowMode = !rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-freeze').addEventListener('click', () => { globalSpeed = 0; updateSpeedUI(); showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-reset').addEventListener('click', () => { globalSpeed=1; rainbowMode=false; updateSpeedUI(); showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); });
 
-            class ShootingStar {
-                constructor() { this.reset(); }
-                reset() {
-                    this.x = Math.random() * cw; this.y = Math.random() * ch;
-                    this.len = Math.random() * 80 + 10;
-                    this.speed = Math.random() * 10 + 6;
-                    this.size = Math.random() * 1 + 0.1;
-                    this.life = 0; this.waitTime = Math.random() * 100;
-                    this.active = false; this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5; 
-                }
-                update() {
-                    if (this.waitTime > 0) { this.waitTime--; return; }
-                    this.active = true;
-                    this.x += Math.cos(this.angle) * this.speed;
-                    this.y += Math.sin(this.angle) * this.speed;
-                    this.life++;
-                    if (this.x > cw + 100 || this.y > ch + 100) this.reset();
-                }
-                draw() {
-                    if (!this.active) return;
-                    const endX = this.x - Math.cos(this.angle) * this.len;
-                    const endY = this.y - Math.sin(this.angle) * this.len;
-                    const grad = ctx.createLinearGradient(this.x, this.y, endX, endY);
-                    grad.addColorStop(0, "rgba(255, 255, 255, 1)");
-                    grad.addColorStop(1, "rgba(255, 255, 255, 0)");
-                    ctx.strokeStyle = grad; ctx.lineWidth = this.size;
-                    ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(endX, endY); ctx.stroke();
-                }
-            }
-            const meteors = []; for(let i=0; i<3; i++) meteors.push(new ShootingStar());
-
+            // --- 4. 物理引擎 (牛顿+相对论) ---
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
                     this.r = Math.random() * cw * 0.6 + 50;
-                    this.baseOmega = (Math.random() * 0.5 + 0.5) * 800 / Math.pow(this.r, 1.5);
+                    // 基础轨道速度 (开普勒模拟)
+                    this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
                     this.size = Math.random() * 2 + 0.5;
+                    this.x = cw/2 + Math.cos(this.angle) * this.r;
+                    this.y = ch/2 + Math.sin(this.angle) * this.r;
+                    // 物理属性：位置(pos), 速度(vel), 加速度(acc)
+                    this.vx = 0; this.vy = 0;
+                    // 记录原始轨道颜色
                     const ratio = (this.r - 50) / (cw * 0.5);
-                    const r = 200 + Math.floor(55 * ratio); const g = 200 - Math.floor(100 * ratio); const b = 255;
-                    this.baseColor = {r, g, b, a: Math.random() * 0.8 + 0.2};
-                    this.hue = Math.random() * 360; this.ox = 0; this.oy = 0;
+                    this.baseColor = {
+                        r: 200 + Math.floor(55 * ratio),
+                        g: 200 - Math.floor(100 * ratio),
+                        b: 255,
+                        a: Math.random() * 0.8 + 0.2
+                    };
+                    this.hue = Math.random() * 360;
                 }
                 update() {
-                    this.angle += this.baseOmega * 0.05 * warpSpeed * globalSpeed; 
-                    if(rainbowMode) this.hue += 2;
-                    const curX = cw / 2 + Math.cos(this.angle) * this.r + this.ox;
-                    const curY = ch / 2 + Math.sin(this.angle) * this.r + this.oy;
-                    
+                    // 1. 计算理想轨道位置
+                    // 角度随时间变化
+                    let dt = this.orbitalSpeed * warpSpeed * globalSpeed;
+                    this.angle += dt;
+                    let targetX = cw / 2 + Math.cos(this.angle) * this.r;
+                    let targetY = ch / 2 + Math.sin(this.angle) * this.r;
+
+                    // 2. 惯性与力场
+                    // 默认力：将星星拉回其轨道 (弹性)
+                    let ax = (targetX - this.x) * 0.02; 
+                    let ay = (targetY - this.y) * 0.02;
+
+                    // 黑洞引力 (Gravity)
                     if (isSucking) {
-                        const dx = rawMx - curX; const dy = rawMy - curY;
-                        const distSq = dx*dx + dy*dy;
-                        const force = 5000 / (distSq + 1000); 
-                        this.ox += (dx / Math.sqrt(distSq)) * force * 5;
-                        this.oy += (dy / Math.sqrt(distSq)) * force * 5;
+                        let dx = rawMx - this.x; let dy = rawMy - this.y;
+                        let distSq = dx*dx + dy*dy;
+                        let force = 2000 / (distSq + 100); // F = G*M / r^2
+                        ax += dx * force; ay += dy * force;
                     }
-                    shockwaves.forEach(wave => {
-                        const dx = curX - wave.x; const dy = curY - wave.y;
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        if (Math.abs(dist - wave.r) < 30) {
-                            const pushForce = 10 * wave.life;
-                            this.ox += (dx / dist) * pushForce;
-                            this.oy += (dy / dist) * pushForce;
-                        }
-                    });
-                    this.ox *= 0.92; this.oy *= 0.92;
+
+                    // 3. 牛顿运动定律更新
+                    this.vx += ax; this.vy += ay;
+                    // 阻力 (Friction)
+                    this.vx *= 0.92; this.vy *= 0.92;
+                    // 更新位置
+                    this.x += this.vx; this.y += this.vy;
+
+                    // 4. 多普勒效应 (Doppler Effect - Visual)
+                    // 速度越快，颜色越偏蓝(Blueshift)或红(Redshift)
+                    // 这里简化为：速度快就变亮/变白/变青
+                    this.speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
                 }
                 draw() {
-                    const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30 + this.ox;
-                    const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30 + this.oy;
+                    // 视差移动
+                    let dx = this.x - mx * 30;
+                    let dy = this.y - my * 30;
+
+                    // 视界 (Event Horizon): 如果离黑洞太近，就不画了（被吞噬）
+                    if (isSucking) {
+                        let d2Hole = (dx - rawMx)**2 + (dy - rawMy)**2;
+                        if (d2Hole < 400) return; // 吞噬半径 20
+                    }
+
+                    ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
                     
-                    // 已移除鼠标连线
-                    
-                    ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
-                    if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
-                    else if (isWarping) ctx.fillStyle = `rgba(200, 255, 255, 0.9)`;
-                    else ctx.fillStyle = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${this.baseColor.a})`;
+                    // 颜色计算
+                    if (rainbowMode) {
+                        this.hue += 2;
+                        ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
+                    } else if (isWarping || this.speed > 3) {
+                        // 高速/曲率模式：蓝移
+                        ctx.fillStyle = `rgba(200, 255, 255, 1)`;
+                    } else {
+                        ctx.fillStyle = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${this.baseColor.a})`;
+                    }
                     ctx.fill();
                 }
             }
-            const stars = []; for (let i = 0; i < 1000; i++) stars.push(new Star());
+            const stars = []; for (let i = 0; i < 1200; i++) stars.push(new Star());
 
+            // --- 粒子与特效 ---
+            class Shockwave {
+                constructor(x, y) { this.x = x; this.y = y; this.r = 1; this.life = 1.0; }
+                update() { this.r += 15; this.life -= 0.02; }
+                draw() {
+                    if(this.life<=0)return;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+                    ctx.strokeStyle=`rgba(80, 255, 255, ${this.life*0.3})`; ctx.lineWidth=2; ctx.stroke();
+                }
+            }
+            const shockwaves = [];
+            
             const particles = [];
             class Particle {
                 constructor(x, y) {
-                    this.x = x; this.y = y;
-                    const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 5 + 2;
-                    this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
-                    this.life = 1; this.hue = Math.random() * 60 + 260;
+                    this.x=x; this.y=y; 
+                    let a=Math.random()*Math.PI*2; let s=Math.random()*5+2;
+                    this.vx=Math.cos(a)*s; this.vy=Math.sin(a)*s; this.life=1; this.hue=Math.random()*60+260;
                 }
-                update() { this.x += this.vx; this.y += this.vy; this.vy += 0.2; this.life -= 0.02; }
+                update() { this.x+=this.vx; this.y+=this.vy; this.vy+=0.2; this.life-=0.02; }
                 draw() {
-                    ctx.globalAlpha = this.life; ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 1)`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                    ctx.fill(); ctx.globalAlpha = 1;
+                    ctx.globalAlpha=this.life; ctx.fillStyle=`hsla(${this.hue}, 80%, 70%, 1)`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
                 }
             }
-
+            
+            // --- 事件绑定 ---
             document.addEventListener('mousedown', (e) => {
                 if(e.target.closest('#avatar-btn') || e.target.closest('#context-menu')) return;
-                // 仅左键触发黑洞
-                if(e.button === 0) {
+                if(e.button === 0) { // 左键
                     shockwaves.push(new Shockwave(e.clientX, e.clientY));
                     isSucking = true;
                     for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
+                    // 施加给星星一个瞬间斥力（模拟爆炸冲击波）
+                    stars.forEach(s => {
+                        let dx = s.x - e.clientX; let dy = s.y - e.clientY;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 300) {
+                            let f = 1000 / dist;
+                            s.vx += (dx/dist)*f; s.vy += (dy/dist)*f;
+                        }
+                    });
                 }
             });
             document.addEventListener('mouseup', () => { isSucking = false; });
 
             const avatarBtn = document.getElementById('avatar-btn');
             const avatarImg = document.getElementById('avatar-img');
-            const toast = document.getElementById('toast');
-            
-            function showToast(msg) {
-                toast.innerText = msg;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2500);
-            }
-
             avatarBtn.addEventListener('click', (e) => {
                 e.stopPropagation(); if(isWarping) return;
                 isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
@@ -588,34 +542,45 @@
                 }, 2500);
             });
 
+            // Konami Code
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-            let konamiIndex = 0;
-            const hintBox = document.getElementById('konami-hint');
-            const kbdElements = hintBox.querySelectorAll('kbd');
-            function resetKonami() { konamiIndex = 0; kbdElements.forEach(el => el.classList.remove('active')); hintBox.classList.remove('typing-active'); }
+            let kIndex = 0;
+            const hBox = document.getElementById('konami-hint');
+            const kbds = hBox.querySelectorAll('kbd');
+            function resetK() { kIndex=0; kbds.forEach(el=>el.classList.remove('active')); hBox.classList.remove('typing-active'); }
             document.addEventListener('keydown', (e) => {
-                if (e.key === konamiCode[konamiIndex]) {
-                    if (konamiIndex === 0) hintBox.classList.add('typing-active');
-                    if (kbdElements[konamiIndex]) kbdElements[konamiIndex].classList.add('active');
-                    konamiIndex++;
-                    if (konamiIndex === konamiCode.length) {
+                if(e.key === konamiCode[kIndex]) {
+                    if(kIndex===0) hBox.classList.add('typing-active');
+                    if(kbds[kIndex]) kbds[kIndex].classList.add('active');
+                    kIndex++;
+                    if(kIndex===konamiCode.length) {
                         rainbowMode = !rainbowMode;
-                        showToast(rainbowMode ? "🌈 RGB MODE: ON" : "🌑 RGB MODE: OFF");
-                        setTimeout(resetKonami, 800);
+                        showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF");
+                        setTimeout(resetK, 800);
                     }
-                } else { if (konamiIndex > 0) resetKonami(); if (e.key === konamiCode[0]) { konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active'); } }
+                } else { if(kIndex>0) resetK(); if(e.key===konamiCode[0]){kIndex=1; hBox.classList.add('typing-active'); kbds[0].classList.add('active');}}
             });
 
+            // --- 循环 ---
             function loop() {
                 ctx.globalCompositeOperation = 'destination-out';
-                let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.1;
+                // 拖尾控制：速度越快拖尾越长（alpha越小）
+                let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.15;
                 ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
                 ctx.fillRect(0, 0, cw, ch);
 
                 ctx.globalCompositeOperation = 'lighter';
                 stars.forEach(s => { s.update(); s.draw(); });
-                meteors.forEach(m => { m.update(); m.draw(); });
-                shockwaves.forEach((wave, i) => { wave.update(); wave.draw(); if(wave.life<=0) shockwaves.splice(i,1); });
+                shockwaves.forEach((w,i)=>{ w.update(); w.draw(); if(w.life<=0) shockwaves.splice(i,1); });
+
+                // 绘制黑洞视界 (如果按住)
+                if(isSucking) {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2);
+                    ctx.fillStyle = '#000'; ctx.fill();
+                    ctx.strokeStyle = '#50ffff'; ctx.lineWidth=2; ctx.stroke();
+                    ctx.globalCompositeOperation = 'lighter';
+                }
 
                 ctx.globalCompositeOperation = 'source-over';
                 for (let i = particles.length - 1; i >= 0; i--) {
