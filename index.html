@@ -111,48 +111,49 @@
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* --- ⌨️ 秘密提示符样式 --- */
+        /* --- 提示符样式 --- */
         .hint-corner {
             position: fixed; bottom: 20px; right: 25px;
             z-index: 50; display: flex; align-items: center; justify-content: flex-end;
             cursor: help;
         }
-
-        /* 默认状态：半透明图标 */
         .hint-icon {
             font-size: 24px; color: rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
-
-        /* 提示文字框：默认隐藏 */
         .hint-box {
-            position: absolute; right: 35px; /* 在图标左侧 */
-            background: rgba(0, 20, 40, 0.8);
+            position: absolute; right: 35px;
+            background: rgba(0, 20, 40, 0.85);
             border: 1px solid rgba(80, 255, 255, 0.3);
             padding: 8px 12px; border-radius: 8px;
             color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transform: translateX(20px); pointer-events: none;
+            opacity: 0; transform: translateX(20px);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            white-space: nowrap;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            white-space: nowrap; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            pointer-events: none; /* 默认不挡鼠标 */
         }
-
-        /* 悬停时的交互 */
-        .hint-corner:hover .hint-icon {
-            color: #fff; transform: scale(1.1);
-            text-shadow: 0 0 10px #ffc8f5;
-        }
-        .hint-corner:hover .hint-box {
+        /* 两种情况显示提示框：悬停 或 正在输入代码 */
+        .hint-corner:hover .hint-box, 
+        .hint-box.typing-active {
             opacity: 1; transform: translateX(0);
         }
+        .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
 
-        /* 键盘按键样式模拟 */
         kbd {
             background-color: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.3);
             border-radius: 3px; padding: 2px 4px;
             margin: 0 2px; font-family: monospace; font-weight: bold;
+            transition: all 0.1s;
+        }
+        
+        /* 按键高亮状态 */
+        kbd.active {
+            background-color: #50ffff;
+            color: #000;
+            border-color: #50ffff;
+            box-shadow: 0 0 10px #50ffff;
+            transform: scale(1.1);
         }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -166,8 +167,6 @@
             .separator { display: none; }
             .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
-            
-            /* 移动端隐藏键盘提示，因为无法输入 */
             .hint-corner { display: none; }
         }
     </style>
@@ -202,7 +201,7 @@
     </div>
 
     <div class="hint-corner">
-        <div class="hint-box">
+        <div class="hint-box" id="konami-hint">
             Try: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
         </div>
         <div class="hint-icon">⌨️</div>
@@ -278,6 +277,7 @@
                 for(let i=0; i<15; i++) particles.push(new Particle(e.clientX, e.clientY));
             });
 
+            // --- 交互逻辑 ---
             const avatarBtn = document.getElementById('avatar-btn');
             const avatarImg = document.getElementById('avatar-img');
             const toast = document.getElementById('toast');
@@ -309,19 +309,52 @@
                 }, 2500);
             });
 
+            // --- Konami Code 增强版 ---
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             let konamiIndex = 0;
+            const hintBox = document.getElementById('konami-hint');
+            const kbdElements = hintBox.querySelectorAll('kbd'); // 获取所有按键元素
+
+            function resetKonami() {
+                konamiIndex = 0;
+                kbdElements.forEach(el => el.classList.remove('active')); // 清除高亮
+                hintBox.classList.remove('typing-active'); // 隐藏提示框
+            }
+
             document.addEventListener('keydown', (e) => {
+                // 判断按键是否匹配当前序列
                 if (e.key === konamiCode[konamiIndex]) {
+                    // 1. 让提示框显现（即使用户鼠标没放上去）
+                    if (konamiIndex === 0) hintBox.classList.add('typing-active');
+                    
+                    // 2. 点亮对应的 <kbd>
+                    if (kbdElements[konamiIndex]) {
+                        kbdElements[konamiIndex].classList.add('active');
+                    }
+
                     konamiIndex++;
+
+                    // 3. 检查是否完成
                     if (konamiIndex === konamiCode.length) {
                         rainbowMode = !rainbowMode;
                         toast.innerText = rainbowMode ? "🌈 RGB GAMER MODE: ON" : "🌑 RGB GAMER MODE: OFF";
                         toast.classList.add('show');
                         setTimeout(() => toast.classList.remove('show'), 3000);
-                        konamiIndex = 0;
+                        
+                        // 完成后延迟一下再重置，让用户看到全亮的效果
+                        setTimeout(resetKonami, 800);
                     }
-                } else { konamiIndex = 0; }
+                } else {
+                    // 按错键：立即重置
+                    if (konamiIndex > 0) resetKonami();
+                    
+                    // 边缘情况处理：如果按错了，但按的键恰好是第一个键(ArrowUp)，则重新开始而不是彻底重置
+                    if (e.key === konamiCode[0]) {
+                        konamiIndex = 1;
+                        hintBox.classList.add('typing-active');
+                        kbdElements[0].classList.add('active');
+                    }
+                }
             });
 
             function loop() {
