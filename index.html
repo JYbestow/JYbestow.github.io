@@ -19,6 +19,7 @@
             transition: filter 0.5s;
         }
 
+        /* 画布 */
         canvas#startrack {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1; pointer-events: none;
@@ -41,14 +42,6 @@
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s ease-out;
             max-width: 90%; box-sizing: border-box;
-            /* 初始隐藏，等引导结束后显示 */
-            opacity: 0; transform: scale(0.9);
-            animation: cardAppear 1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-            animation-delay: 2.8s; /* 等待引导动画结束 */
-        }
-
-        @keyframes cardAppear {
-            to { opacity: 1; transform: scale(1); }
         }
 
         .avatar-container {
@@ -81,12 +74,7 @@
         .name {
             font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8);
             margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px;
-            white-space: nowrap; min-height: 1.2em; /* 防止打字时高度塌陷 */
-        }
-
-        /* 打字机光标 */
-        .typing-cursor::after {
-            content: '|'; animation: blink 1s infinite; color: #50ffff;
+            white-space: nowrap;
         }
 
         .role {
@@ -115,74 +103,67 @@
             transform: skewX(-20deg); animation: shine 4s infinite;
         }
 
-        /* --- HUD & 系统引导层 --- */
-        #boot-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-family: 'Courier New', monospace; color: #50ffff;
-            pointer-events: none; /* 动画结束后允许穿透 */
-            animation: fadeOutOverlay 0.5s ease-out forwards;
-            animation-delay: 3.5s; /* 3.5秒后消失 */
+        /* --- HUD & UI --- */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
+            color: #50ffff; padding: 12px 24px; border-radius: 8px;
+            font-family: 'Courier New', monospace; font-weight: bold;
+            opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 100; box-shadow: 0 0 20px rgba(80, 255, 255, 0.3); pointer-events: none;
         }
-        
-        .boot-text {
-            font-size: 16px; margin: 5px 0; opacity: 0;
-            text-shadow: 0 0 5px #50ffff;
-            animation: textGlitch 0.1s infinite;
-        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* 逐行显示动画 */
-        .line-1 { animation: slideIn 0.5s forwards 0.5s; }
-        .line-2 { animation: slideIn 0.5s forwards 1.2s; }
-        .line-3 { animation: slideIn 0.5s forwards 1.9s; }
-        .line-4 { animation: slideIn 0.5s forwards 2.6s; color: #ffc8f5; font-weight: bold; transform: scale(1.2); }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeOutOverlay { to { opacity: 0; visibility: hidden; } }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* 左下角仪表盘 */
+        /* 左下角：速度仪表盘 */
         .speed-hud {
             position: fixed; bottom: 20px; left: 25px; z-index: 50;
             font-family: 'Courier New', monospace; color: rgba(255,255,255,0.5);
-            font-size: 12px; pointer-events: none; display: flex; flex-direction: column; gap: 5px;
-            opacity: 0; animation: slideIn 1s forwards 4s; /* 引导结束后出现 */
+            font-size: 12px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 5px;
         }
-        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
+        .speed-bar-container {
+            width: 150px; height: 4px; background: rgba(255,255,255,0.1);
+            border-radius: 2px; overflow: hidden;
+        }
+        .speed-bar {
+            height: 100%; background: #50ffff; width: 50%;
+            transition: width 0.1s linear, background 0.3s;
+            box-shadow: 0 0 5px #50ffff;
+        }
         .hud-text { font-weight: bold; letter-spacing: 1px; }
 
-        /* 右下角键盘提示 */
+        /* 右下角：键盘提示 */
         .hint-corner {
             position: fixed; bottom: 20px; right: 25px;
-            z-index: 50; display: flex; align-items: center; justify-content: flex-end; cursor: help;
-            opacity: 0; animation: slideIn 1s forwards 4s; /* 引导结束后出现 */
+            z-index: 50; display: flex; align-items: center; justify-content: flex-end;
+            cursor: help;
         }
-        .hint-icon { font-size: 24px; color: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .hint-icon {
+            font-size: 24px; color: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
         .hint-box {
-            position: absolute; right: 35px; background: rgba(0, 20, 40, 0.85); border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transform: translateX(20px); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            white-space: nowrap; box-shadow: 0 0 15px rgba(0,0,0,0.5); pointer-events: none;
+            position: absolute; right: 35px;
+            background: rgba(0, 20, 40, 0.85);
+            border: 1px solid rgba(80, 255, 255, 0.3);
+            padding: 8px 12px; border-radius: 8px;
+            color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
+            opacity: 0; transform: translateX(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            pointer-events: none;
         }
         .hint-corner:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
         .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
 
         kbd {
-            background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
+            background-color: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 3px; padding: 2px 4px;
+            margin: 0 2px; font-family: monospace; font-weight: bold;
+            transition: all 0.1s;
         }
         kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
-
-        #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff; color: #50ffff;
-            padding: 12px 24px; border-radius: 8px; font-family: 'Courier New', monospace; font-weight: bold;
-            opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            z-index: 100; box-shadow: 0 0 20px rgba(80, 255, 255, 0.3); pointer-events: none;
-        }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
@@ -195,10 +176,7 @@
             .separator { display: none; }
             .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
-            .hint-corner, .speed-hud { display: none; }
-            /* 移动端不显示引导层，直接显示内容 */
-            #boot-overlay { display: none; }
-            .glass-card { animation-delay: 0s; opacity: 1; transform: scale(1); }
+            .hint-corner, .speed-hud { display: none; } /* 移动端隐藏复杂操作提示 */
         }
     </style>
 </head>
@@ -206,13 +184,6 @@
 
     <canvas id="startrack"></canvas>
     
-    <div id="boot-overlay">
-        <div class="boot-text line-1">Initializing Mechanical Core... [OK]</div>
-        <div class="boot-text line-2">>> [Wheel] to Control Time Dilation</div>
-        <div class="boot-text line-3">>> [Hold Click] to Create Singularity</div>
-        <div class="boot-text line-4">SYSTEM READY. WELCOME.</div>
-    </div>
-
     <div id="toast">SYSTEM: Warp Drive Engaged!</div>
 
     <div class="speed-hud">
@@ -224,12 +195,12 @@
 
     <div class="main">
         <div class="glass-card" id="tilt-card">
-            <div class="avatar-container" id="avatar-btn" title="Click: Warp Drive">
+            <div class="avatar-container" id="avatar-btn" title="Click: Warp Drive | Wheel: Time Control">
                 <div class="orbit-ring" id="orbit-ring"></div>
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
             </div>
             
-            <div class="name typing-cursor" id="typewriter-name"></div>
+            <div class="name">嘎嘎sama | 今予</div>
             
             <div class="role">
                 <span>Zhejiang University</span>
@@ -255,35 +226,20 @@
     <script src="./zepto.min.js"></script>
 
     <script>
-        console.log("%c ZJU MECH ENG SYSTEM \n%c Welcome, Pilot.", "font-size: 20px; color: #ffc8f5; font-weight: bold;", "font-size: 14px; color: #50ffff;");
+        console.log("%c Hello ZJU Engineer! \n%c System Ready.", "font-size: 20px; color: #ffc8f5;", "font-size: 14px; color: #50ffff;");
 
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
         $(function() {
-            // --- 打字机效果 ---
-            const nameText = "嘎嘎sama | 今予";
-            const nameEl = document.getElementById('typewriter-name');
-            let typeIdx = 0;
-            // 延迟一点开始打字，配合引导动画
-            setTimeout(() => {
-                const typeInterval = setInterval(() => {
-                    nameEl.innerText += nameText.charAt(typeIdx);
-                    typeIdx++;
-                    if(typeIdx >= nameText.length) {
-                        clearInterval(typeInterval);
-                        nameEl.classList.remove('typing-cursor'); // 移除光标
-                    }
-                }, 100); // 打字速度
-            }, 3000);
-
             const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
             let cw, ch;
             function resize() { cw = window.innerWidth; ch = window.innerHeight; canvas.width = cw; canvas.height = ch; }
             resize(); window.addEventListener('resize', resize);
 
-            let mx = 0, my = 0; // 归一化坐标
-            let rawMx = -100, rawMy = -100; // 绝对坐标 (用于无人机)
+            // 鼠标位置
+            let mx = 0, my = 0;
+            let rawMx = 0, rawMy = 0; // 绝对坐标用于引力计算
 
             document.addEventListener('mousemove', (e) => {
                 rawMx = e.clientX; rawMy = e.clientY;
@@ -297,58 +253,39 @@
                 if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
             });
 
-            // 全局控制
-            let globalSpeed = 1.0; 
-            let warpSpeed = 1.0;
+            // --- 全局控制变量 ---
+            let globalSpeed = 1.0; // 时间倍率
+            let warpSpeed = 1.0;   // 曲率驱动倍率 (叠加)
             let isWarping = false;
             let rainbowMode = false;
-            let isSucking = false;
+            let isSucking = false; // 是否开启黑洞模式
             
-            // UI 元素
+            // --- 功能 1: 滚轮控制时间 (Time Dilation) ---
             const speedText = document.getElementById('speed-text');
             const speedBar = document.getElementById('speed-bar');
-
-            // --- 滚轮时间控制 ---
+            
             document.addEventListener('wheel', (e) => {
                 e.preventDefault();
+                // 滚轮向下(-)，变慢/倒流；滚轮向上(+)，加速
+                // 注意：不同浏览器 deltaY 正负可能不同，通常向下拉是正数
                 globalSpeed -= e.deltaY * 0.001; 
+                
+                // 限制一下最大最小速度，防止失控
                 if(globalSpeed > 5) globalSpeed = 5;
                 if(globalSpeed < -2) globalSpeed = -2;
+
+                // 更新 UI
                 speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
-                let pct = (globalSpeed + 2) / 7 * 100;
+                // 简单的进度条映射：0x = 0%, 5x = 100%, -2x = 红色警告?
+                let pct = (globalSpeed + 2) / 7 * 100; // 映射 -2~5 到 0~100
                 speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
-                speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
+                
+                if(globalSpeed < 0) speedBar.style.backgroundColor = '#ff5050'; // 倒流变红
+                else speedBar.style.backgroundColor = '#50ffff';
             }, { passive: false });
 
-            // --- 伴飞无人机 (Drone) ---
-            let droneAngle = 0;
-            function drawDrone() {
-                // 如果鼠标还没移动进画面，不画
-                if(rawMx < 0) return;
-                
-                droneAngle += 0.1; // 绕鼠标旋转
-                // 无人机轨道半径：开启黑洞时变小，加速时变大
-                let orbitR = isSucking ? 15 : (isWarping ? 50 : 25);
-                let dx = rawMx + Math.cos(droneAngle) * orbitR;
-                let dy = rawMy + Math.sin(droneAngle) * orbitR;
 
-                ctx.beginPath();
-                // 画一个小三角形
-                ctx.moveTo(dx + 5, dy);
-                ctx.lineTo(dx - 5, dy - 5);
-                ctx.lineTo(dx - 5, dy + 5);
-                ctx.fillStyle = isSucking ? '#ff5050' : (rainbowMode ? `hsl(${droneAngle*20}, 100%, 50%)` : '#50ffff');
-                ctx.fill();
-                
-                // 画连接线
-                ctx.beginPath();
-                ctx.moveTo(rawMx, rawMy);
-                ctx.lineTo(dx, dy);
-                ctx.strokeStyle = `rgba(255,255,255,0.2)`;
-                ctx.stroke();
-            }
-
-            // --- 物理引擎 ---
+            // --- 星星类 (加入物理引擎) ---
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
@@ -359,26 +296,45 @@
                     const r = 200 + Math.floor(55 * ratio); const g = 200 - Math.floor(100 * ratio); const b = 255;
                     this.baseColor = {r, g, b, a: Math.random() * 0.8 + 0.2};
                     this.hue = Math.random() * 360;
-                    this.ox = 0; this.oy = 0;
+                    // 物理偏移量 (被黑洞吸走时用)
+                    this.ox = 0; 
+                    this.oy = 0;
                 }
                 update() {
+                    // 1. 基础公转 (受时间倍率 globalSpeed 影响)
                     this.angle += this.baseOmega * 0.05 * warpSpeed * globalSpeed; 
+                    
                     if(rainbowMode) this.hue += 2;
+
+                    // 2. 黑洞引力逻辑 (Gravity Well)
                     if (isSucking) {
+                        // 计算星星当前位置
                         const x = cw / 2 + Math.cos(this.angle) * this.r + this.ox;
                         const y = ch / 2 + Math.sin(this.angle) * this.r + this.oy;
-                        const dx = rawMx - x; const dy = rawMy - y;
+                        
+                        // 计算到鼠标(黑洞)的向量
+                        const dx = rawMx - x;
+                        const dy = rawMy - y;
                         const distSq = dx*dx + dy*dy;
+                        const dist = Math.sqrt(distSq);
+                        
+                        // 引力公式 F = G/r^2 (这里简化模拟)
+                        // 距离越近吸力越强，但限制最小值防止飞出屏幕
                         const force = 5000 / (distSq + 1000); 
-                        this.ox += (dx / Math.sqrt(distSq)) * force * 5;
-                        this.oy += (dy / Math.sqrt(distSq)) * force * 5;
+                        
+                        this.ox += (dx / dist) * force * 5;
+                        this.oy += (dy / dist) * force * 5;
                     } else {
-                        this.ox *= 0.92; this.oy *= 0.92;
+                        // 弹性复位：如果没有引力，星星慢慢回到轨道
+                        this.ox *= 0.92;
+                        this.oy *= 0.92;
                     }
                 }
                 draw() {
+                    // 叠加偏移量
                     const x = cw / 2 + Math.cos(this.angle) * this.r - mx * 30 + this.ox;
                     const y = ch / 2 + Math.sin(this.angle) * this.r - my * 30 + this.oy;
+                    
                     ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2);
                     if (rainbowMode) ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     else if (isWarping) ctx.fillStyle = `rgba(200, 255, 255, 0.9)`;
@@ -388,6 +344,7 @@
             }
             const stars = []; for (let i = 0; i < 1000; i++) stars.push(new Star());
 
+            // --- 粒子系统 ---
             const particles = [];
             class Particle {
                 constructor(x, y) {
@@ -404,45 +361,64 @@
                 }
             }
 
-            // 鼠标交互
+            // --- 功能 2: 长按生成黑洞 (Mouse Hold) ---
             let pressTimer = null;
             document.addEventListener('mousedown', (e) => {
-                if(e.target.closest('#avatar-btn')) return;
-                isSucking = true;
+                if(e.target.closest('#avatar-btn')) return; // 点头像不触发黑洞
+
+                // 设置一个定时器，如果按下超过 200ms 算长按（黑洞），否则算点击（爆炸）
+                isSucking = true; // 立即开启引力，提升手感
+                
+                // 爆炸效果还是保留，每次按下都有一点火花
                 for(let i=0; i<5; i++) particles.push(new Particle(e.clientX, e.clientY));
             });
-            document.addEventListener('mouseup', () => { isSucking = false; });
 
-            // 头像 Warp
+            document.addEventListener('mouseup', () => {
+                isSucking = false; // 释放黑洞
+            });
+
+            // --- 交互: 头像 Warp Drive ---
             const avatarBtn = document.getElementById('avatar-btn');
             const avatarImg = document.getElementById('avatar-img');
             const toast = document.getElementById('toast');
+            
             avatarBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); if(isWarping) return;
+                e.stopPropagation();
+                if(isWarping) return;
                 isWarping = true;
-                avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
+                avatarBtn.classList.add('warp-active');
+                avatarImg.classList.add('spin-warp');
+                
                 let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
-                toast.innerText = "⚡ WARP DRIVE ENGAGED ⚡"; toast.classList.add('show');
+                toast.innerText = "⚡ WARP DRIVE ENGAGED ⚡";
+                toast.classList.add('show');
+                
                 setTimeout(() => {
                     clearInterval(accelInterval);
                     const decelInterval = setInterval(() => {
                         if(warpSpeed > 1) { warpSpeed -= 1; } else {
                             warpSpeed = 1; isWarping = false;
-                            avatarBtn.classList.remove('warp-active'); avatarImg.classList.remove('spin-warp');
-                            toast.classList.remove('show'); clearInterval(decelInterval);
+                            avatarBtn.classList.remove('warp-active');
+                            avatarImg.classList.remove('spin-warp');
+                            toast.classList.remove('show');
+                            clearInterval(decelInterval);
                         }
                     }, 50);
                 }, 2500);
             });
 
-            // Konami Code
+            // --- 交互: Konami Code ---
             const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             let konamiIndex = 0;
             const hintBox = document.getElementById('konami-hint');
             const kbdElements = hintBox.querySelectorAll('kbd');
+
             function resetKonami() {
-                konamiIndex = 0; kbdElements.forEach(el => el.classList.remove('active')); hintBox.classList.remove('typing-active');
+                konamiIndex = 0;
+                kbdElements.forEach(el => el.classList.remove('active'));
+                hintBox.classList.remove('typing-active');
             }
+
             document.addEventListener('keydown', (e) => {
                 if (e.key === konamiCode[konamiIndex]) {
                     if (konamiIndex === 0) hintBox.classList.add('typing-active');
@@ -457,22 +433,22 @@
                     }
                 } else {
                     if (konamiIndex > 0) resetKonami();
-                    if (e.key === konamiCode[0]) { konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active'); }
+                    if (e.key === konamiCode[0]) {
+                        konamiIndex = 1; hintBox.classList.add('typing-active'); kbdElements[0].classList.add('active');
+                    }
                 }
             });
 
-            // 渲染循环
+            // --- 渲染循环 ---
             function loop() {
                 ctx.globalCompositeOperation = 'destination-out';
+                // 拖尾长度随速度变化，防止高速时画面太乱
                 let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.1;
                 ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
                 ctx.fillRect(0, 0, cw, ch);
 
                 ctx.globalCompositeOperation = 'lighter';
                 stars.forEach(s => { s.update(); s.draw(); });
-
-                // 画伴飞无人机
-                drawDrone();
 
                 ctx.globalCompositeOperation = 'source-over';
                 for (let i = particles.length - 1; i >= 0; i--) {
@@ -482,3 +458,7 @@
                 requestAnimFrame(loop);
             }
             loop();
+        });
+    </script>
+</body>
+</html>
