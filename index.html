@@ -2,14 +2,14 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>今予's Homepage - Physics Core</title>
+    <title>今予's Homepage - Galaxy Core</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
 
     <style>
         @font-face {
@@ -19,274 +19,124 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
-            background-size: 400% 400%;
-            animation: aurora 20s ease infinite;
+            background-color: #000;
             font-family: 'sakura', sans-serif;
             user-select: none; -webkit-user-select: none;
-            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none;
         }
 
-        @keyframes aurora {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        canvas#startrack {
+        /* 3D 画布 */
+        #world {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
+            z-index: 1; outline: none;
+            /* 依然保留极光背景作为深层衬底 */
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
         }
 
         /* 摄像头隐藏元素 */
         #input_video {
-            position: fixed; bottom: 20px; left: 20px; width: 120px; height: 90px;
-            border-radius: 8px; border: 1px solid rgba(80, 255, 255, 0.3);
+            position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
+            border-radius: 10px; border: 1px solid rgba(80, 255, 255, 0.3);
             opacity: 0; pointer-events: none; transition: opacity 0.5s;
             z-index: 900; transform: scaleX(-1);
         }
-        #input_video.active { opacity: 0.6; }
+        #input_video.active { opacity: 0.8; }
 
+        /* UI 层 */
         .main {
             position: relative; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
-            z-index: 10; perspective: 1200px;
-            opacity: 0; transition: opacity 1s ease-in; pointer-events: none;
+            z-index: 10; pointer-events: none;
         }
-        .main.loaded { opacity: 1; }
 
         .glass-card {
             position: relative; pointer-events: auto;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(20, 25, 30, 0.4);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px; padding: 50px 80px;
             display: flex; flex-direction: column; align-items: center;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s ease-out;
-            max-width: 90%; box-sizing: border-box;
         }
-
-        .avatar-container {
-            position: relative; width: 130px; height: 130px; margin-bottom: 25px;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: auto;
-        }
-        .avatar-container:hover { transform: scale(1.05); }
-        .avatar-container:active { transform: scale(0.95); }
 
         .avatar-img {
             width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
             border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); z-index: 2;
-            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6);
         }
-        .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
-
-        .orbit-ring {
-            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
-            border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3);
-            animation: spin 20s linear infinite; transition: all 0.5s;
-        }
-        .warp-active .orbit-ring {
-            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
-            animation: spin 0.5s linear infinite;
-        }
-        .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; }
 
         .name {
             font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8);
-            margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px;
-            white-space: nowrap;
+            margin: 15px 0 10px 0; text-align: center; font-weight: bold; letter-spacing: 2px;
         }
 
         .role {
             font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px;
-            text-transform: uppercase; font-family: -apple-system, sans-serif;
+            text-transform: uppercase; font-family: sans-serif;
             margin-bottom: 35px; text-align: center;
-            display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px;
+            display: flex; flex-direction: row; gap: 8px;
         }
         .separator { color: #ff64c8; }
 
-        .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
+        .btns { display: flex; gap: 25px; }
         .btn {
-            position: relative; padding: 12px 36px; border-radius: 50px;
+            padding: 12px 36px; border-radius: 50px;
             background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ffc8f5; text-decoration: none; font-size: 1.2rem; overflow: hidden;
-            transition: all 0.3s; cursor: pointer; white-space: nowrap;
-            display: flex; justify-content: center; align-items: center; pointer-events: auto;
+            color: #ffc8f5; text-decoration: none; font-size: 1.2rem;
+            transition: all 0.3s; cursor: pointer;
         }
         .btn:hover {
             background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5);
             border-color: #ffc8f5; transform: translateY(-3px); color: #fff;
         }
-        .btn::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: skewX(-20deg); animation: shine 4s infinite;
-        }
 
-        /* --- UI & HUD --- */
-        #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
-            color: #50ffff; padding: 12px 24px; border-radius: 8px;
-            font-family: 'Courier New', monospace; font-weight: bold;
-            opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            z-index: 100; box-shadow: 0 0 20px rgba(80, 255, 255, 0.3); pointer-events: none;
+        /* 控制坞 */
+        .control-dock {
+            position: fixed; bottom: 30px; right: 30px; z-index: 100;
+            display: flex; gap: 15px; align-items: center; pointer-events: auto;
         }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .dock-btn {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; font-size: 20px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s; backdrop-filter: blur(5px);
+        }
+        .dock-btn:hover { transform: scale(1.1); border-color: #50ffff; box-shadow: 0 0 15px #50ffff; color: #50ffff; }
+        .dock-btn.active { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; }
 
-        .speed-hud {
-            position: fixed; bottom: 20px; left: 25px; z-index: 50;
-            font-family: 'Courier New', monospace; color: rgba(255,255,255,0.5);
-            font-size: 12px; pointer-events: none;
-            display: flex; flex-direction: column; gap: 5px; opacity: 0; transition: opacity 1s;
-        }
-        .speed-hud.show { opacity: 1; }
-        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
-        .hud-text { font-weight: bold; letter-spacing: 1px; }
-
-        /* 右下角控制区 */
-        .hint-corner {
-            position: fixed; bottom: 20px; right: 25px; z-index: 50;
-            display: flex; align-items: center; justify-content: flex-end; gap: 15px;
-            opacity: 0; transition: opacity 1s;
-        }
-        .hint-corner.show { opacity: 1; }
-
-        .icon-btn {
-            font-size: 24px; color: rgba(255, 255, 255, 0.4);
-            cursor: pointer; transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
-            pointer-events: auto;
-        }
-        .icon-btn:hover { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
-        .icon-btn.active { color: #50ffff; text-shadow: 0 0 15px #50ffff; transform: scale(1.1); }
-
-        .hint-box {
-            position: absolute; right: 80px; bottom: 0;
-            background: rgba(0, 20, 40, 0.85); border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transform: translateX(20px); transition: all 0.3s; white-space: nowrap; pointer-events: none;
-        }
-        #kb-icon:hover + .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
-
-        kbd {
-            background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px;
-            padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
-        }
-        kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
-
-        /* 战术菜单 */
-        #context-menu {
-            position: fixed; top: 0; left: 0; width: 160px; height: 160px;
-            border-radius: 50%; pointer-events: none; z-index: 999;
-            opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; justify-content: center; align-items: center;
-        }
-        #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-        .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
-        .ctx-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite; }
-        .ctx-item {
-            position: absolute; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-            background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4);
-            border-radius: 50%; color: #50ffff; font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
-        .ctx-top { top: 0; left: 50%; transform: translateX(-50%); }
-        .ctx-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .ctx-left { left: 0; top: 50%; transform: translateY(-50%); }
-        .ctx-right { right: 0; top: 50%; transform: translateY(-50%); }
-
-        /* 引导层 */
-        #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999;
-            display: flex; justify-content: center; align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
-        }
-        .terminal-text {
-            color: #50ffff; font-size: 16px; line-height: 1.8; text-shadow: 0 0 5px #50ffff; max-width: 600px; padding: 20px;
-        }
-        .cmd-line { display: block; min-height: 20px; }
-        .highlight { color: #ffc8f5; font-weight: bold; }
-        .blink { animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
-        .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
-        @keyframes tvOff {
-            0% { transform: scale(1); opacity: 1; filter: blur(0); }
-            40% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
-            100% { transform: scaleY(0.005) scaleX(0); opacity: 0; }
-        }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
-        @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
-
-        /* 加载进度条 */
+        /* 加载条 */
         #loading-bar {
             position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%;
             z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff;
         }
 
+        /* 移动端适配 */
         @media (max-width: 700px) {
-            .glass-card { width: 85%; padding: 40px 20px; max-height: 90vh; overflow-y: auto; }
-            .name { font-size: 2rem; }
-            .role { flex-direction: column; gap: 5px; margin-bottom: 25px; }
+            .glass-card { width: 85%; padding: 40px 20px; }
+            .role { flex-direction: column; }
             .separator { display: none; }
-            .btns { flex-direction: column; width: 100%; gap: 15px; }
+            .btns { flex-direction: column; width: 100%; }
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
-            .hint-corner, .speed-hud, #context-menu { display: none; }
-            .terminal-text { font-size: 12px; }
         }
     </style>
 </head>
 <body>
 
-    <canvas id="startrack"></canvas>
-    
+    <div id="world"></div>
     <video id="input_video" autoplay playsinline></video>
     <div id="loading-bar"></div>
 
-    <div id="boot-screen">
-        <div class="terminal-text" id="terminal-content"></div>
-    </div>
-
-    <div id="toast">SYSTEM: Warp Drive Engaged!</div>
-
-    <div class="speed-hud" id="ui-hud">
-        <div class="hud-text" id="speed-text">TIME: 1.0x</div>
-        <div class="speed-bar-container">
-            <div class="speed-bar" id="speed-bar"></div>
-        </div>
-    </div>
-
-    <div id="context-menu">
-        <div class="ctx-ring"></div>
-        <div class="ctx-center"></div>
-        <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
-        <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
-        <div class="ctx-item ctx-bottom" id="ctx-reset">RESET</div>
-        <div class="ctx-item ctx-left" id="ctx-freeze">FREEZE</div>
-    </div>
-
-    <div class="main" id="main-content">
+    <div class="main">
         <div class="glass-card" id="tilt-card">
-            <div class="avatar-container" id="avatar-btn">
-                <div class="orbit-ring" id="orbit-ring"></div>
-                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
+            <div class="avatar-container">
+                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" alt="头像">
             </div>
-            
             <div class="name">嘎嘎sama | 今予</div>
-            
             <div class="role">
                 <span>Zhejiang University</span>
                 <span class="separator">|</span>
                 <span>Mechanical Engineering</span>
             </div>
-
             <div class="btns">
                 <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn">博客</a>
                 <a href="https://github.com/JYbestow" target="_blank" class="btn">Github</a>
@@ -295,387 +145,262 @@
         </div>
     </div>
 
-    <div class="hint-corner" id="ui-hint">
-        <div class="icon-btn" id="hand-btn" title="Enable Hand Control">🖐️</div>
-        
-        <div class="hint-box" id="konami-hint">
-            Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
-        </div>
-        <div class="icon-btn" id="kb-icon">⌨️</div>
+    <div class="control-dock">
+        <div class="dock-btn" id="hand-btn" title="Enable Hand Control">🖐️</div>
+        <div class="dock-btn" id="fs-btn" title="Toggle Fullscreen">⛶</div>
     </div>
 
     <script>
-        console.log("%c Hello ZJU Engineer! \n%c System Ready.", "font-size: 20px; color: #ffc8f5;", "font-size: 14px; color: #50ffff;");
+        // --- 1. Three.js 场景搭建 ---
+        const scene = new THREE.Scene();
+        // 关键：相机位置，Z=100，向下倾斜一点，形成鸟瞰+平视的结合，最显星空浩瀚
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 30, 100);
+        camera.lookAt(0, 0, 0);
 
-        window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 性能优化
+        document.getElementById('world').appendChild(renderer.domElement);
 
-        $(function() {
-            // --- 1. 引导系统 ---
-            const lines = [
-                "INITIALIZING PHYSICS ENGINE...",
-                "LOADING NEURAL NETWORK... [OK]",
-                "CALIBRATING SENSORS... [OK]",
-                "--------------------------------",
-                "AVAILABLE COMMANDS:",
-                "> [SCROLL WHEEL]  : CONTROL TIME",
-                "> [LONG PRESS]    : GENERATE BLACK HOLE",
-                "> [RIGHT CLICK]   : TACTICAL MENU",
-                "> [HAND GESTURE]  : ENABLE NEURAL LINK",
-                "--------------------------------",
-                "SYSTEM ONLINE. CLICK TO START <span class='blink'>_</span>"
-            ];
+        // --- 2. 粒子系统 (星系吸积盘) ---
+        const PARTICLE_COUNT = 12000; // 粒子数量
+        const geometry = new THREE.BufferGeometry();
+        
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const colors = new Float32Array(PARTICLE_COUNT * 3);
+        const sizes = new Float32Array(PARTICLE_COUNT);
+        
+        // 自定义属性：基础半径、角度、速度、相位
+        const baseRadii = new Float32Array(PARTICLE_COUNT);
+        const angles = new Float32Array(PARTICLE_COUNT);
+        const speeds = new Float32Array(PARTICLE_COUNT);
+        const randomOffsets = new Float32Array(PARTICLE_COUNT * 3); // 用于混沌震动
+
+        // 颜色配置：内圈青白 -> 外圈紫蓝
+        const colorInside = new THREE.Color('#a0ffff');
+        const colorOutside = new THREE.Color('#4b0082');
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            // 1. 分布逻辑：吸积盘 (XZ平面)
+            // 使用 Math.pow 让粒子更多聚集在中心，模拟引力
+            const r = Math.pow(Math.random(), 1.5) * 150 + 10; 
+            const theta = Math.random() * Math.PI * 2;
             
-            const termContent = document.getElementById('terminal-content');
-            const bootScreen = document.getElementById('boot-screen');
-            const mainContent = document.getElementById('main-content');
-            const uiHud = document.getElementById('ui-hud');
-            const uiHint = document.getElementById('ui-hint');
+            // 2. 初始位置
+            // y 轴给一点点厚度，形成“盘”而非“圈”
+            const y = (Math.random() - 0.5) * (r * 0.1); 
             
-            let lineIndex = 0; let charIndex = 0;
-            function typeWriter() {
-                if (lineIndex < lines.length) {
-                    const currentLine = lines[lineIndex];
-                    if (lineIndex === lines.length - 1) {
-                        const div = document.createElement('div');
-                        div.className = 'cmd-line highlight';
-                        div.innerHTML = currentLine;
-                        termContent.appendChild(div);
-                        lineIndex++;
-                    } else {
-                        if (charIndex === 0) {
-                            const div = document.createElement('div');
-                            div.className = 'cmd-line';
-                            div.id = 'line-' + lineIndex;
-                            termContent.appendChild(div);
-                        }
-                        const currentDiv = document.getElementById('line-' + lineIndex);
-                        currentDiv.textContent += currentLine.charAt(charIndex);
-                        charIndex++;
-                        if (charIndex < currentLine.length) setTimeout(typeWriter, 15);
-                        else { charIndex = 0; lineIndex++; setTimeout(typeWriter, 80); }
-                    }
+            baseRadii[i] = r;
+            angles[i] = theta;
+            
+            // 3. 开普勒速度：v ∝ 1/sqrt(r)
+            speeds[i] = (1 / Math.sqrt(r)) * 2.5; 
+
+            // 4. 颜色插值
+            const color = colorInside.clone().lerp(colorOutside, r / 150);
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
+
+            // 5. 大小随机
+            sizes[i] = Math.random() * 1.5 + 0.5;
+
+            // 6. 随机偏移向量 (用于混沌模式)
+            randomOffsets[i*3] = (Math.random()-0.5);
+            randomOffsets[i*3+1] = (Math.random()-0.5);
+            randomOffsets[i*3+2] = (Math.random()-0.5);
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        // 材质：使用发光贴图 + AdditiveBlending 实现唯美光晕
+        const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png');
+        
+        // 核心：Shader Material 不太好写，用 PointsMaterial 配合 onBeforeCompile 实现物理变大变亮
+        // 为了简单且效果好，我们直接在 Loop 里控制 position 和 geometry 属性
+        const material = new THREE.PointsMaterial({
+            size: 1,
+            map: sprite,
+            vertexColors: true,
+            blending: THREE.AdditiveBlending, // 关键：光线叠加
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.9,
+            sizeAttenuation: true // 关键：近大远小
+        });
+
+        const starSystem = new THREE.Points(geometry, material);
+        scene.add(starSystem);
+
+        // --- 3. 动画与物理逻辑 ---
+        
+        let handExpansion = 0; // 手势因子：0=常态，1=爆发，-0.5=收缩
+        let targetExpansion = 0;
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // 平滑插值手势数据
+            handExpansion += (targetExpansion - handExpansion) * 0.05;
+
+            const pos = geometry.attributes.position.array;
+            const siz = geometry.attributes.size.array;
+
+            // 基础时间流速 (张开时加速)
+            const globalTimeScale = 1 + Math.max(0, handExpansion) * 3;
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const i3 = i * 3;
+                
+                // 1. 更新角度 (开普勒轨道)
+                angles[i] += speeds[i] * 0.005 * globalTimeScale;
+
+                // 2. 计算物理半径
+                // 膨胀逻辑：半径变大
+                let r = baseRadii[i] * (1 + Math.max(-0.8, handExpansion) * 1.5);
+                
+                // 3. 计算标准轨道位置
+                let x = Math.cos(angles[i]) * r;
+                let z = Math.sin(angles[i]) * r;
+                // Y轴：手张开时，粒子不仅扩散，还上下立体炸开 (Volume Explosion)
+                let y = (Math.random() - 0.5) * (r * 0.1) * (1 + handExpansion * 5); 
+
+                // 4. 临场感逻辑：向屏幕冲刺 (Z轴位移)
+                // 如果手张开，粒子会被拉向相机 (Camera Z=100)
+                if (handExpansion > 0.1) {
+                    z += handExpansion * 40; // 向 Z 正方向偏移
+                    x *= (1 + handExpansion * 0.2); // 视野变宽
                 }
-            }
-            setTimeout(typeWriter, 500);
-            
-            function closeBoot() {
-                bootScreen.classList.add('system-off');
-                mainContent.classList.add('loaded');
-                setTimeout(() => { uiHud.classList.add('show'); uiHint.classList.add('show'); }, 800);
-            }
-            bootScreen.addEventListener('click', closeBoot);
-            bootScreen.addEventListener('touchstart', closeBoot);
 
-            // --- 2. 核心变量 ---
-            const canvas = document.getElementById('startrack');
-            const ctx = canvas.getContext('2d');
-            let cw, ch;
-            function resize() { cw = window.innerWidth; ch = window.innerHeight; canvas.width = cw; canvas.height = ch; }
-            resize(); window.addEventListener('resize', resize);
-
-            let mx = 0, my = 0; let rawMx = 0, rawMy = 0;
-            function updateCoords(x, y) {
-                rawMx = x; rawMy = y;
-                mx = (x - cw / 2) / cw; 
-                my = (y - ch / 2) / ch;
-                const card = document.getElementById('tilt-card');
-                if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
-            }
-            document.addEventListener('mousemove', (e) => updateCoords(e.clientX, e.clientY));
-            document.addEventListener('touchmove', (e) => {
-                if(e.touches.length > 0) updateCoords(e.touches[0].clientX, e.touches[0].clientY);
-            });
-            document.addEventListener('mouseleave', () => {
-                const card = document.getElementById('tilt-card');
-                if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
-            });
-
-            // 物理与控制常量
-            let globalSpeed = 1.0; 
-            let warpSpeed = 1.0;
-            let isWarping = false; 
-            let rainbowMode = false; 
-            let isSucking = false;
-            
-            // 手势控制变量
-            let handExpansion = 0; // -1 (拳头) ~ 1 (张开)
-            let targetHandExpansion = 0; 
-
-            // --- 3. MediaPipe 手势识别逻辑 ---
-            const videoElement = document.getElementById('input_video');
-            const handBtn = document.getElementById('hand-btn');
-            const loadingBar = document.getElementById('loading-bar');
-            let isHandTrackingActive = false;
-            let hands, cameraFeed;
-
-            function onHandResults(results) {
-                loadingBar.style.width = '0%';
-                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                    const landmarks = results.multiHandLandmarks[0];
-                    const thumbTip = landmarks[4];
-                    const pinkyTip = landmarks[20];
-                    const wrist = landmarks[0];
-                    const distOpen = Math.hypot(thumbTip.x - pinkyTip.x, thumbTip.y - pinkyTip.y);
-                    const scaleRef = Math.hypot(wrist.x - landmarks[9].x, wrist.y - landmarks[9].y);
-                    const openness = distOpen / (scaleRef * 1.5);
-
-                    if (openness < 0.3) targetHandExpansion = -0.5; // 握拳收缩
-                    else if (openness > 0.8) targetHandExpansion = 1.5; // 大张爆发
-                    else targetHandExpansion = (openness - 0.3) * 2; 
+                // 5. 混沌与布朗运动 (Chaos)
+                // 当粒子太靠近屏幕 (z > 60) 或 膨胀系数很高时
+                if (handExpansion > 0.6 || z > 50) {
+                    const noiseAmp = handExpansion * 5; // 震动幅度
+                    x += randomOffsets[i3] * noiseAmp;
+                    y += randomOffsets[i3+1] * noiseAmp;
+                    z += randomOffsets[i3+2] * noiseAmp;
+                    
+                    // 亮度/大小爆发 (物理灯光规律)
+                    siz[i] = (Math.random() * 2 + 2) * (1 + handExpansion); 
                 } else {
-                    targetHandExpansion = 0; // 无手时归零
+                    // 常态呼吸
+                    siz[i] = (Math.random() * 0.5 + 1);
+                    // 握拳变暗变小
+                    if (handExpansion < 0) siz[i] *= 0.5;
                 }
+
+                pos[i3] = x;
+                pos[i3+1] = y;
+                pos[i3+2] = z;
             }
 
-            async function startHandTracking() {
+            // 更新缓冲区
+            geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.size.needsUpdate = true;
+
+            // 鼠标视差 (微调相机)
+            camera.position.x += (mouseX * 20 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 20 + 30 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- 4. 交互：鼠标/触摸视差 ---
+        let mouseX = 0, mouseY = 0;
+        function updateParallax(x, y) {
+            mouseX = (x - window.innerWidth / 2) / window.innerWidth;
+            mouseY = (y - window.innerHeight / 2) / window.innerHeight;
+            
+            const card = document.getElementById('tilt-card');
+            if(card) {
+                card.style.transform = `perspective(1000px) rotateX(${-mouseY * 15}deg) rotateY(${mouseX * 15}deg)`;
+            }
+        }
+        document.addEventListener('mousemove', e => updateParallax(e.clientX, e.clientY));
+        
+        // --- 5. MediaPipe 手势识别 ---
+        const videoElement = document.getElementById('input_video');
+        const handBtn = document.getElementById('hand-btn');
+        const loadingBar = document.getElementById('loading-bar');
+        let isHandTrackingActive = false;
+        let hands, cameraFeed;
+
+        function onResults(results) {
+            loadingBar.style.width = '0%';
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const lm = results.multiHandLandmarks[0]; // 关键点
+                
+                // 计算手掌张开程度 (0~1)
+                // 简单算法：计算拇指尖(4)到小指尖(20)的距离，除以手掌基准大小
+                const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
+                const palmSize = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y); // 手腕到中指根
+                const openness = dist / (palmSize * 1.8);
+
+                // 映射逻辑
+                if (openness < 0.25) {
+                    targetExpansion = -0.8; // 握拳：强力收缩
+                } else if (openness > 0.7) {
+                    targetExpansion = 1.2; // 张开：爆发
+                } else {
+                    targetExpansion = 0; // 自然：恢复
+                }
+            } else {
+                targetExpansion = 0;
+            }
+        }
+
+        async function toggleHandControl() {
+            if (!isHandTrackingActive) {
                 loadingBar.style.width = '30%';
                 hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
                 hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
-                hands.onResults(onHandResults);
+                hands.onResults(onResults);
 
                 cameraFeed = new Camera(videoElement, {
                     onFrame: async () => { await hands.send({image: videoElement}); },
                     width: 320, height: 240
                 });
 
-                loadingBar.style.width = '70%';
+                loadingBar.style.width = '60%';
                 await cameraFeed.start();
                 loadingBar.style.width = '100%';
-                setTimeout(() => loadingBar.style.width = '0%', 500);
-                
+                setTimeout(()=>loadingBar.style.width='0%', 500);
+
                 videoElement.classList.add('active');
-                isHandTrackingActive = true;
                 handBtn.classList.add('active');
-                showToast("🧠 NEURAL LINK ESTABLISHED");
-            }
-
-            function stopHandTracking() {
-                if (cameraFeed) { 
-                    const stream = videoElement.srcObject;
-                    if(stream) stream.getTracks().forEach(track => track.stop());
-                    videoElement.srcObject = null;
-                }
+                isHandTrackingActive = true;
+            } else {
+                const stream = videoElement.srcObject;
+                if(stream) stream.getTracks().forEach(t=>t.stop());
+                videoElement.srcObject = null;
                 videoElement.classList.remove('active');
-                isHandTrackingActive = false;
                 handBtn.classList.remove('active');
-                targetHandExpansion = 0;
-                showToast("🔌 NEURAL LINK DISCONNECTED");
+                isHandTrackingActive = false;
+                targetExpansion = 0;
             }
+        }
+        handBtn.addEventListener('click', toggleHandControl);
 
-            handBtn.addEventListener('click', () => {
-                if (!isHandTrackingActive) startHandTracking(); else stopHandTracking();
-            });
-
-            // --- 4. 交互逻辑 (滚轮、右键) ---
-            const speedText = document.getElementById('speed-text');
-            const speedBar = document.getElementById('speed-bar');
-            function updateSpeedUI() {
-                speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
-                let pct = (globalSpeed + 2) / 7 * 100;
-                speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
-                speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
-            }
-            document.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                globalSpeed -= e.deltaY * 0.001; 
-                if(globalSpeed > 5) globalSpeed = 5; if(globalSpeed < -2) globalSpeed = -2;
-                updateSpeedUI();
-            }, { passive: false });
-
-            // 禁用系统右键，使用自定义菜单
-            const ctxMenu = document.getElementById('context-menu');
-            document.addEventListener('contextmenu', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                if(window.innerWidth > 700) {
-                    ctxMenu.style.left = (e.clientX - 80) + 'px';
-                    ctxMenu.style.top = (e.clientY - 80) + 'px';
-                    ctxMenu.classList.add('visible');
-                }
-                return false;
-            }, { passive: false });
-
-            document.addEventListener('click', (e) => {
-                if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
-            });
-            function showToast(msg) {
-                const toast = document.getElementById('toast');
-                toast.innerText = msg; toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2500);
-            }
-            document.getElementById('ctx-warp').addEventListener('click', () => { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); });
-            document.getElementById('ctx-rgb').addEventListener('click', () => { rainbowMode = !rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); ctxMenu.classList.remove('visible'); });
-            document.getElementById('ctx-freeze').addEventListener('click', () => { globalSpeed = 0; updateSpeedUI(); showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); });
-            document.getElementById('ctx-reset').addEventListener('click', () => { globalSpeed=1; rainbowMode=false; updateSpeedUI(); showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); });
-
-            // --- 5. 物理引擎 (含手势映射) ---
-            class Star {
-                constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
-                reset() {
-                    const limit = Math.sqrt(cw*cw + ch*ch) / 2;
-                    this.r = Math.random() * limit + 50;
-                    this.baseR = this.r; // 记录基础半径
-                    this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
-                    this.size = Math.random() * 2 + 0.5;
-                    this.baseSize = this.size;
-                    this.x = cw/2 + Math.cos(this.angle) * this.r;
-                    this.y = ch/2 + Math.sin(this.angle) * this.r;
-                    this.vx = 0; this.vy = 0;
-                    const ratio = (this.r - 50) / (limit);
-                    this.baseColor = {
-                        r: 200 + Math.floor(55 * ratio),
-                        g: 200 - Math.floor(100 * ratio),
-                        b: 255,
-                        a: Math.random() * 0.8 + 0.2
-                    };
-                    this.hue = Math.random() * 360;
-                }
-                update() {
-                    let dt = this.orbitalSpeed * warpSpeed * globalSpeed;
-                    this.angle += dt;
-                    
-                    // --- 手势控制物理 ---
-                    // 膨胀系数：handExpansion > 0 时半径变大，< 0 时变小
-                    let expansionScale = 1 + handExpansion * 1.2; 
-                    let currentR = this.baseR * expansionScale;
-                    
-                    let targetX = cw / 2 + Math.cos(this.angle) * currentR;
-                    let targetY = ch / 2 + Math.sin(this.angle) * currentR;
-
-                    // 混沌效应 (当张开很大且在外围时)
-                    if (handExpansion > 0.8) {
-                        targetX += (Math.random() - 0.5) * 20 * handExpansion;
-                        targetY += (Math.random() - 0.5) * 20 * handExpansion;
-                    }
-
-                    // 弹力拉回
-                    let ax = (targetX - this.x) * (0.02 + handExpansion * 0.01); 
-                    let ay = (targetY - this.y) * (0.02 + handExpansion * 0.01);
-
-                    if (isSucking) {
-                        let dx = rawMx - this.x; let dy = rawMy - this.y;
-                        let distSq = dx*dx + dy*dy;
-                        let force = 2000 / (distSq + 100);
-                        ax += dx * force; ay += dy * force;
-                    }
-
-                    this.vx += ax; this.vy += ay;
-                    this.vx *= 0.92; this.vy *= 0.92;
-                    this.x += this.vx; this.y += this.vy;
-                    this.speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
-
-                    // 亮度与大小变化 (物理直觉：近大远小)
-                    // 膨胀时(靠近屏幕)，大小显著增加，亮度增加
-                    let zoomFactor = Math.max(0.1, 1 + handExpansion * 1.5);
-                    this.size = this.baseSize * zoomFactor;
-                    
-                    if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) this.reset();
-                }
-                draw() {
-                    let dx = this.x - mx * 30;
-                    let dy = this.y - my * 30;
-                    if (isSucking) {
-                        let d2Hole = (dx - rawMx)**2 + (dy - rawMy)**2;
-                        if (d2Hole < 400) { this.reset(); return; }
-                    }
-                    ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
-                    
-                    if (rainbowMode) {
-                        this.hue += 2; ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
-                    } else if (isWarping || this.speed > 3 || handExpansion > 0.5) {
-                        // 高能态变白
-                        ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, 0.5 + handExpansion)})`;
-                    } else {
-                        // 收缩态变暗
-                        let dim = Math.max(0.2, 1 + handExpansion); // handExpansion是负数时变暗
-                        ctx.fillStyle = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${this.baseColor.a * dim})`;
-                    }
-                    ctx.fill();
-                }
-            }
-            const stars = []; for (let i = 0; i < 1200; i++) stars.push(new Star());
-
-            // --- 6. 事件绑定 (兼容移动端) ---
-            function triggerBlackHole(x, y) {
-                isSucking = true;
-                stars.forEach(s => {
-                    let dx = s.x - x; let dy = s.y - y;
-                    let dist = Math.sqrt(dx*dx + dy*dy);
-                    if(dist < 300) { let f = 1000 / dist; s.vx += (dx/dist)*f; s.vy += (dy/dist)*f; }
-                });
-            }
-            document.addEventListener('mousedown', (e) => {
-                if(e.target.closest('#avatar-btn') || e.target.closest('#context-menu') || e.target.closest('.icon-btn')) return;
-                if(e.button === 0) triggerBlackHole(e.clientX, e.clientY);
-            });
-            document.addEventListener('mouseup', () => { isSucking = false; });
-            document.addEventListener('touchstart', (e) => {
-                if(e.target.closest('#avatar-btn') || e.target.closest('.btn') || e.target.closest('.icon-btn')) return;
-                if(e.touches.length === 1) triggerBlackHole(e.touches[0].clientX, e.touches[0].clientY);
-            }, {passive: false});
-            document.addEventListener('touchend', () => { isSucking = false; });
-
-            const avatarBtn = document.getElementById('avatar-btn');
-            const avatarImg = document.getElementById('avatar-img');
-            avatarBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); if(isWarping) return;
-                isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
-                let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
-                showToast("⚡ WARP DRIVE ENGAGED ⚡");
-                setTimeout(() => {
-                    clearInterval(accelInterval);
-                    const decelInterval = setInterval(() => {
-                        if(warpSpeed > 1) { warpSpeed -= 1; } else {
-                            warpSpeed = 1; isWarping = false;
-                            avatarBtn.classList.remove('warp-active'); avatarImg.classList.remove('spin-warp');
-                            clearInterval(decelInterval);
-                        }
-                    }, 50);
-                }, 2500);
-            });
-
-            // Konami Code
-            const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-            let kIndex = 0;
-            const hBox = document.getElementById('konami-hint');
-            const kbds = hBox.querySelectorAll('kbd');
-            function resetK() { kIndex=0; kbds.forEach(el=>el.classList.remove('active')); hBox.classList.remove('typing-active'); }
-            document.addEventListener('keydown', (e) => {
-                if(e.key === konamiCode[kIndex]) {
-                    if(kIndex===0) hBox.classList.add('typing-active');
-                    if(kbds[kIndex]) kbds[kIndex].classList.add('active');
-                    kIndex++;
-                    if(kIndex===konamiCode.length) {
-                        rainbowMode = !rainbowMode;
-                        showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF");
-                        setTimeout(resetK, 800);
-                    }
-                } else { if(kIndex>0) resetK(); if(e.key===konamiCode[0]){kIndex=1; hBox.classList.add('typing-active'); kbds[0].classList.add('active');}}
-            });
-
-            // --- 循环 ---
-            function loop() {
-                // 平滑过渡手势数值
-                handExpansion += (targetHandExpansion - handExpansion) * 0.1;
-
-                ctx.globalCompositeOperation = 'destination-out';
-                let alpha = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 0.05 : 0.15;
-                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-                ctx.fillRect(0, 0, cw, ch);
-
-                ctx.globalCompositeOperation = 'lighter';
-                stars.forEach(s => { s.update(); s.draw(); });
-
-                if(isSucking) {
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2);
-                    ctx.fillStyle = '#000'; ctx.fill();
-                    ctx.strokeStyle = '#50ffff'; ctx.lineWidth=2; ctx.stroke();
-                    ctx.globalCompositeOperation = 'lighter';
-                }
-                requestAnimFrame(loop);
-            }
-            loop();
+        // 全屏
+        document.getElementById('fs-btn').addEventListener('click', () => {
+            if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if(document.exitFullscreen) document.exitFullscreen();
         });
+
+        // 窗口自适应
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
     </script>
 </body>
 </html>
