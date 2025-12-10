@@ -2,7 +2,7 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>今予's Homepage - Neural Link</title>
+    <title>今予's Homepage - Silent Core</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
@@ -33,7 +33,16 @@
 
         canvas#startrack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* --- 📷 摄像头与骨骼绘制容器 (左下角) --- */
+        /* --- 📺 CRT 扫描线与暗角 --- */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 998; pointer-events: none;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.7);
+            opacity: 0.6;
+        }
+
+        /* 摄像头与骨骼绘制容器 */
         .camera-box {
             position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
             border: 1px solid rgba(80, 255, 255, 0.3); border-radius: 8px;
@@ -42,12 +51,11 @@
         }
         .camera-box.active { opacity: 1; }
         
-        /* 视频和绘图层重叠，并做镜像翻转 */
         #input_video, #overlay_canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             transform: scaleX(-1); object-fit: cover;
         }
-        #input_video { opacity: 0.5; } /* 视频半透明，突出骨骼 */
+        #input_video { opacity: 0.5; } 
 
         #loading-bar { position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%; z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff; }
 
@@ -56,7 +64,7 @@
 
         .glass-card {
             position: relative; pointer-events: auto;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(20, 25, 30, 0.6);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px; padding: 50px 80px;
@@ -75,7 +83,7 @@
         .warp-active .orbit-ring { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; animation: spin 0.5s linear infinite; }
         .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; }
 
-        .name { font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8); margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
+        .name { font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8); margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px; white-space: nowrap; min-height: 3rem; }
         .role { font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 35px; text-align: center; display: flex; flex-direction: row; gap: 8px; justify-content: center; }
         .separator { color: #ff64c8; }
         .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
@@ -83,36 +91,15 @@
         .btn:hover { background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5); border-color: #ffc8f5; transform: translateY(-3px); color: #fff; }
         .btn::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: shine 4s infinite; }
 
-        /* --- 🔧 右下角控制区 (布局修复) --- */
-        .hint-corner {
-            position: fixed; bottom: 20px; right: 25px; z-index: 50; 
-            display: flex; align-items: center; justify-content: flex-end; gap: 20px; /* 按钮间距 */
-            opacity: 0; transition: opacity 1s; pointer-events: none;
-        }
+        /* 右下角控制区 */
+        .hint-corner { position: fixed; bottom: 20px; right: 25px; z-index: 999; display: flex; align-items: center; justify-content: flex-end; gap: 20px; opacity: 0; transition: opacity 1s; pointer-events: none; }
         .hint-corner.show { opacity: 1; }
-
-        .icon-btn {
-            font-size: 24px; color: rgba(255, 255, 255, 0.4);
-            cursor: pointer; transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5); pointer-events: auto;
-        }
+        .icon-btn { font-size: 24px; color: rgba(255, 255, 255, 0.4); cursor: pointer; transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); pointer-events: auto; }
         .icon-btn:hover { color: #fff; transform: scale(1.2); text-shadow: 0 0 15px #50ffff; }
         .icon-btn.active { color: #50ffff; text-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
-
-        /* 键盘组：隔离 hover 事件 */
         .kb-group { position: relative; display: flex; align-items: center; pointer-events: auto; }
-        
-        /* 提示框：位于键盘图标的左侧 */
-        .hint-box {
-            position: absolute; right: 100%; top: 50%; transform: translateY(-50%) translateX(10px); margin-right: 15px;
-            background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none;
-        }
-        
-        /* 只有悬停在键盘组时，才显示提示框 */
+        .hint-box { position: absolute; right: 100%; top: 50%; transform: translateY(-50%) translateX(10px); margin-right: 15px; background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3); padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px; opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none; }
         .kb-group:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateY(-50%) translateX(0); }
-
         kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-weight: bold; transition: all 0.1s; }
         kbd.active { background: #50ffff; color: #000; box-shadow: 0 0 10px #50ffff; }
 
@@ -127,7 +114,6 @@
         .blink { animation: blink 1s infinite; } @keyframes blink { 50% { opacity: 0; } }
         @keyframes spin { 100% { transform: rotate(360deg); } } @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } } @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
 
-        /* 右键菜单 */
         #context-menu { position: fixed; top: 0; left: 0; width: 160px; height: 160px; border-radius: 50%; pointer-events: none; z-index: 999; opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s; display: flex; justify-content: center; align-items: center; }
         #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
         .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
@@ -141,7 +127,6 @@
         .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
         .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
 
-        /* 移动端 */
         @media (max-width: 700px) {
             .glass-card { width: 85%; padding: 40px 20px; max-height: 90vh; overflow-y: auto; }
             .name { font-size: 2rem; }
@@ -156,6 +141,7 @@
 </head>
 <body>
 
+    <div class="scanlines"></div>
     <canvas id="startrack"></canvas>
     
     <div class="camera-box" id="camera-box">
@@ -173,7 +159,7 @@
                 <div class="orbit-ring" id="orbit-ring"></div>
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
             </div>
-            <div class="name">嘎嘎sama | 今予</div>
+            <div class="name" id="decrypt-name">嘎嘎sama | 今予</div>
             <div class="role">
                 <span>Zhejiang University</span>
                 <span class="separator">|</span>
@@ -197,7 +183,6 @@
             <div class="hint-box" id="konami-hint">Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></div>
             <div class="icon-btn" id="kb-icon">⌨️</div>
         </div>
-        
         <div class="icon-btn" id="hand-btn" title="Toggle Hand Control">🖐️</div>
     </div>
 
@@ -214,7 +199,65 @@
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 700;
 
+        // --- 文字解码特效 ---
+        class TextScramble {
+            constructor(el) {
+                this.el = el;
+                this.chars = '!<>-_\\/[]{}—=+*^?#________';
+                this.update = this.update.bind(this);
+            }
+            setText(newText) {
+                const oldText = this.el.innerText;
+                const length = Math.max(oldText.length, newText.length);
+                const promise = new Promise((resolve) => this.resolve = resolve);
+                this.queue = [];
+                for (let i = 0; i < length; i++) {
+                    const from = oldText[i] || '';
+                    const to = newText[i] || '';
+                    const start = Math.floor(Math.random() * 40);
+                    const end = start + Math.floor(Math.random() * 40);
+                    this.queue.push({ from, to, start, end });
+                }
+                cancelAnimationFrame(this.frameRequest);
+                this.frame = 0;
+                this.update();
+                return promise;
+            }
+            update() {
+                let output = '';
+                let complete = 0;
+                for (let i = 0, n = this.queue.length; i < n; i++) {
+                    let { from, to, start, end, char } = this.queue[i];
+                    if (this.frame >= end) {
+                        complete++;
+                        output += to;
+                    } else if (this.frame >= start) {
+                        if (!char || Math.random() < 0.28) {
+                            char = this.randomChar();
+                            this.queue[i].char = char;
+                        }
+                        output += `<span class="dud">${char}</span>`;
+                    } else {
+                        output += from;
+                    }
+                }
+                this.el.innerHTML = output;
+                if (complete === this.queue.length) {
+                    this.resolve();
+                } else {
+                    this.frameRequest = requestAnimationFrame(this.update);
+                    this.frame++;
+                }
+            }
+            randomChar() {
+                return this.chars[Math.floor(Math.random() * this.chars.length)];
+            }
+        }
+
         $(function() {
+            const nameEl = document.getElementById('decrypt-name');
+            const scrambler = new TextScramble(nameEl);
+            
             // --- 引导 ---
             let cmdLines = ["> [SCROLL] : TIME DILATION", "> [HOLD]   : SINGULARITY"];
             if (!isMobile) { cmdLines.push("> [RIGHT CLICK] : TACTICAL MENU"); cmdLines.push("> [HAND]   : GOD MODE"); } 
@@ -237,7 +280,11 @@
             function closeBoot() {
                 document.getElementById('boot-screen').classList.add('system-off');
                 document.getElementById('main-content').classList.add('loaded');
-                setTimeout(() => { document.getElementById('ui-hint').classList.add('show'); document.getElementById('ui-hud').classList.add('show'); }, 800);
+                setTimeout(() => { 
+                    document.getElementById('ui-hint').classList.add('show'); 
+                    document.getElementById('ui-hud').classList.add('show');
+                    scrambler.setText('嘎嘎sama | 今予');
+                }, 800);
             }
             document.getElementById('boot-screen').addEventListener('click', closeBoot);
             document.getElementById('boot-screen').addEventListener('touchstart', closeBoot);
@@ -263,37 +310,30 @@
             // 状态
             let globalSpeed=1.0, warpSpeed=1.0, isWarping=false, rainbowMode=false, isSucking=false, handExpansion=0, targetExpansion=0;
 
-            // --- Hand Control (PC Only) ---
+            // --- Hand Control ---
             if (!isMobile) {
                 const videoElement = document.getElementById('input_video');
                 const overlayCanvas = document.getElementById('overlay_canvas');
-                const ctxOverlay = overlayCanvas.getContext('2d'); // 获取绘图层
+                const ctxOverlay = overlayCanvas.getContext('2d');
                 const handBtn = document.getElementById('hand-btn');
                 const cameraBox = document.getElementById('camera-box');
                 const loadingBar = document.getElementById('loading-bar');
                 let isHandActive = false, hands, cameraFeed;
 
-                // 初始化绘图 Canvas 尺寸 (对应 Camera 的 320x240)
-                overlayCanvas.width = 320; 
-                overlayCanvas.height = 240;
+                overlayCanvas.width = 320; overlayCanvas.height = 240;
 
                 window.onHandResults = function(results) {
                     loadingBar.style.width = '0%';
-                    
-                    // --- 骨骼绘制 ---
                     ctxOverlay.save();
                     ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
                     if (results.multiHandLandmarks) {
                         for (const landmarks of results.multiHandLandmarks) {
-                            // 绘制连线 (青色)
                             drawConnectors(ctxOverlay, landmarks, HAND_CONNECTIONS, {color: '#50ffff', lineWidth: 2});
-                            // 绘制节点 (粉色)
                             drawLandmarks(ctxOverlay, landmarks, {color: '#ffc8f5', lineWidth: 1, radius: 2});
                         }
                     }
                     ctxOverlay.restore();
 
-                    // --- 物理控制 ---
                     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                         const lm = results.multiHandLandmarks[0];
                         const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
@@ -317,19 +357,13 @@
                         await cameraFeed.start();
                         loadingBar.style.width = '100%';
                         setTimeout(()=>loadingBar.style.width='0%', 500);
-                        
-                        cameraBox.classList.add('active'); // 显示摄像头框
-                        handBtn.classList.add('active'); 
-                        isHandActive = true;
+                        cameraBox.classList.add('active'); handBtn.classList.add('active'); isHandActive = true;
                         showToast("🖐️ HAND CONTROL ACTIVE");
                     } else {
                         if(videoElement.srcObject) videoElement.srcObject.getTracks().forEach(t=>t.stop());
                         videoElement.srcObject = null;
-                        
-                        cameraBox.classList.remove('active'); // 隐藏摄像头框
-                        handBtn.classList.remove('active'); 
-                        isHandActive = false; targetExpansion = 0;
-                        ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // 清空绘图
+                        cameraBox.classList.remove('active'); handBtn.classList.remove('active'); isHandActive = false; targetExpansion = 0;
+                        ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
                         showToast("🔌 NEURAL LINK OFF");
                     }
                 }
@@ -337,6 +371,31 @@
             }
 
             // --- 物理引擎 ---
+            class ShootingStar {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * cw; this.y = Math.random() * ch;
+                    this.len = Math.random() * 80 + 10; this.speed = Math.random() * 10 + 6;
+                    this.size = Math.random() * 1 + 0.1; this.life = 0; this.waitTime = Math.random() * 100;
+                    this.active = false; this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5;
+                }
+                update() {
+                    if (this.waitTime > 0) { this.waitTime--; return; }
+                    this.active = true; this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed;
+                    this.life++; if (this.x > cw + 100 || this.y > ch + 100) this.reset();
+                }
+                draw() {
+                    if (!this.active) return;
+                    const endX = this.x - Math.cos(this.angle) * this.len;
+                    const endY = this.y - Math.sin(this.angle) * this.len;
+                    const grad = ctx.createLinearGradient(this.x, this.y, endX, endY);
+                    grad.addColorStop(0, "rgba(255, 255, 255, 1)"); grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+                    ctx.strokeStyle = grad; ctx.lineWidth = this.size;
+                    ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(endX, endY); ctx.stroke();
+                }
+            }
+            const meteors = []; for(let i=0; i<2; i++) meteors.push(new ShootingStar());
+
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
@@ -384,9 +443,8 @@
                     let brightness = 1 / (dist * dist);
                     this.size = this.baseSize * (1 / dist);
 
-                    // 颜色逻辑修复：优先判断 Warp Drive
                     if (isWarping) {
-                        this.renderColor = `rgba(100, 255, 255, 1)`; // 强制青色
+                        this.renderColor = `rgba(100, 255, 255, 1)`; 
                     } else if (rainbowMode) {
                         this.hue+=2; this.renderColor = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     } else if (handExpansion > 0.5) {
@@ -460,7 +518,10 @@
                     if(e.key === kCode[kIdx]) {
                         if(kIdx===0) document.getElementById('konami-hint').classList.add('typing-active');
                         document.querySelectorAll('kbd')[kIdx].classList.add('active'); kIdx++;
-                        if(kIdx===kCode.length) { rainbowMode=!rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); setTimeout(()=>{kIdx=0;document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active'));document.getElementById('konami-hint').classList.remove('typing-active')},800); }
+                        if(kIdx===kCode.length) { 
+                            rainbowMode=!rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF");
+                            setTimeout(()=>{kIdx=0;document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active'));document.getElementById('konami-hint').classList.remove('typing-active')},800); 
+                        }
                     } else { if(kIdx>0) { kIdx=0; document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active')); document.getElementById('konami-hint').classList.remove('typing-active'); } }
                 });
             }
@@ -474,6 +535,7 @@
 
                 ctx.globalCompositeOperation = 'lighter';
                 stars.forEach(s => { s.update(); s.draw(); });
+                meteors.forEach(m => { m.update(); m.draw(); });
 
                 if(isSucking) {
                     ctx.globalCompositeOperation = 'source-over';
