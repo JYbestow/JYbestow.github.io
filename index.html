@@ -2,7 +2,7 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>今予's Homepage - Silent Core</title>
+    <title>今予's Homepage - Crystal Clear</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
@@ -33,13 +33,16 @@
 
         canvas#startrack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* --- 📺 CRT 扫描线与暗角 --- */
+        /* --- 📺 CRT 扫描线 (修复：层级下调) --- */
         .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 998; pointer-events: none;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            /* 关键修复：z-index 设为 5，高于 Canvas(1)，但低于 Main(10) */
+            z-index: 5; 
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
             background-size: 100% 4px;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.7);
-            opacity: 0.6;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8); /* 边缘暗角 */
+            opacity: 0.7; /* 稍微增加不透明度，因为现在它在背景层，不会挡住文字 */
         }
 
         /* 摄像头与骨骼绘制容器 */
@@ -62,14 +65,18 @@
         .main { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10; perspective: 1200px; opacity: 0; transition: opacity 1s ease-in; pointer-events: none; }
         .main.loaded { opacity: 1; }
 
+        /* --- 💎 玻璃卡片 (修复：更通透) --- */
         .glass-card {
             position: relative; pointer-events: auto;
-            background: rgba(20, 25, 30, 0.6);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            /* 调亮了背景色基调，减少黑色占比，增加通透感 */
+            background: rgba(30, 35, 45, 0.45);
+            /* 增强模糊效果，提升质感 */
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.2); /* 顶部高光 */
             border-radius: 24px; padding: 50px 80px;
             display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
             transition: transform 0.1s ease-out;
             max-width: 90%; box-sizing: border-box;
         }
@@ -114,6 +121,7 @@
         .blink { animation: blink 1s infinite; } @keyframes blink { 50% { opacity: 0; } }
         @keyframes spin { 100% { transform: rotate(360deg); } } @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } } @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
 
+        /* 右键菜单 */
         #context-menu { position: fixed; top: 0; left: 0; width: 160px; height: 160px; border-radius: 50%; pointer-events: none; z-index: 999; opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s; display: flex; justify-content: center; align-items: center; }
         #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
         .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
@@ -498,6 +506,7 @@
                 setTimeout(()=>{ clearInterval(t); const d = setInterval(()=>{if(warpSpeed>1)warpSpeed-=1;else{warpSpeed=1;isWarping=false;document.getElementById('avatar-btn').classList.remove('warp-active');document.getElementById('avatar-img').classList.remove('spin-warp');clearInterval(d)}},50) }, 2500);
             });
 
+            // 右键菜单 (PC Only)
             const ctxMenu = document.getElementById('context-menu');
             document.addEventListener('contextmenu', e => {
                 e.preventDefault(); e.stopPropagation();
@@ -511,6 +520,7 @@
             document.getElementById('ctx-freeze').onclick = () => { globalSpeed=0; showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); };
             document.getElementById('ctx-reset').onclick = () => { globalSpeed=1; rainbowMode=false; showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); };
 
+            // Konami (PC Only)
             if(!isMobile) {
                 const kCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
                 let kIdx = 0;
