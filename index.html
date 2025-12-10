@@ -153,60 +153,69 @@
     <script>
         // --- 1. Three.js 场景搭建 ---
         const scene = new THREE.Scene();
-        // 关键：相机位置，Z=100，向下倾斜一点，形成鸟瞰+平视的结合，最显星空浩瀚
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 30, 100);
         camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 性能优化
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
         document.getElementById('world').appendChild(renderer.domElement);
 
-        // --- 2. 粒子系统 (星系吸积盘) ---
-        const PARTICLE_COUNT = 12000; // 粒子数量
-        const geometry = new THREE.BufferGeometry();
+        // --- 2. 粒子系统 (内嵌纹理生成，修复不显示问题) ---
         
+        // 动态生成发光圆形纹理，不依赖外部图片
+        function createGhostTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            
+            // 径向渐变
+            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        const PARTICLE_COUNT = 12000;
+        const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(PARTICLE_COUNT * 3);
         const colors = new Float32Array(PARTICLE_COUNT * 3);
         const sizes = new Float32Array(PARTICLE_COUNT);
         
-        // 自定义属性：基础半径、角度、速度、相位
         const baseRadii = new Float32Array(PARTICLE_COUNT);
         const angles = new Float32Array(PARTICLE_COUNT);
         const speeds = new Float32Array(PARTICLE_COUNT);
-        const randomOffsets = new Float32Array(PARTICLE_COUNT * 3); // 用于混沌震动
+        const randomOffsets = new Float32Array(PARTICLE_COUNT * 3);
 
-        // 颜色配置：内圈青白 -> 外圈紫蓝
         const colorInside = new THREE.Color('#a0ffff');
         const colorOutside = new THREE.Color('#4b0082');
 
         for (let i = 0; i < PARTICLE_COUNT; i++) {
-            // 1. 分布逻辑：吸积盘 (XZ平面)
-            // 使用 Math.pow 让粒子更多聚集在中心，模拟引力
             const r = Math.pow(Math.random(), 1.5) * 150 + 10; 
             const theta = Math.random() * Math.PI * 2;
-            
-            // 2. 初始位置
-            // y 轴给一点点厚度，形成“盘”而非“圈”
             const y = (Math.random() - 0.5) * (r * 0.1); 
             
             baseRadii[i] = r;
             angles[i] = theta;
-            
-            // 3. 开普勒速度：v ∝ 1/sqrt(r)
             speeds[i] = (1 / Math.sqrt(r)) * 2.5; 
 
-            // 4. 颜色插值
             const color = colorInside.clone().lerp(colorOutside, r / 150);
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
 
-            // 5. 大小随机
             sizes[i] = Math.random() * 1.5 + 0.5;
 
-            // 6. 随机偏移向量 (用于混沌模式)
             randomOffsets[i*3] = (Math.random()-0.5);
             randomOffsets[i*3+1] = (Math.random()-0.5);
             randomOffsets[i*3+2] = (Math.random()-0.5);
@@ -216,20 +225,15 @@
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-        // 材质：使用发光贴图 + AdditiveBlending 实现唯美光晕
-        const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png');
-        
-        // 核心：Shader Material 不太好写，用 PointsMaterial 配合 onBeforeCompile 实现物理变大变亮
-        // 为了简单且效果好，我们直接在 Loop 里控制 position 和 geometry 属性
         const material = new THREE.PointsMaterial({
-            size: 1,
-            map: sprite,
+            size: 1.5, // 稍微调大一点，确保可见
+            map: createGhostTexture(), // 使用代码生成的纹理
             vertexColors: true,
-            blending: THREE.AdditiveBlending, // 关键：光线叠加
+            blending: THREE.AdditiveBlending,
             depthWrite: false,
             transparent: true,
             opacity: 0.9,
-            sizeAttenuation: true // 关键：近大远小
+            sizeAttenuation: true
         });
 
         const starSystem = new THREE.Points(geometry, material);
@@ -237,7 +241,7 @@
 
         // --- 3. 动画与物理逻辑 ---
         
-        let handExpansion = 0; // 手势因子：0=常态，1=爆发，-0.5=收缩
+        let handExpansion = 0;
         let targetExpansion = 0;
         let time = 0;
 
@@ -245,52 +249,36 @@
             requestAnimationFrame(animate);
             time += 0.01;
 
-            // 平滑插值手势数据
             handExpansion += (targetExpansion - handExpansion) * 0.05;
 
             const pos = geometry.attributes.position.array;
             const siz = geometry.attributes.size.array;
-
-            // 基础时间流速 (张开时加速)
             const globalTimeScale = 1 + Math.max(0, handExpansion) * 3;
 
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const i3 = i * 3;
                 
-                // 1. 更新角度 (开普勒轨道)
                 angles[i] += speeds[i] * 0.005 * globalTimeScale;
 
-                // 2. 计算物理半径
-                // 膨胀逻辑：半径变大
                 let r = baseRadii[i] * (1 + Math.max(-0.8, handExpansion) * 1.5);
                 
-                // 3. 计算标准轨道位置
                 let x = Math.cos(angles[i]) * r;
                 let z = Math.sin(angles[i]) * r;
-                // Y轴：手张开时，粒子不仅扩散，还上下立体炸开 (Volume Explosion)
                 let y = (Math.random() - 0.5) * (r * 0.1) * (1 + handExpansion * 5); 
 
-                // 4. 临场感逻辑：向屏幕冲刺 (Z轴位移)
-                // 如果手张开，粒子会被拉向相机 (Camera Z=100)
                 if (handExpansion > 0.1) {
-                    z += handExpansion * 40; // 向 Z 正方向偏移
-                    x *= (1 + handExpansion * 0.2); // 视野变宽
+                    z += handExpansion * 40; 
+                    x *= (1 + handExpansion * 0.2); 
                 }
 
-                // 5. 混沌与布朗运动 (Chaos)
-                // 当粒子太靠近屏幕 (z > 60) 或 膨胀系数很高时
                 if (handExpansion > 0.6 || z > 50) {
-                    const noiseAmp = handExpansion * 5; // 震动幅度
+                    const noiseAmp = handExpansion * 5;
                     x += randomOffsets[i3] * noiseAmp;
                     y += randomOffsets[i3+1] * noiseAmp;
                     z += randomOffsets[i3+2] * noiseAmp;
-                    
-                    // 亮度/大小爆发 (物理灯光规律)
                     siz[i] = (Math.random() * 2 + 2) * (1 + handExpansion); 
                 } else {
-                    // 常态呼吸
                     siz[i] = (Math.random() * 0.5 + 1);
-                    // 握拳变暗变小
                     if (handExpansion < 0) siz[i] *= 0.5;
                 }
 
@@ -299,11 +287,10 @@
                 pos[i3+2] = z;
             }
 
-            // 更新缓冲区
             geometry.attributes.position.needsUpdate = true;
             geometry.attributes.size.needsUpdate = true;
 
-            // 鼠标视差 (微调相机)
+            // 视差微调
             camera.position.x += (mouseX * 20 - camera.position.x) * 0.05;
             camera.position.y += (-mouseY * 20 + 30 - camera.position.y) * 0.05;
             camera.lookAt(scene.position);
@@ -312,7 +299,7 @@
         }
         animate();
 
-        // --- 4. 交互：鼠标/触摸视差 ---
+        // --- 4. 交互逻辑 ---
         let mouseX = 0, mouseY = 0;
         function updateParallax(x, y) {
             mouseX = (x - window.innerWidth / 2) / window.innerWidth;
@@ -325,7 +312,7 @@
         }
         document.addEventListener('mousemove', e => updateParallax(e.clientX, e.clientY));
         
-        // --- 5. MediaPipe 手势识别 ---
+        // --- 5. 手势控制 ---
         const videoElement = document.getElementById('input_video');
         const handBtn = document.getElementById('hand-btn');
         const loadingBar = document.getElementById('loading-bar');
@@ -335,22 +322,14 @@
         function onResults(results) {
             loadingBar.style.width = '0%';
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const lm = results.multiHandLandmarks[0]; // 关键点
-                
-                // 计算手掌张开程度 (0~1)
-                // 简单算法：计算拇指尖(4)到小指尖(20)的距离，除以手掌基准大小
+                const lm = results.multiHandLandmarks[0]; 
                 const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
-                const palmSize = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y); // 手腕到中指根
+                const palmSize = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y); 
                 const openness = dist / (palmSize * 1.8);
 
-                // 映射逻辑
-                if (openness < 0.25) {
-                    targetExpansion = -0.8; // 握拳：强力收缩
-                } else if (openness > 0.7) {
-                    targetExpansion = 1.2; // 张开：爆发
-                } else {
-                    targetExpansion = 0; // 自然：恢复
-                }
+                if (openness < 0.25) targetExpansion = -0.8; 
+                else if (openness > 0.7) targetExpansion = 1.2; 
+                else targetExpansion = 0; 
             } else {
                 targetExpansion = 0;
             }
@@ -377,9 +356,11 @@
                 handBtn.classList.add('active');
                 isHandTrackingActive = true;
             } else {
-                const stream = videoElement.srcObject;
-                if(stream) stream.getTracks().forEach(t=>t.stop());
-                videoElement.srcObject = null;
+                if(videoElement.srcObject) {
+                    const stream = videoElement.srcObject;
+                    stream.getTracks().forEach(t=>t.stop());
+                    videoElement.srcObject = null;
+                }
                 videoElement.classList.remove('active');
                 handBtn.classList.remove('active');
                 isHandTrackingActive = false;
@@ -388,13 +369,11 @@
         }
         handBtn.addEventListener('click', toggleHandControl);
 
-        // 全屏
         document.getElementById('fs-btn').addEventListener('click', () => {
             if(!document.fullscreenElement) document.documentElement.requestFullscreen();
             else if(document.exitFullscreen) document.exitFullscreen();
         });
 
-        // 窗口自适应
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
