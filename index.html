@@ -2,7 +2,7 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>今予's Homepage - Neural Physics</title>
+    <title>今予's Homepage - Zero Latency</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
@@ -32,28 +32,18 @@
 
         canvas#startrack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* 摄像头预览窗 (左下角) */
         #input_video {
             position: fixed; bottom: 20px; left: 20px; width: 120px; height: 90px;
             border-radius: 8px; border: 1px solid rgba(80, 255, 255, 0.3);
             opacity: 0; pointer-events: none; transition: opacity 0.5s;
-            z-index: 900; transform: scaleX(-1); /* 镜像翻转 */
+            z-index: 900; transform: scaleX(-1);
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
         #input_video.active { opacity: 0.8; }
 
-        /* 加载进度条 */
-        #loading-bar {
-            position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%;
-            z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff;
-        }
+        #loading-bar { position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%; z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff; }
 
-        .main {
-            position: relative; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 10; perspective: 1200px;
-            opacity: 0; transition: opacity 1s ease-in; pointer-events: none;
-        }
+        .main { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10; perspective: 1200px; opacity: 0; transition: opacity 1s ease-in; pointer-events: none; }
         .main.loaded { opacity: 1; }
 
         .glass-card {
@@ -68,102 +58,57 @@
             max-width: 90%; box-sizing: border-box;
         }
 
-        .avatar-container {
-            position: relative; width: 130px; height: 130px; margin-bottom: 25px;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: auto;
-        }
+        .avatar-container { position: relative; width: 130px; height: 130px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.3s; pointer-events: auto; }
         .avatar-container:hover { transform: scale(1.05); }
         .avatar-container:active { transform: scale(0.95); }
-
-        .avatar-img {
-            width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); z-index: 2;
-            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
+        .avatar-img { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255, 255, 255, 0.9); box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); z-index: 2; transition: transform 1s; }
         .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
-
-        .orbit-ring {
-            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
-            border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3);
-            animation: spin 20s linear infinite; transition: all 0.5s;
-        }
+        .orbit-ring { position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px; border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3); animation: spin 20s linear infinite; transition: all 0.5s; }
         .warp-active .orbit-ring { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; animation: spin 0.5s linear infinite; }
         .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; }
 
-        .name {
-            font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8);
-            margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px; white-space: nowrap;
-        }
-
-        .role {
-            font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px;
-            text-transform: uppercase; font-family: -apple-system, sans-serif;
-            margin-bottom: 35px; text-align: center;
-            display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px;
-        }
+        .name { font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8); margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
+        .role { font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 35px; text-align: center; display: flex; flex-direction: row; gap: 8px; justify-content: center; }
         .separator { color: #ff64c8; }
-
         .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
-        .btn {
-            position: relative; padding: 12px 36px; border-radius: 50px;
-            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ffc8f5; text-decoration: none; font-size: 1.2rem; overflow: hidden;
-            transition: all 0.3s; cursor: pointer; white-space: nowrap;
-            display: flex; justify-content: center; align-items: center; pointer-events: auto;
-        }
-        .btn:hover {
-            background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5);
-            border-color: #ffc8f5; transform: translateY(-3px); color: #fff;
-        }
-        .btn::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: skewX(-20deg); animation: shine 4s infinite;
-        }
+        .btn { position: relative; padding: 12px 36px; border-radius: 50px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffc8f5; text-decoration: none; font-size: 1.2rem; overflow: hidden; transition: all 0.3s; cursor: pointer; white-space: nowrap; display: flex; justify-content: center; align-items: center; pointer-events: auto; }
+        .btn:hover { background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5); border-color: #ffc8f5; transform: translateY(-3px); color: #fff; }
+        .btn::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: shine 4s infinite; }
 
-        /* 右下角控制区 */
-        .hint-corner {
-            position: fixed; bottom: 20px; right: 25px; z-index: 50; display: flex; align-items: center; justify-content: flex-end; gap: 15px;
-            opacity: 0; transition: opacity 1s; pointer-events: none; /* 容器穿透 */
-        }
+        .hint-corner { position: fixed; bottom: 20px; right: 25px; z-index: 50; display: flex; align-items: center; justify-content: flex-end; gap: 15px; opacity: 0; transition: opacity 1s; pointer-events: none; }
         .hint-corner.show { opacity: 1; }
-
-        /* 功能按钮 */
-        .icon-btn {
-            font-size: 24px; color: rgba(255, 255, 255, 0.4);
-            cursor: pointer; transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5); pointer-events: auto; /* 按钮可点 */
-        }
+        .icon-btn { font-size: 24px; color: rgba(255, 255, 255, 0.4); cursor: pointer; transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); pointer-events: auto; }
         .icon-btn:hover { color: #fff; transform: scale(1.2); text-shadow: 0 0 15px #50ffff; }
         .icon-btn.active { color: #50ffff; text-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
-
-        .hint-box {
-            position: absolute; right: 90px; bottom: 5px;
-            background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transform: translateX(20px); transition: all 0.3s; white-space: nowrap; pointer-events: none;
-        }
+        .hint-box { position: absolute; right: 90px; bottom: 5px; background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3); padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px; opacity: 0; transform: translateX(20px); transition: all 0.3s; white-space: nowrap; pointer-events: none; }
         .icon-btn:hover + .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
-
-        kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 2px 4px; font-weight: bold; }
+        kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-weight: bold; transition: all 0.1s; }
         kbd.active { background: #50ffff; color: #000; box-shadow: 0 0 10px #50ffff; }
 
-        /* 战术菜单 & 引导层 & Toast (保持原样) */
-        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #50ffff; color: #50ffff; padding: 10px 20px; border-radius: 5px; opacity: 0; transition: opacity 0.5s; pointer-events: none; font-family: monospace; }
+        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #50ffff; color: #50ffff; padding: 10px 20px; border-radius: 5px; opacity: 0; transition: opacity 0.5s; pointer-events: none; font-family: monospace; z-index: 100; }
         #toast.show { opacity: 1; }
-        
         #boot-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; font-family: 'Courier New', monospace; cursor: pointer; }
         .terminal-text { color: #50ffff; font-size: 14px; line-height: 1.6; text-shadow: 0 0 5px #50ffff; padding: 20px; max-width: 600px; }
         .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
         @keyframes tvOff { 0% { transform: scale(1); opacity: 1; } 100% { transform: scaleY(0.005) scaleX(0); opacity: 0; } }
         .highlight { color: #ffc8f5; font-weight: bold; }
         .blink { animation: blink 1s infinite; } @keyframes blink { 50% { opacity: 0; } }
-        @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } } @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } } @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
 
-        /* 移动端适配 */
+        /* 右键菜单 */
+        #context-menu { position: fixed; top: 0; left: 0; width: 160px; height: 160px; border-radius: 50%; pointer-events: none; z-index: 999; opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s; display: flex; justify-content: center; align-items: center; }
+        #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
+        .ctx-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite; }
+        .ctx-item { position: absolute; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4); border-radius: 50%; color: #50ffff; font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
+        .ctx-top { top: 0; } .ctx-bottom { bottom: 0; } .ctx-left { left: 0; } .ctx-right { right: 0; }
+
+        .speed-hud { position: fixed; bottom: 20px; left: 25px; z-index: 50; font-family: 'Courier New', monospace; color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none; display: flex; flex-direction: column; gap: 5px; opacity: 0; transition: opacity 1s; }
+        .speed-hud.show { opacity: 1; }
+        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
+
         @media (max-width: 700px) {
             .glass-card { width: 85%; padding: 40px 20px; max-height: 90vh; overflow-y: auto; }
             .name { font-size: 2rem; }
@@ -171,28 +116,24 @@
             .separator { display: none; }
             .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; text-align: center; }
-            .hint-corner { right: 15px; bottom: 15px; } /* 移动端保留手势开关 */
-            #kb-icon, #konami-hint { display: none; } /* 移动端隐藏键盘提示 */
+            .hint-corner { right: 15px; bottom: 15px; }
+            #kb-icon, #konami-hint { display: none; }
+            .speed-hud, #context-menu { display: none; }
         }
     </style>
 </head>
 <body>
 
     <canvas id="startrack"></canvas>
-    
     <video id="input_video" autoplay playsinline></video>
     <div id="loading-bar"></div>
-
-    <div id="boot-screen">
-        <div class="terminal-text" id="terminal-content"></div>
-    </div>
-
+    <div id="boot-screen"><div class="terminal-text" id="terminal-content"></div></div>
     <div id="toast">SYSTEM: Warp Drive Engaged!</div>
 
     <div class="main" id="main-content">
         <div class="glass-card" id="tilt-card">
             <div class="avatar-container" id="avatar-btn">
-                <div class="orbit-ring"></div>
+                <div class="orbit-ring" id="orbit-ring"></div>
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
             </div>
             <div class="name">嘎嘎sama | 今予</div>
@@ -209,338 +150,248 @@
         </div>
     </div>
 
+    <div class="speed-hud" id="ui-hud">
+        <div class="hud-text" id="speed-text">TIME: 1.0x</div>
+        <div class="speed-bar-container"><div class="speed-bar" id="speed-bar"></div></div>
+    </div>
+
     <div class="hint-corner" id="ui-hint">
         <div class="icon-btn" id="hand-btn" title="Toggle Neural Link (Hand Control)">🖐️</div>
-        
-        <div class="hint-box" id="konami-hint">
-            Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
-        </div>
+        <div class="hint-box" id="konami-hint">Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></div>
         <div class="icon-btn" id="kb-icon">⌨️</div>
     </div>
 
-    <script>
-        console.log("%c Hello ZJU Engineer! \n%c System Ready.", "font-size: 20px; color: #ffc8f5;", "font-size: 14px; color: #50ffff;");
+    <div id="context-menu">
+        <div class="ctx-ring"></div><div class="ctx-center"></div>
+        <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
+        <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
+        <div class="ctx-item ctx-bottom" id="ctx-reset">RESET</div>
+        <div class="ctx-item ctx-left" id="ctx-freeze">FREEZE</div>
+    </div>
 
+    <script>
+        console.log("%c Hello ZJU Engineer!", "font-size: 20px; color: #50ffff;");
         window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
         $(function() {
-            // --- 引导逻辑 ---
-            const lines = [
-                "INITIALIZING GRAVITY WELL...",
-                "LOADING NEURAL NETWORK... [OK]",
-                "--------------------------------",
-                "COMMANDS:",
-                "> [SCROLL] : TIME DILATION",
-                "> [HOLD]   : SINGULARITY",
-                "> [HAND]   : GOD MODE (EXPAND/COLLAPSE)",
-                "--------------------------------",
-                "CLICK TO START <span class='blink'>_</span>"
-            ];
-            
-            const termContent = document.getElementById('terminal-content');
-            const bootScreen = document.getElementById('boot-screen');
-            const mainContent = document.getElementById('main-content');
-            const uiHint = document.getElementById('ui-hint');
-            
-            let lineIndex = 0; let charIndex = 0;
-            function typeWriter() {
-                if (lineIndex < lines.length) {
-                    const currentLine = lines[lineIndex];
-                    if (lineIndex === lines.length - 1) {
-                        termContent.innerHTML += `<div class='cmd-line highlight'>${currentLine}</div>`;
-                        lineIndex++;
-                    } else {
-                        if (charIndex === 0) termContent.innerHTML += `<div class='cmd-line' id='line-${lineIndex}'></div>`;
-                        const currentDiv = document.getElementById('line-' + lineIndex);
-                        currentDiv.textContent += currentLine.charAt(charIndex);
-                        charIndex++;
-                        if (charIndex < currentLine.length) setTimeout(typeWriter, 15);
-                        else { charIndex = 0; lineIndex++; setTimeout(typeWriter, 50); }
+            // --- 引导 ---
+            const lines = ["INITIALIZING PHYSICS ENGINE...", "LOADING NEURAL NETWORK... [OK]", "--------------------------------", "COMMANDS:", "> [SCROLL] : TIME DILATION", "> [HOLD]   : SINGULARITY", "> [HAND]   : GOD MODE", "--------------------------------", "CLICK TO START <span class='blink'>_</span>"];
+            const term = document.getElementById('terminal-content');
+            let lIdx = 0, cIdx = 0;
+            function type() {
+                if(lIdx < lines.length) {
+                    if(lIdx === lines.length - 1) { term.innerHTML += `<div class='cmd-line highlight'>${lines[lIdx]}</div>`; lIdx++; } 
+                    else {
+                        if(cIdx===0) term.innerHTML += `<div class='cmd-line' id='l-${lIdx}'></div>`;
+                        document.getElementById('l-'+lIdx).textContent += lines[lIdx].charAt(cIdx); cIdx++;
+                        if(cIdx < lines[lIdx].length) setTimeout(type, 15); else { cIdx=0; lIdx++; setTimeout(type, 50); }
                     }
                 }
             }
-            setTimeout(typeWriter, 500);
+            setTimeout(type, 500);
             
             function closeBoot() {
-                bootScreen.classList.add('system-off');
-                mainContent.classList.add('loaded');
-                setTimeout(() => uiHint.classList.add('show'), 800);
+                document.getElementById('boot-screen').classList.add('system-off');
+                document.getElementById('main-content').classList.add('loaded');
+                setTimeout(() => { document.getElementById('ui-hint').classList.add('show'); document.getElementById('ui-hud').classList.add('show'); }, 800);
             }
-            bootScreen.addEventListener('click', closeBoot);
-            bootScreen.addEventListener('touchstart', closeBoot);
+            document.getElementById('boot-screen').addEventListener('click', closeBoot);
+            document.getElementById('boot-screen').addEventListener('touchstart', closeBoot);
 
-            // --- 核心画布 ---
+            // --- Canvas Core (优化版) ---
             const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
             let cw, ch;
-            function resize() { cw = window.innerWidth; ch = window.innerHeight; canvas.width = cw; canvas.height = ch; }
+            // 优化：限制 DPR，防止 3x/4x 屏幕卡顿
+            function resize() { 
+                cw = window.innerWidth; ch = window.innerHeight; 
+                const dpr = Math.min(window.devicePixelRatio, 2); 
+                canvas.width = cw * dpr; canvas.height = ch * dpr;
+                ctx.scale(dpr, dpr);
+            }
             resize(); window.addEventListener('resize', resize);
 
-            // 坐标
-            let mx = 0, my = 0; let rawMx = 0, rawMy = 0;
-            function updateCoords(x, y) {
-                rawMx = x; rawMy = y;
-                mx = (x - cw / 2) / cw; my = (y - ch / 2) / ch;
-                const card = document.getElementById('tilt-card');
-                if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
-            }
-            document.addEventListener('mousemove', e => updateCoords(e.clientX, e.clientY));
-            document.addEventListener('touchmove', e => { if(e.touches.length) updateCoords(e.touches[0].clientX, e.touches[0].clientY); });
+            let mx = 0, my = 0, rawMx = 0, rawMy = 0;
+            function updateCoords(x, y) { rawMx = x; rawMy = y; mx = (x - cw/2)/cw; my = (y - ch/2)/ch; 
+                const c = document.getElementById('tilt-card'); if(c) c.style.transform = `perspective(1000px) rotateX(${-my*15}deg) rotateY(${mx*15}deg)`; }
+            document.addEventListener('mousemove', e=>updateCoords(e.clientX, e.clientY));
+            document.addEventListener('touchmove', e=>{if(e.touches.length) updateCoords(e.touches[0].clientX, e.touches[0].clientY);});
 
-            // 状态变量
-            let globalSpeed = 1.0; 
-            let warpSpeed = 1.0;
-            let isWarping = false; 
-            let rainbowMode = false; 
-            let isSucking = false;
-            
-            // --- 手势控制变量 ---
-            let handExpansion = 0; // -1 (拳) ~ 1 (张)
-            let targetExpansion = 0;
+            // 状态
+            let globalSpeed=1.0, warpSpeed=1.0, isWarping=false, rainbowMode=false, isSucking=false, handExpansion=0, targetExpansion=0;
 
-            // --- MediaPipe 手势识别 ---
+            // --- Hand Control ---
             const videoElement = document.getElementById('input_video');
             const handBtn = document.getElementById('hand-btn');
             const loadingBar = document.getElementById('loading-bar');
-            let isHandTrackingActive = false;
-            let hands, cameraFeed;
+            let isHandActive = false, hands, cameraFeed;
 
             function onHandResults(results) {
                 loadingBar.style.width = '0%';
                 if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                     const lm = results.multiHandLandmarks[0];
-                    // 计算张开度: 拇指(4)到小指(20)距离 / 手掌基准(0-9)
                     const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
-                    const palmSize = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
-                    const openness = dist / (palmSize * 1.6); // 1.6是经验系数
-
-                    if (openness < 0.3) targetExpansion = -0.8; // 握拳收缩
-                    else if (openness > 0.85) targetExpansion = 1.2; // 大张爆发
+                    const palm = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
+                    const openness = dist / (palm * 1.6);
+                    if (openness < 0.3) targetExpansion = -0.8;
+                    else if (openness > 0.85) targetExpansion = 1.2;
                     else targetExpansion = (openness - 0.3) * 1.5; 
-                } else {
-                    targetExpansion = 0;
-                }
+                } else targetExpansion = 0;
             }
 
-            async function toggleHandControl() {
-                if (!isHandTrackingActive) {
-                    showToast("🧠 INITIALIZING NEURAL LINK...");
+            async function toggleHand() {
+                if (!isHandActive) {
+                    showToast("🧠 NEURAL LINK INITIALIZING...");
                     loadingBar.style.width = '30%';
                     hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-                    hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5}); // 降低复杂度提升性能
+                    hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5}); // 性能优化
                     hands.onResults(onHandResults);
-
-                    cameraFeed = new Camera(videoElement, {
-                        onFrame: async () => { await hands.send({image: videoElement}); },
-                        width: 320, height: 240
-                    });
-
+                    cameraFeed = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 320, height: 240 });
                     loadingBar.style.width = '60%';
                     await cameraFeed.start();
                     loadingBar.style.width = '100%';
                     setTimeout(()=>loadingBar.style.width='0%', 500);
-
-                    videoElement.classList.add('active');
-                    handBtn.classList.add('active');
-                    isHandTrackingActive = true;
+                    videoElement.classList.add('active'); handBtn.classList.add('active'); isHandActive = true;
                     showToast("🖐️ HAND CONTROL ACTIVE");
                 } else {
                     if(videoElement.srcObject) videoElement.srcObject.getTracks().forEach(t=>t.stop());
                     videoElement.srcObject = null;
-                    videoElement.classList.remove('active');
-                    handBtn.classList.remove('active');
-                    isHandTrackingActive = false;
-                    targetExpansion = 0;
+                    videoElement.classList.remove('active'); handBtn.classList.remove('active'); isHandActive = false; targetExpansion = 0;
                     showToast("🔌 NEURAL LINK OFF");
                 }
             }
-            handBtn.addEventListener('click', toggleHandControl);
+            handBtn.addEventListener('click', toggleHand);
 
-            // --- 物理引擎 ---
+            // --- 物理引擎 (粒子) ---
             class Star {
                 constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
                 reset() {
-                    const limit = Math.sqrt(cw*cw + ch*ch) / 2; // 覆盖全屏对角线
-                    this.r = Math.random() * limit + 50;
-                    this.baseR = this.r; // 记忆原始半径
+                    const limit = Math.sqrt(cw*cw + ch*ch) / 2;
+                    this.r = Math.random() * limit + 50; this.baseR = this.r;
                     this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
-                    this.baseSize = Math.random() * 2 + 0.5;
-                    this.size = this.baseSize;
+                    this.baseSize = Math.random() * 2 + 0.5; this.size = this.baseSize;
                     this.x = cw/2 + Math.cos(this.angle) * this.r;
                     this.y = ch/2 + Math.sin(this.angle) * this.r;
                     this.vx = 0; this.vy = 0;
                     const ratio = (this.r - 50) / limit;
-                    this.baseColor = {
-                        r: 200 + Math.floor(55 * ratio),
-                        g: 200 - Math.floor(100 * ratio),
-                        b: 255,
-                        a: Math.random() * 0.8 + 0.2
-                    };
+                    this.baseColor = { r: 200+Math.floor(55*ratio), g: 200-Math.floor(100*ratio), b: 255, a: Math.random()*0.8+0.2 };
                     this.hue = Math.random() * 360;
                 }
                 update() {
-                    let dt = this.orbitalSpeed * warpSpeed * globalSpeed;
-                    this.angle += dt;
-
-                    // --- 物理核心：手势物理场 ---
-                    // 1. 膨胀/收缩场
-                    // 当手张开(expansion > 0)，目标半径变大；握拳(expansion < 0)，目标半径变小
-                    let expansionFactor = 1 + handExpansion * 1.5; 
+                    this.angle += this.orbitalSpeed * warpSpeed * globalSpeed;
+                    
+                    let expansionFactor = 1 + handExpansion * 1.5;
                     let targetR = this.baseR * expansionFactor;
-                    
-                    // 2. 模拟 3D 深度 (Z轴) 对 2D 坐标的影响
-                    // 张开手 = 靠近屏幕 = 视野范围变大 = 坐标系放大
-                    // 但为了保持轨道感，我们主要通过半径控制
-                    
-                    let targetX = cw / 2 + Math.cos(this.angle) * targetR;
-                    let targetY = ch / 2 + Math.sin(this.angle) * targetR;
+                    let tx = cw/2 + Math.cos(this.angle) * targetR;
+                    let ty = ch/2 + Math.sin(this.angle) * targetR;
 
-                    // 3. 混沌效应 (Roche Limit Chaos)
-                    // 当手张开很大 (>0.8)，粒子极度靠近屏幕，产生布朗运动
+                    // 混沌抖动 (替换掉 shadowBlur)
                     if (handExpansion > 0.8) {
-                        const jitter = handExpansion * 8; // 抖动幅度
-                        targetX += (Math.random() - 0.5) * jitter;
-                        targetY += (Math.random() - 0.5) * jitter;
+                        const jitter = handExpansion * 8;
+                        tx += (Math.random() - 0.5) * jitter;
+                        ty += (Math.random() - 0.5) * jitter;
                     }
 
-                    // 4. 弹性拉力 (Spring Force)
-                    // 将粒子拉向计算出的目标位置
-                    let ax = (targetX - this.x) * (0.05 + Math.abs(handExpansion)*0.02); // 手势越大，反应越快
-                    let ay = (targetY - this.y) * (0.05 + Math.abs(handExpansion)*0.02);
-
-                    // 5. 黑洞长按逻辑 (叠加)
+                    // 弹力与引力
+                    let ax = (tx - this.x) * (0.05 + Math.abs(handExpansion)*0.02);
+                    let ay = (ty - this.y) * (0.05 + Math.abs(handExpansion)*0.02);
+                    
                     if (isSucking) {
-                        let dx = rawMx - this.x; let dy = rawMy - this.y;
+                        let dx = rawMx - this.x, dy = rawMy - this.y;
                         let distSq = dx*dx + dy*dy;
                         let force = 2000 / (distSq + 100);
                         ax += dx * force; ay += dy * force;
                     }
 
                     this.vx += ax; this.vy += ay;
-                    this.vx *= 0.90; this.vy *= 0.90; // 阻力
+                    this.vx *= 0.9; this.vy *= 0.9;
                     this.x += this.vx; this.y += this.vy;
 
-                    // 6. 光度物理 (Inverse Square Law Simulation)
-                    // 假设 handExpansion = 0 是基准距离 d=1
-                    // handExpansion = 1 是超近距离 d=0.2 (亮度爆炸)
-                    // handExpansion = -1 是远距离 d=2 (亮度衰减)
-                    
-                    // 模拟距离系数 (越小越近)
-                    let distance = 1 - handExpansion * 0.7; 
-                    if (distance < 0.1) distance = 0.1; // 防止除以0
+                    // 光效计算
+                    let dist = 1 - handExpansion * 0.7; 
+                    if(dist < 0.1) dist = 0.1;
+                    let brightness = 1 / (dist * dist);
+                    this.size = this.baseSize * (1 / dist);
 
-                    // 亮度 I ∝ 1/d^2
-                    let brightness = 1 / (distance * distance);
-                    
-                    // 大小也随距离变化
-                    this.size = this.baseSize * (1 / distance);
-
-                    // 颜色处理
                     if (handExpansion > 0.5) {
-                        // 极近距离：过曝变白
                         this.renderColor = `rgba(255, 255, 255, ${Math.min(1, brightness * 0.5)})`;
                     } else {
-                        // 正常/远距离：原有颜色，调整透明度
                         let alpha = this.baseColor.a * Math.min(1, brightness);
                         this.renderColor = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${alpha})`;
                     }
 
-                    // 边界检查
-                    if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) this.reset();
+                    if (this.x < -cw || this.x > cw*2 || this.y < -ch || this.y > ch*2 || isNaN(this.x)) this.reset();
                 }
                 draw() {
-                    let dx = this.x - mx * 30; // 视差
-                    let dy = this.y - my * 30;
-                    
+                    let dx = this.x - mx * 30; let dy = this.y - my * 30;
                     if (isSucking) {
                         let d2Hole = (dx - rawMx)**2 + (dy - rawMy)**2;
                         if (d2Hole < 400) { this.reset(); return; }
                     }
-
                     ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
+                    if (rainbowMode) { this.hue+=2; ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`; }
+                    else ctx.fillStyle = this.renderColor;
                     
-                    if (rainbowMode) {
-                        this.hue += 2; ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
-                    } else {
-                        ctx.fillStyle = this.renderColor;
-                    }
-                    
-                    // 混沌状态下的光晕
-                    if (handExpansion > 0.8) {
-                        ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
-                    } else {
-                        ctx.shadowBlur = 0;
-                    }
-                    
+                    // 性能优化：不再使用 shadowBlur，靠 lighter 叠加发光
                     ctx.fill();
-                    ctx.shadowBlur = 0; // 重置
                 }
             }
             const stars = []; for (let i = 0; i < 1200; i++) stars.push(new Star());
 
-            // --- 辅助功能 (鼠标/键盘) ---
+            // --- 辅助 ---
             function showToast(msg) {
-                const toast = document.getElementById('toast');
-                toast.innerText = msg; toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2500);
+                const t = document.getElementById('toast');
+                t.innerText = msg; t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), 2500);
             }
-            document.addEventListener('wheel', e => { globalSpeed -= e.deltaY * 0.001; });
-            document.addEventListener('mousedown', e => { 
-                if(e.target.closest('.icon-btn') || e.target.closest('.avatar-container')) return; 
-                isSucking = true; 
-            });
-            document.addEventListener('mouseup', () => isSucking = false);
-            document.addEventListener('touchstart', e => { 
-                if(!e.target.closest('.icon-btn')) isSucking = true; 
-            });
-            document.addEventListener('touchend', () => isSucking = false);
+            
+            // 鼠标/滚轮/右键
+            document.addEventListener('wheel', e => { globalSpeed -= e.deltaY * 0.001; if(globalSpeed>5)globalSpeed=5; if(globalSpeed<-2)globalSpeed=-2; 
+                document.getElementById('speed-text').innerText=`TIME: ${globalSpeed.toFixed(2)}x`;
+                document.getElementById('speed-bar').style.width = `${Math.max(0,Math.min(100, (globalSpeed+2)/7*100))}%`;
+            }, {passive:false});
+            
+            document.addEventListener('mousedown', e => { if(e.target.closest('.icon-btn')||e.target.closest('#context-menu')||e.target.closest('#avatar-btn'))return; if(e.button===0) isSucking=true; });
+            document.addEventListener('mouseup', () => isSucking=false);
+            document.addEventListener('touchstart', e => { if(e.target.closest('.icon-btn')||e.target.closest('.btn')||e.target.closest('#avatar-btn'))return; if(e.touches.length===1) isSucking=true; }, {passive:false});
+            document.addEventListener('touchend', () => isSucking=false);
 
-            const avatarBtn = document.getElementById('avatar-btn');
-            const avatarImg = document.getElementById('avatar-img');
-            avatarBtn.addEventListener('click', (e) => {
+            document.getElementById('avatar-btn').addEventListener('click', e => {
                 e.stopPropagation(); if(isWarping) return;
-                isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
-                let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
-                showToast("⚡ WARP DRIVE ENGAGED ⚡");
-                setTimeout(() => {
-                    clearInterval(accelInterval);
-                    const decelInterval = setInterval(() => {
-                        if(warpSpeed > 1) { warpSpeed -= 1; } else {
-                            warpSpeed = 1; isWarping = false;
-                            avatarBtn.classList.remove('warp-active'); avatarImg.classList.remove('spin-warp');
-                            clearInterval(decelInterval);
-                        }
-                    }, 50);
-                }, 2500);
+                isWarping = true; document.getElementById('avatar-btn').classList.add('warp-active'); document.getElementById('avatar-img').classList.add('spin-warp');
+                let t = setInterval(()=>{if(warpSpeed<20)warpSpeed+=1},50); showToast("⚡ WARP ENGAGED");
+                setTimeout(()=>{ clearInterval(t); const d = setInterval(()=>{if(warpSpeed>1)warpSpeed-=1;else{warpSpeed=1;isWarping=false;document.getElementById('avatar-btn').classList.remove('warp-active');document.getElementById('avatar-img').classList.remove('spin-warp');clearInterval(d)}},50) }, 2500);
             });
 
-            // Konami
-            const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-            let kIndex = 0;
-            const hBox = document.getElementById('konami-hint');
-            const kbds = hBox.querySelectorAll('kbd');
-            document.addEventListener('keydown', (e) => {
-                if(e.key === konamiCode[kIndex]) {
-                    if(kIndex===0) hBox.classList.add('typing-active');
-                    if(kbds[kIndex]) kbds[kIndex].classList.add('active');
-                    kIndex++;
-                    if(kIndex===konamiCode.length) {
-                        rainbowMode = !rainbowMode;
-                        showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF");
-                        setTimeout(() => { kIndex=0; kbds.forEach(k=>k.classList.remove('active')); hBox.classList.remove('typing-active'); }, 800);
-                    }
-                } else { 
-                    if(kIndex>0) { kIndex=0; kbds.forEach(k=>k.classList.remove('active')); hBox.classList.remove('typing-active'); }
+            // 右键菜单
+            const ctxMenu = document.getElementById('context-menu');
+            document.addEventListener('contextmenu', e => {
+                e.preventDefault(); e.stopPropagation();
+                if(window.innerWidth > 700) {
+                    ctxMenu.style.left = (e.clientX - 80) + 'px'; ctxMenu.style.top = (e.clientY - 80) + 'px'; ctxMenu.classList.add('visible');
                 }
             });
+            document.addEventListener('click', e => { if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-warp').onclick = () => { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); };
+            document.getElementById('ctx-rgb').onclick = () => { rainbowMode = !rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); ctxMenu.classList.remove('visible'); };
+            document.getElementById('ctx-freeze').onclick = () => { globalSpeed=0; showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); };
+            document.getElementById('ctx-reset').onclick = () => { globalSpeed=1; rainbowMode=false; showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); };
 
-            // --- 循环 ---
+            // Konami
+            const kCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+            let kIdx = 0;
+            document.addEventListener('keydown', e => {
+                if(e.key === kCode[kIdx]) {
+                    if(kIdx===0) document.getElementById('konami-hint').classList.add('typing-active');
+                    document.querySelectorAll('kbd')[kIdx].classList.add('active'); kIdx++;
+                    if(kIdx===kCode.length) { rainbowMode=!rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); setTimeout(()=>{kIdx=0;document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active'));document.getElementById('konami-hint').classList.remove('typing-active')},800); }
+                } else { if(kIdx>0) { kIdx=0; document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active')); document.getElementById('konami-hint').classList.remove('typing-active'); } }
+            });
+
+            // Loop
             function loop() {
-                // 平滑过渡手势值
                 handExpansion += (targetExpansion - handExpansion) * 0.1;
-
                 ctx.globalCompositeOperation = 'destination-out';
-                // 拖尾：当手张开很大时(运动快)，拖尾缩短以防画面太乱
                 let alpha = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 0.1 : 0.15;
                 ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
                 ctx.fillRect(0, 0, cw, ch);
@@ -550,8 +401,7 @@
 
                 if(isSucking) {
                     ctx.globalCompositeOperation = 'source-over';
-                    ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2);
-                    ctx.fillStyle = '#000'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2); ctx.fillStyle = '#000'; ctx.fill();
                     ctx.strokeStyle = '#50ffff'; ctx.lineWidth=2; ctx.stroke();
                     ctx.globalCompositeOperation = 'lighter';
                 }
