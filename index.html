@@ -2,12 +2,13 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>嘎嘎's Homepage - Final Fixed</title>
+    <title>今予's Homepage - Neural Link</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
 
@@ -32,22 +33,27 @@
 
         canvas#startrack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* 摄像头小窗 */
-        #input_video {
-            position: fixed; bottom: 20px; left: 20px; width: 120px; height: 90px;
-            border-radius: 8px; border: 1px solid rgba(80, 255, 255, 0.3);
-            opacity: 0; pointer-events: none; transition: opacity 0.5s;
-            z-index: 900; transform: scaleX(-1);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        /* --- 📷 摄像头与骨骼绘制容器 (左下角) --- */
+        .camera-box {
+            position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
+            border: 1px solid rgba(80, 255, 255, 0.3); border-radius: 8px;
+            z-index: 900; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.5s;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); background: rgba(0,0,0,0.5);
         }
-        #input_video.active { opacity: 0.8; }
+        .camera-box.active { opacity: 1; }
+        
+        /* 视频和绘图层重叠，并做镜像翻转 */
+        #input_video, #overlay_canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            transform: scaleX(-1); object-fit: cover;
+        }
+        #input_video { opacity: 0.5; } /* 视频半透明，突出骨骼 */
 
         #loading-bar { position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%; z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff; }
 
         .main { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10; perspective: 1200px; opacity: 0; transition: opacity 1s ease-in; pointer-events: none; }
         .main.loaded { opacity: 1; }
 
-        /* 玻璃卡片 */
         .glass-card {
             position: relative; pointer-events: auto;
             background: rgba(255, 255, 255, 0.05);
@@ -77,10 +83,10 @@
         .btn:hover { background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5); border-color: #ffc8f5; transform: translateY(-3px); color: #fff; }
         .btn::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: shine 4s infinite; }
 
-        /* 右下角控制区 */
+        /* --- 🔧 右下角控制区 (布局修复) --- */
         .hint-corner {
             position: fixed; bottom: 20px; right: 25px; z-index: 50; 
-            display: flex; align-items: center; justify-content: flex-end; gap: 20px;
+            display: flex; align-items: center; justify-content: flex-end; gap: 20px; /* 按钮间距 */
             opacity: 0; transition: opacity 1s; pointer-events: none;
         }
         .hint-corner.show { opacity: 1; }
@@ -93,13 +99,18 @@
         .icon-btn:hover { color: #fff; transform: scale(1.2); text-shadow: 0 0 15px #50ffff; }
         .icon-btn.active { color: #50ffff; text-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
 
+        /* 键盘组：隔离 hover 事件 */
         .kb-group { position: relative; display: flex; align-items: center; pointer-events: auto; }
+        
+        /* 提示框：位于键盘图标的左侧 */
         .hint-box {
             position: absolute; right: 100%; top: 50%; transform: translateY(-50%) translateX(10px); margin-right: 15px;
             background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3);
             padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
             opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none;
         }
+        
+        /* 只有悬停在键盘组时，才显示提示框 */
         .kb-group:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateY(-50%) translateX(0); }
 
         kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-weight: bold; transition: all 0.1s; }
@@ -146,7 +157,12 @@
 <body>
 
     <canvas id="startrack"></canvas>
-    <video id="input_video" autoplay playsinline></video>
+    
+    <div class="camera-box" id="camera-box">
+        <video id="input_video" autoplay playsinline></video>
+        <canvas id="overlay_canvas"></canvas>
+    </div>
+
     <div id="loading-bar"></div>
     <div id="boot-screen"><div class="terminal-text" id="terminal-content"></div></div>
     <div id="toast">SYSTEM: Warp Drive Engaged!</div>
@@ -247,15 +263,37 @@
             // 状态
             let globalSpeed=1.0, warpSpeed=1.0, isWarping=false, rainbowMode=false, isSucking=false, handExpansion=0, targetExpansion=0;
 
-            // --- Hand Control ---
+            // --- Hand Control (PC Only) ---
             if (!isMobile) {
                 const videoElement = document.getElementById('input_video');
+                const overlayCanvas = document.getElementById('overlay_canvas');
+                const ctxOverlay = overlayCanvas.getContext('2d'); // 获取绘图层
                 const handBtn = document.getElementById('hand-btn');
+                const cameraBox = document.getElementById('camera-box');
                 const loadingBar = document.getElementById('loading-bar');
                 let isHandActive = false, hands, cameraFeed;
 
+                // 初始化绘图 Canvas 尺寸 (对应 Camera 的 320x240)
+                overlayCanvas.width = 320; 
+                overlayCanvas.height = 240;
+
                 window.onHandResults = function(results) {
                     loadingBar.style.width = '0%';
+                    
+                    // --- 骨骼绘制 ---
+                    ctxOverlay.save();
+                    ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                    if (results.multiHandLandmarks) {
+                        for (const landmarks of results.multiHandLandmarks) {
+                            // 绘制连线 (青色)
+                            drawConnectors(ctxOverlay, landmarks, HAND_CONNECTIONS, {color: '#50ffff', lineWidth: 2});
+                            // 绘制节点 (粉色)
+                            drawLandmarks(ctxOverlay, landmarks, {color: '#ffc8f5', lineWidth: 1, radius: 2});
+                        }
+                    }
+                    ctxOverlay.restore();
+
+                    // --- 物理控制 ---
                     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                         const lm = results.multiHandLandmarks[0];
                         const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
@@ -279,12 +317,19 @@
                         await cameraFeed.start();
                         loadingBar.style.width = '100%';
                         setTimeout(()=>loadingBar.style.width='0%', 500);
-                        videoElement.classList.add('active'); handBtn.classList.add('active'); isHandActive = true;
+                        
+                        cameraBox.classList.add('active'); // 显示摄像头框
+                        handBtn.classList.add('active'); 
+                        isHandActive = true;
                         showToast("🖐️ HAND CONTROL ACTIVE");
                     } else {
                         if(videoElement.srcObject) videoElement.srcObject.getTracks().forEach(t=>t.stop());
                         videoElement.srcObject = null;
-                        videoElement.classList.remove('active'); handBtn.classList.remove('active'); isHandActive = false; targetExpansion = 0;
+                        
+                        cameraBox.classList.remove('active'); // 隐藏摄像头框
+                        handBtn.classList.remove('active'); 
+                        isHandActive = false; targetExpansion = 0;
+                        ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // 清空绘图
                         showToast("🔌 NEURAL LINK OFF");
                     }
                 }
@@ -339,9 +384,11 @@
                     let brightness = 1 / (dist * dist);
                     this.size = this.baseSize * (1 / dist);
 
-                    // 修复：Warp Drive 时强制青色
+                    // 颜色逻辑修复：优先判断 Warp Drive
                     if (isWarping) {
-                        this.renderColor = `rgba(100, 255, 255, 1)`; // 青色高亮
+                        this.renderColor = `rgba(100, 255, 255, 1)`; // 强制青色
+                    } else if (rainbowMode) {
+                        this.hue+=2; this.renderColor = `hsla(${this.hue}, 100%, 70%, 0.8)`;
                     } else if (handExpansion > 0.5) {
                         this.renderColor = `rgba(255, 255, 255, ${Math.min(1, brightness * 0.5)})`;
                     } else {
@@ -358,8 +405,7 @@
                         if (d2Hole < 400) { this.reset(); return; }
                     }
                     ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
-                    if (rainbowMode) { this.hue+=2; ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`; }
-                    else ctx.fillStyle = this.renderColor;
+                    ctx.fillStyle = this.renderColor;
                     ctx.fill();
                 }
             }
@@ -394,7 +440,6 @@
                 setTimeout(()=>{ clearInterval(t); const d = setInterval(()=>{if(warpSpeed>1)warpSpeed-=1;else{warpSpeed=1;isWarping=false;document.getElementById('avatar-btn').classList.remove('warp-active');document.getElementById('avatar-img').classList.remove('spin-warp');clearInterval(d)}},50) }, 2500);
             });
 
-            // 右键菜单 (PC Only)
             const ctxMenu = document.getElementById('context-menu');
             document.addEventListener('contextmenu', e => {
                 e.preventDefault(); e.stopPropagation();
@@ -408,7 +453,6 @@
             document.getElementById('ctx-freeze').onclick = () => { globalSpeed=0; showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); };
             document.getElementById('ctx-reset').onclick = () => { globalSpeed=1; rainbowMode=false; showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); };
 
-            // Konami (PC Only)
             if(!isMobile) {
                 const kCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
                 let kIdx = 0;
