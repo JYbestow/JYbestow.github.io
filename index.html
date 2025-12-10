@@ -2,15 +2,10 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>今予's Homepage - Galaxy Core</title>
+    <title>今予's Homepage</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-
     <style>
         @font-face {
             font-family: "sakura";
@@ -19,124 +14,252 @@
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            background-color: #000;
+            background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
+            background-size: 400% 400%;
+            animation: aurora 20s ease infinite;
             font-family: 'sakura', sans-serif;
-            user-select: none; -webkit-user-select: none;
+            
+            /* --- 📱 移动端核心修复 --- */
+            user-select: none; -webkit-user-select: none; /* 禁止选中 */
+            -webkit-touch-callout: none; /* 禁用iOS长按系统菜单 */
+            -webkit-tap-highlight-color: transparent; /* 禁用点击高亮 */
+            touch-action: none; /* 禁用浏览器默认的手势（缩放/滚动），完全由JS接管 */
         }
 
-        /* 3D 画布 */
-        #world {
+        @keyframes aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        canvas#startrack {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; outline: none;
-            /* 依然保留极光背景作为深层衬底 */
-            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            z-index: 1; pointer-events: none;
         }
 
-        /* 摄像头隐藏元素 */
-        #input_video {
-            position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
-            border-radius: 10px; border: 1px solid rgba(80, 255, 255, 0.3);
-            opacity: 0; pointer-events: none; transition: opacity 0.5s;
-            z-index: 900; transform: scaleX(-1);
-        }
-        #input_video.active { opacity: 0.8; }
-
-        /* UI 层 */
         .main {
             position: relative; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
-            z-index: 10; pointer-events: none;
+            z-index: 10; perspective: 1200px;
+            opacity: 0; transition: opacity 1s ease-in;
         }
+        .main.loaded { opacity: 1; }
 
+        /* 玻璃卡片 */
         .glass-card {
-            position: relative; pointer-events: auto;
-            background: rgba(20, 25, 30, 0.4);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px; padding: 50px 80px;
             display: flex; flex-direction: column; align-items: center;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s ease-out;
+            max-width: 90%; box-sizing: border-box;
         }
+
+        .avatar-container {
+            position: relative; width: 130px; height: 130px; margin-bottom: 25px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* 确保头像能被点击 */
+            pointer-events: auto; 
+        }
+        .avatar-container:hover { transform: scale(1.05); }
+        .avatar-container:active { transform: scale(0.95); }
 
         .avatar-img {
             width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
             border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6);
+            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); z-index: 2;
+            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
+        .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
+
+        .orbit-ring {
+            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
+            border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3);
+            animation: spin 20s linear infinite; transition: all 0.5s;
+        }
+        .warp-active .orbit-ring {
+            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
+            animation: spin 0.5s linear infinite;
+        }
+        .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; }
 
         .name {
             font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8);
-            margin: 15px 0 10px 0; text-align: center; font-weight: bold; letter-spacing: 2px;
+            margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px;
+            white-space: nowrap;
         }
 
         .role {
             font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px;
-            text-transform: uppercase; font-family: sans-serif;
+            text-transform: uppercase; font-family: -apple-system, sans-serif;
             margin-bottom: 35px; text-align: center;
-            display: flex; flex-direction: row; gap: 8px;
+            display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px;
         }
         .separator { color: #ff64c8; }
 
-        .btns { display: flex; gap: 25px; }
+        .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
         .btn {
-            padding: 12px 36px; border-radius: 50px;
+            position: relative; padding: 12px 36px; border-radius: 50px;
             background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ffc8f5; text-decoration: none; font-size: 1.2rem;
-            transition: all 0.3s; cursor: pointer;
+            color: #ffc8f5; text-decoration: none; font-size: 1.2rem; overflow: hidden;
+            transition: all 0.3s; cursor: pointer; white-space: nowrap;
+            display: flex; justify-content: center; align-items: center;
+            /* 确保按钮能被点击 */
+            pointer-events: auto;
         }
         .btn:hover {
             background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5);
             border-color: #ffc8f5; transform: translateY(-3px); color: #fff;
         }
-
-        /* 控制坞 */
-        .control-dock {
-            position: fixed; bottom: 30px; right: 30px; z-index: 100;
-            display: flex; gap: 15px; align-items: center; pointer-events: auto;
-        }
-        .dock-btn {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; font-size: 20px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: all 0.3s; backdrop-filter: blur(5px);
-        }
-        .dock-btn:hover { transform: scale(1.1); border-color: #50ffff; box-shadow: 0 0 15px #50ffff; color: #50ffff; }
-        .dock-btn.active { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; }
-
-        /* 加载条 */
-        #loading-bar {
-            position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%;
-            z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff;
+        .btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg); animation: shine 4s infinite;
         }
 
-        /* 移动端适配 */
+        /* UI & HUD */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #50ffff;
+            color: #50ffff; padding: 12px 24px; border-radius: 8px;
+            font-family: 'Courier New', monospace; font-weight: bold;
+            opacity: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 100; box-shadow: 0 0 20px rgba(80, 255, 255, 0.3); pointer-events: none;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .speed-hud {
+            position: fixed; bottom: 20px; left: 25px; z-index: 50;
+            font-family: 'Courier New', monospace; color: rgba(255,255,255,0.5);
+            font-size: 12px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 5px; opacity: 0; transition: opacity 1s;
+        }
+        .speed-hud.show { opacity: 1; }
+        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
+        .hud-text { font-weight: bold; letter-spacing: 1px; }
+
+        .hint-corner {
+            position: fixed; bottom: 20px; right: 25px; z-index: 50; display: flex; align-items: center; justify-content: flex-end;
+            cursor: help; opacity: 0; transition: opacity 1s;
+        }
+        .hint-corner.show { opacity: 1; }
+        .hint-icon { font-size: 24px; color: rgba(255, 255, 255, 0.3); transition: all 0.3s ease; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .hint-box {
+            position: absolute; right: 35px; background: rgba(0, 20, 40, 0.85); border: 1px solid rgba(80, 255, 255, 0.3);
+            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
+            opacity: 0; transform: translateX(20px); transition: all 0.3s; white-space: nowrap; pointer-events: none;
+        }
+        .hint-corner:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateX(0); }
+        .hint-corner:hover .hint-icon { color: #fff; transform: scale(1.1); text-shadow: 0 0 10px #ffc8f5; }
+        kbd {
+            background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px;
+            padding: 2px 4px; margin: 0 2px; font-family: monospace; font-weight: bold; transition: all 0.1s;
+        }
+        kbd.active { background-color: #50ffff; color: #000; border-color: #50ffff; box-shadow: 0 0 10px #50ffff; transform: scale(1.1); }
+
+        /* 战术菜单 */
+        #context-menu {
+            position: fixed; top: 0; left: 0; width: 160px; height: 160px;
+            border-radius: 50%; pointer-events: none; z-index: 999;
+            opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; justify-content: center; align-items: center;
+        }
+        #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
+        .ctx-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite; }
+        .ctx-item {
+            position: absolute; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+            background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4);
+            border-radius: 50%; color: #50ffff; font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
+        .ctx-top { top: 0; left: 50%; transform: translateX(-50%); }
+        .ctx-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+        .ctx-left { left: 0; top: 50%; transform: translateY(-50%); }
+        .ctx-right { right: 0; top: 50%; transform: translateY(-50%); }
+
+        /* 引导层 */
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999;
+            display: flex; justify-content: center; align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
+        }
+        .terminal-text {
+            color: #50ffff; font-size: 16px; line-height: 1.8; text-shadow: 0 0 5px #50ffff; max-width: 600px; padding: 20px;
+        }
+        .cmd-line { display: block; min-height: 20px; }
+        .highlight { color: #ffc8f5; font-weight: bold; }
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
+        @keyframes tvOff {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            40% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
+            100% { transform: scaleY(0.005) scaleX(0); opacity: 0; }
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+        @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
+
         @media (max-width: 700px) {
-            .glass-card { width: 85%; padding: 40px 20px; }
-            .role { flex-direction: column; }
+            .glass-card { width: 85%; padding: 40px 20px; max-height: 90vh; overflow-y: auto; }
+            .name { font-size: 2rem; }
+            .role { flex-direction: column; gap: 5px; margin-bottom: 25px; }
             .separator { display: none; }
-            .btns { flex-direction: column; width: 100%; }
+            .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; box-sizing: border-box; text-align: center; }
+            .hint-corner, .speed-hud, #context-menu { display: none; }
+            .terminal-text { font-size: 12px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="world"></div>
-    <video id="input_video" autoplay playsinline></video>
-    <div id="loading-bar"></div>
+    <canvas id="startrack"></canvas>
+    
+    <div id="boot-screen">
+        <div class="terminal-text" id="terminal-content"></div>
+    </div>
 
-    <div class="main">
+    <div id="toast">SYSTEM: Warp Drive Engaged!</div>
+
+    <div class="speed-hud" id="ui-hud">
+        <div class="hud-text" id="speed-text">TIME: 1.0x</div>
+        <div class="speed-bar-container">
+            <div class="speed-bar" id="speed-bar"></div>
+        </div>
+    </div>
+
+    <div id="context-menu">
+        <div class="ctx-ring"></div>
+        <div class="ctx-center"></div>
+        <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
+        <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
+        <div class="ctx-item ctx-bottom" id="ctx-reset">RESET</div>
+        <div class="ctx-item ctx-left" id="ctx-freeze">FREEZE</div>
+    </div>
+
+    <div class="main" id="main-content">
         <div class="glass-card" id="tilt-card">
-            <div class="avatar-container">
-                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" alt="头像">
+            <div class="avatar-container" id="avatar-btn">
+                <div class="orbit-ring" id="orbit-ring"></div>
+                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
             </div>
+            
             <div class="name">嘎嘎sama | 今予</div>
+            
             <div class="role">
                 <span>Zhejiang University</span>
                 <span class="separator">|</span>
                 <span>Mechanical Engineering</span>
             </div>
+
             <div class="btns">
                 <a href="https://notion-next-is5zr145w-hjys-projects-4f1ab78d.vercel.app/" target="_blank" class="btn">博客</a>
                 <a href="https://github.com/JYbestow" target="_blank" class="btn">Github</a>
@@ -145,241 +268,350 @@
         </div>
     </div>
 
-    <div class="control-dock">
-        <div class="dock-btn" id="hand-btn" title="Enable Hand Control">🖐️</div>
-        <div class="dock-btn" id="fs-btn" title="Toggle Fullscreen">⛶</div>
+    <div class="hint-corner" id="ui-hint">
+        <div class="hint-box" id="konami-hint">
+            Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd>
+        </div>
+        <div class="hint-icon">⌨️</div>
     </div>
 
+    <script src="./zepto.min.js"></script>
+
     <script>
-        // --- 1. Three.js 场景搭建 ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 30, 100);
-        camera.lookAt(0, 0, 0);
+        console.log("%c Hello ZJU Engineer! \n%c System Ready.", "font-size: 20px; color: #ffc8f5;", "font-size: 14px; color: #50ffff;");
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-        document.getElementById('world').appendChild(renderer.domElement);
+        window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
 
-        // --- 2. 粒子系统 (内嵌纹理生成，修复不显示问题) ---
-        
-        // 动态生成发光圆形纹理，不依赖外部图片
-        function createGhostTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 32;
-            canvas.height = 32;
+        $(function() {
+            // --- 引导系统 ---
+            const lines = [
+                "INITIALIZING PHYSICS ENGINE...",
+                "LOADING NEURAL NETWORK... [OK]",
+                "CALIBRATING SENSORS... [OK]",
+                "--------------------------------",
+                "AVAILABLE COMMANDS:",
+                "> [SCROLL WHEEL]  : CONTROL TIME",
+                "> [LONG PRESS]    : GENERATE BLACK HOLE",
+                "> [RIGHT CLICK]   : TACTICAL MENU",
+                "> [CLICK AVATAR]  : ENGAGE WARP DRIVE",
+                "--------------------------------",
+                "SYSTEM ONLINE. CLICK TO START <span class='blink'>_</span>"
+            ];
+            
+            const termContent = document.getElementById('terminal-content');
+            const bootScreen = document.getElementById('boot-screen');
+            const mainContent = document.getElementById('main-content');
+            const uiHud = document.getElementById('ui-hud');
+            const uiHint = document.getElementById('ui-hint');
+            
+            let lineIndex = 0; let charIndex = 0;
+            function typeWriter() {
+                if (lineIndex < lines.length) {
+                    const currentLine = lines[lineIndex];
+                    if (lineIndex === lines.length - 1) {
+                        const div = document.createElement('div');
+                        div.className = 'cmd-line highlight';
+                        div.innerHTML = currentLine;
+                        termContent.appendChild(div);
+                        lineIndex++;
+                    } else {
+                        if (charIndex === 0) {
+                            const div = document.createElement('div');
+                            div.className = 'cmd-line';
+                            div.id = 'line-' + lineIndex;
+                            termContent.appendChild(div);
+                        }
+                        const currentDiv = document.getElementById('line-' + lineIndex);
+                        currentDiv.textContent += currentLine.charAt(charIndex);
+                        charIndex++;
+                        if (charIndex < currentLine.length) setTimeout(typeWriter, 15);
+                        else { charIndex = 0; lineIndex++; setTimeout(typeWriter, 80); }
+                    }
+                }
+            }
+            setTimeout(typeWriter, 500);
+            
+            function closeBoot() {
+                bootScreen.classList.add('system-off');
+                mainContent.classList.add('loaded');
+                setTimeout(() => { uiHud.classList.add('show'); uiHint.classList.add('show'); }, 800);
+            }
+            bootScreen.addEventListener('click', closeBoot);
+            bootScreen.addEventListener('touchstart', closeBoot);
+
+            // --- 核心变量与初始化 ---
+            const canvas = document.getElementById('startrack');
             const ctx = canvas.getContext('2d');
+            let cw, ch;
+            function resize() { cw = window.innerWidth; ch = window.innerHeight; canvas.width = cw; canvas.height = ch; }
+            resize(); window.addEventListener('resize', resize);
+
+            let mx = 0, my = 0; let rawMx = 0, rawMy = 0;
+            // 兼容移动端 Touch 事件
+            function updateCoords(x, y) {
+                rawMx = x; rawMy = y;
+                mx = (x - cw / 2) / cw; 
+                my = (y - ch / 2) / ch;
+                const card = document.getElementById('tilt-card');
+                if (card) card.style.transform = `perspective(1000px) rotateX(${-my * 15}deg) rotateY(${mx * 15}deg)`;
+            }
             
-            // 径向渐变
-            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
-            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            document.addEventListener('mousemove', (e) => updateCoords(e.clientX, e.clientY));
+            document.addEventListener('touchmove', (e) => {
+                if(e.touches.length > 0) updateCoords(e.touches[0].clientX, e.touches[0].clientY);
+            });
+
+            document.addEventListener('mouseleave', () => {
+                const card = document.getElementById('tilt-card');
+                if (card) card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
+            });
+
+            // 物理常量
+            let globalSpeed = 1.0; 
+            let warpSpeed = 1.0;
+            let isWarping = false; 
+            let rainbowMode = false; 
+            let isSucking = false;
             
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 32, 32);
-            
-            const texture = new THREE.Texture(canvas);
-            texture.needsUpdate = true;
-            return texture;
-        }
+            // --- 交互逻辑 ---
+            const speedText = document.getElementById('speed-text');
+            const speedBar = document.getElementById('speed-bar');
+            function updateSpeedUI() {
+                speedText.innerText = `TIME: ${globalSpeed.toFixed(2)}x`;
+                let pct = (globalSpeed + 2) / 7 * 100;
+                speedBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+                speedBar.style.backgroundColor = globalSpeed < 0 ? '#ff5050' : '#50ffff';
+            }
+            document.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                globalSpeed -= e.deltaY * 0.001; 
+                if(globalSpeed > 5) globalSpeed = 5; if(globalSpeed < -2) globalSpeed = -2;
+                updateSpeedUI();
+            }, { passive: false });
 
-        const PARTICLE_COUNT = 12000;
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const colors = new Float32Array(PARTICLE_COUNT * 3);
-        const sizes = new Float32Array(PARTICLE_COUNT);
-        
-        const baseRadii = new Float32Array(PARTICLE_COUNT);
-        const angles = new Float32Array(PARTICLE_COUNT);
-        const speeds = new Float32Array(PARTICLE_COUNT);
-        const randomOffsets = new Float32Array(PARTICLE_COUNT * 3);
-
-        const colorInside = new THREE.Color('#a0ffff');
-        const colorOutside = new THREE.Color('#4b0082');
-
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const r = Math.pow(Math.random(), 1.5) * 150 + 10; 
-            const theta = Math.random() * Math.PI * 2;
-            const y = (Math.random() - 0.5) * (r * 0.1); 
-            
-            baseRadii[i] = r;
-            angles[i] = theta;
-            speeds[i] = (1 / Math.sqrt(r)) * 2.5; 
-
-            const color = colorInside.clone().lerp(colorOutside, r / 150);
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
-
-            sizes[i] = Math.random() * 1.5 + 0.5;
-
-            randomOffsets[i*3] = (Math.random()-0.5);
-            randomOffsets[i*3+1] = (Math.random()-0.5);
-            randomOffsets[i*3+2] = (Math.random()-0.5);
-        }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-        const material = new THREE.PointsMaterial({
-            size: 1.5, // 稍微调大一点，确保可见
-            map: createGhostTexture(), // 使用代码生成的纹理
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            transparent: true,
-            opacity: 0.9,
-            sizeAttenuation: true
-        });
-
-        const starSystem = new THREE.Points(geometry, material);
-        scene.add(starSystem);
-
-        // --- 3. 动画与物理逻辑 ---
-        
-        let handExpansion = 0;
-        let targetExpansion = 0;
-        let time = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-
-            handExpansion += (targetExpansion - handExpansion) * 0.05;
-
-            const pos = geometry.attributes.position.array;
-            const siz = geometry.attributes.size.array;
-            const globalTimeScale = 1 + Math.max(0, handExpansion) * 3;
-
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const i3 = i * 3;
+            // --- 📱 核心修复：禁用系统右键菜单 ---
+            const ctxMenu = document.getElementById('context-menu');
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault(); // 拦截系统菜单
+                e.stopPropagation();
                 
-                angles[i] += speeds[i] * 0.005 * globalTimeScale;
-
-                let r = baseRadii[i] * (1 + Math.max(-0.8, handExpansion) * 1.5);
-                
-                let x = Math.cos(angles[i]) * r;
-                let z = Math.sin(angles[i]) * r;
-                let y = (Math.random() - 0.5) * (r * 0.1) * (1 + handExpansion * 5); 
-
-                if (handExpansion > 0.1) {
-                    z += handExpansion * 40; 
-                    x *= (1 + handExpansion * 0.2); 
+                // 仅在桌面端显示自定义战术菜单
+                if(window.innerWidth > 700) {
+                    ctxMenu.style.left = (e.clientX - 80) + 'px';
+                    ctxMenu.style.top = (e.clientY - 80) + 'px';
+                    ctxMenu.classList.add('visible');
                 }
+                return false;
+            }, { passive: false });
 
-                if (handExpansion > 0.6 || z > 50) {
-                    const noiseAmp = handExpansion * 5;
-                    x += randomOffsets[i3] * noiseAmp;
-                    y += randomOffsets[i3+1] * noiseAmp;
-                    z += randomOffsets[i3+2] * noiseAmp;
-                    siz[i] = (Math.random() * 2 + 2) * (1 + handExpansion); 
-                } else {
-                    siz[i] = (Math.random() * 0.5 + 1);
-                    if (handExpansion < 0) siz[i] *= 0.5;
-                }
-
-                pos[i3] = x;
-                pos[i3+1] = y;
-                pos[i3+2] = z;
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
+            });
+            function showToast(msg) {
+                const toast = document.getElementById('toast');
+                toast.innerText = msg; toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
             }
-
-            geometry.attributes.position.needsUpdate = true;
-            geometry.attributes.size.needsUpdate = true;
-
-            // 视差微调
-            camera.position.x += (mouseX * 20 - camera.position.x) * 0.05;
-            camera.position.y += (-mouseY * 20 + 30 - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
-
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // --- 4. 交互逻辑 ---
-        let mouseX = 0, mouseY = 0;
-        function updateParallax(x, y) {
-            mouseX = (x - window.innerWidth / 2) / window.innerWidth;
-            mouseY = (y - window.innerHeight / 2) / window.innerHeight;
             
-            const card = document.getElementById('tilt-card');
-            if(card) {
-                card.style.transform = `perspective(1000px) rotateX(${-mouseY * 15}deg) rotateY(${mouseX * 15}deg)`;
+            // 绑定菜单事件
+            document.getElementById('ctx-warp').addEventListener('click', () => { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-rgb').addEventListener('click', () => { rainbowMode = !rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-freeze').addEventListener('click', () => { globalSpeed = 0; updateSpeedUI(); showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); });
+            document.getElementById('ctx-reset').addEventListener('click', () => { globalSpeed=1; rainbowMode=false; updateSpeedUI(); showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); });
+
+            // --- 4. 物理引擎 ---
+            class Star {
+                constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
+                reset() {
+                    // --- 📱 核心修复：移动端全屏铺满 ---
+                    // 使用勾股定理计算对角线长度的一半，确保覆盖屏幕四个角
+                    const limit = Math.sqrt(cw*cw + ch*ch) / 2;
+                    this.r = Math.random() * limit + 50;
+                    
+                    this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.x = cw/2 + Math.cos(this.angle) * this.r;
+                    this.y = ch/2 + Math.sin(this.angle) * this.r;
+                    this.vx = 0; this.vy = 0;
+                    const ratio = (this.r - 50) / (limit);
+                    this.baseColor = {
+                        r: 200 + Math.floor(55 * ratio),
+                        g: 200 - Math.floor(100 * ratio),
+                        b: 255,
+                        a: Math.random() * 0.8 + 0.2
+                    };
+                    this.hue = Math.random() * 360;
+                }
+                update() {
+                    let dt = this.orbitalSpeed * warpSpeed * globalSpeed;
+                    this.angle += dt;
+                    let targetX = cw / 2 + Math.cos(this.angle) * this.r;
+                    let targetY = ch / 2 + Math.sin(this.angle) * this.r;
+
+                    let ax = (targetX - this.x) * 0.02; 
+                    let ay = (targetY - this.y) * 0.02;
+
+                    if (isSucking) {
+                        let dx = rawMx - this.x; let dy = rawMy - this.y;
+                        let distSq = dx*dx + dy*dy;
+                        let force = 2000 / (distSq + 100);
+                        ax += dx * force; ay += dy * force;
+                    }
+
+                    this.vx += ax; this.vy += ay;
+                    this.vx *= 0.92; this.vy *= 0.92;
+                    this.x += this.vx; this.y += this.vy;
+                    this.speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+
+                    // 边界重置
+                    if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) {
+                        this.reset();
+                    }
+                }
+                draw() {
+                    let dx = this.x - mx * 30;
+                    let dy = this.y - my * 30;
+                    if (isSucking) {
+                        let d2Hole = (dx - rawMx)**2 + (dy - rawMy)**2;
+                        if (d2Hole < 400) { this.reset(); return; }
+                    }
+                    ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
+                    if (rainbowMode) {
+                        this.hue += 2; ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.8)`;
+                    } else if (isWarping || this.speed > 3) {
+                        ctx.fillStyle = `rgba(200, 255, 255, 1)`;
+                    } else {
+                        ctx.fillStyle = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${this.baseColor.a})`;
+                    }
+                    ctx.fill();
+                }
             }
-        }
-        document.addEventListener('mousemove', e => updateParallax(e.clientX, e.clientY));
-        
-        // --- 5. 手势控制 ---
-        const videoElement = document.getElementById('input_video');
-        const handBtn = document.getElementById('hand-btn');
-        const loadingBar = document.getElementById('loading-bar');
-        let isHandTrackingActive = false;
-        let hands, cameraFeed;
+            const stars = []; for (let i = 0; i < 1200; i++) stars.push(new Star());
 
-        function onResults(results) {
-            loadingBar.style.width = '0%';
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const lm = results.multiHandLandmarks[0]; 
-                const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
-                const palmSize = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y); 
-                const openness = dist / (palmSize * 1.8);
-
-                if (openness < 0.25) targetExpansion = -0.8; 
-                else if (openness > 0.7) targetExpansion = 1.2; 
-                else targetExpansion = 0; 
-            } else {
-                targetExpansion = 0;
+            // --- 粒子特效 ---
+            class Shockwave {
+                constructor(x, y) { this.x = x; this.y = y; this.r = 1; this.life = 1.0; }
+                update() { this.r += 15; this.life -= 0.02; }
+                draw() {
+                    if(this.life<=0)return;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+                    ctx.strokeStyle=`rgba(80, 255, 255, ${this.life*0.3})`; ctx.lineWidth=2; ctx.stroke();
+                }
             }
-        }
-
-        async function toggleHandControl() {
-            if (!isHandTrackingActive) {
-                loadingBar.style.width = '30%';
-                hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-                hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
-                hands.onResults(onResults);
-
-                cameraFeed = new Camera(videoElement, {
-                    onFrame: async () => { await hands.send({image: videoElement}); },
-                    width: 320, height: 240
+            const shockwaves = [];
+            
+            const particles = [];
+            class Particle {
+                constructor(x, y) {
+                    this.x=x; this.y=y; 
+                    let a=Math.random()*Math.PI*2; let s=Math.random()*5+2;
+                    this.vx=Math.cos(a)*s; this.vy=Math.sin(a)*s; this.life=1; this.hue=Math.random()*60+260;
+                }
+                update() { this.x+=this.vx; this.y+=this.vy; this.vy+=0.2; this.life-=0.02; }
+                draw() {
+                    ctx.globalAlpha=this.life; ctx.fillStyle=`hsla(${this.hue}, 80%, 70%, 1)`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+                }
+            }
+            
+            // --- 5. 交互事件 (兼容鼠标与触摸) ---
+            function triggerBlackHole(x, y) {
+                shockwaves.push(new Shockwave(x, y));
+                isSucking = true;
+                for(let i=0; i<5; i++) particles.push(new Particle(x, y));
+                stars.forEach(s => {
+                    let dx = s.x - x; let dy = s.y - y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 300) { let f = 1000 / dist; s.vx += (dx/dist)*f; s.vy += (dy/dist)*f; }
                 });
-
-                loadingBar.style.width = '60%';
-                await cameraFeed.start();
-                loadingBar.style.width = '100%';
-                setTimeout(()=>loadingBar.style.width='0%', 500);
-
-                videoElement.classList.add('active');
-                handBtn.classList.add('active');
-                isHandTrackingActive = true;
-            } else {
-                if(videoElement.srcObject) {
-                    const stream = videoElement.srcObject;
-                    stream.getTracks().forEach(t=>t.stop());
-                    videoElement.srcObject = null;
-                }
-                videoElement.classList.remove('active');
-                handBtn.classList.remove('active');
-                isHandTrackingActive = false;
-                targetExpansion = 0;
             }
-        }
-        handBtn.addEventListener('click', toggleHandControl);
 
-        document.getElementById('fs-btn').addEventListener('click', () => {
-            if(!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else if(document.exitFullscreen) document.exitFullscreen();
+            // 鼠标事件
+            document.addEventListener('mousedown', (e) => {
+                if(e.target.closest('#avatar-btn') || e.target.closest('#context-menu')) return;
+                if(e.button === 0) triggerBlackHole(e.clientX, e.clientY);
+            });
+            document.addEventListener('mouseup', () => { isSucking = false; });
+
+            // 触摸事件 (移动端黑洞)
+            document.addEventListener('touchstart', (e) => {
+                if(e.target.closest('#avatar-btn') || e.target.closest('.btn')) return;
+                // 防止默认行为（如滚动）
+                // e.preventDefault(); // 注释掉以允许点击按钮，如果需要完全接管再开启
+                if(e.touches.length === 1) {
+                    triggerBlackHole(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, {passive: false});
+            
+            document.addEventListener('touchend', () => { isSucking = false; });
+
+
+            // 按钮事件
+            const avatarBtn = document.getElementById('avatar-btn');
+            const avatarImg = document.getElementById('avatar-img');
+            avatarBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); if(isWarping) return;
+                isWarping = true; avatarBtn.classList.add('warp-active'); avatarImg.classList.add('spin-warp');
+                let accelInterval = setInterval(() => { if(warpSpeed < 20) warpSpeed += 1; }, 50);
+                showToast("⚡ WARP DRIVE ENGAGED ⚡");
+                setTimeout(() => {
+                    clearInterval(accelInterval);
+                    const decelInterval = setInterval(() => {
+                        if(warpSpeed > 1) { warpSpeed -= 1; } else {
+                            warpSpeed = 1; isWarping = false;
+                            avatarBtn.classList.remove('warp-active'); avatarImg.classList.remove('spin-warp');
+                            clearInterval(decelInterval);
+                        }
+                    }, 50);
+                }, 2500);
+            });
+
+            const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+            let kIndex = 0;
+            const hBox = document.getElementById('konami-hint');
+            const kbds = hBox.querySelectorAll('kbd');
+            function resetK() { kIndex=0; kbds.forEach(el=>el.classList.remove('active')); hBox.classList.remove('typing-active'); }
+            document.addEventListener('keydown', (e) => {
+                if(e.key === konamiCode[kIndex]) {
+                    if(kIndex===0) hBox.classList.add('typing-active');
+                    if(kbds[kIndex]) kbds[kIndex].classList.add('active');
+                    kIndex++;
+                    if(kIndex===konamiCode.length) {
+                        rainbowMode = !rainbowMode;
+                        showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF");
+                        setTimeout(resetK, 800);
+                    }
+                } else { if(kIndex>0) resetK(); if(e.key===konamiCode[0]){kIndex=1; hBox.classList.add('typing-active'); kbds[0].classList.add('active');}}
+            });
+
+            // --- 循环 ---
+            function loop() {
+                ctx.globalCompositeOperation = 'destination-out';
+                let alpha = (isWarping || Math.abs(globalSpeed) > 2) ? 0.05 : 0.15;
+                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+                ctx.fillRect(0, 0, cw, ch);
+
+                ctx.globalCompositeOperation = 'lighter';
+                stars.forEach(s => { s.update(); s.draw(); });
+                shockwaves.forEach((w,i)=>{ w.update(); w.draw(); if(w.life<=0) shockwaves.splice(i,1); });
+
+                if(isSucking) {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2);
+                    ctx.fillStyle = '#000'; ctx.fill();
+                    ctx.strokeStyle = '#50ffff'; ctx.lineWidth=2; ctx.stroke();
+                    ctx.globalCompositeOperation = 'lighter';
+                }
+
+                ctx.globalCompositeOperation = 'source-over';
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update(); particles[i].draw();
+                    if (particles[i].life <= 0) particles.splice(i, 1);
+                }
+                requestAnimFrame(loop);
+            }
+            loop();
         });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
     </script>
 </body>
 </html>
