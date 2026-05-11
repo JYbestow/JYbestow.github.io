@@ -19,12 +19,20 @@
 
         *, *::before, *::after { box-sizing: border-box; }
 
+        :root {
+            --cyan: #50ffff;
+            --pink: #ff64c8;
+            --pink-light: #ffc8f5;
+            --bg-deep: #0f0c29;
+            --card-bg: rgba(15, 12, 45, 0.35);
+        }
+
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
             background: #0f0c29;
-            background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1040 25%, #302b63 50%, #1b2735 75%, #090a0f 100%);
             background-size: 400% 400%;
-            animation: aurora 20s ease infinite;
+            animation: aurora 25s ease infinite;
             font-family: 'sakura', sans-serif;
             user-select: none; -webkit-user-select: none;
             -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
@@ -33,253 +41,390 @@
 
         @keyframes aurora {
             0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+        }
+
+        /* ── Vignette overlay ──────────────────────────────────── */
+        body::after {
+            content: ''; position: fixed; inset: 0; z-index: 2;
+            background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%);
+            pointer-events: none;
         }
 
         canvas#startrack {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none; display: block; will-change: transform;
+            z-index: 1; pointer-events: none; display: block;
         }
 
-        /* Camera box */
+        /* ── Camera box ────────────────────────────────────────── */
         .camera-box {
-            position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
-            border: 1px solid rgba(80, 255, 255, 0.3); border-radius: 8px;
+            position: fixed; bottom: 24px; left: 24px; width: 160px; height: 120px;
+            border: 1px solid rgba(80, 255, 255, 0.25); border-radius: 10px;
             z-index: 900; overflow: hidden; opacity: 0; pointer-events: none;
-            transition: opacity 0.5s; box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            background: rgba(0,0,0,0.5);
+            transition: opacity 0.5s ease;
+            box-shadow: 0 0 20px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.6);
         }
         .camera-box.active { opacity: 1; }
+        .camera-box::after {
+            content: 'NEURAL FEED'; position: absolute; bottom: 4px; left: 6px;
+            font-family: monospace; font-size: 8px; color: rgba(80,255,255,0.5);
+            z-index: 2; pointer-events: none; letter-spacing: 1px;
+        }
 
         #input_video, #overlay_canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             transform: scaleX(-1); object-fit: cover;
         }
-        #input_video { opacity: 0.5; }
+        #input_video { opacity: 0.45; }
 
         #loading-bar {
-            position: fixed; top: 0; left: 0; height: 3px; background: #50ffff;
-            width: 0%; z-index: 2000; transition: width 0.3s;
-            box-shadow: 0 0 10px #50ffff; pointer-events: none;
+            position: fixed; top: 0; left: 0; height: 2px; z-index: 2000;
+            pointer-events: none;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--pink-light), var(--cyan), transparent);
+            width: 0%; transition: width 0.25s ease-out;
+            box-shadow: 0 0 12px var(--cyan), 0 0 4px var(--cyan);
+            animation: barPulse 2s ease-in-out infinite;
+        }
+        @keyframes barPulse {
+            0%, 100% { box-shadow: 0 0 12px var(--cyan), 0 0 4px var(--cyan); }
+            50% { box-shadow: 0 0 20px var(--cyan), 0 0 8px var(--pink-light); }
         }
 
+        /* ── Main content ──────────────────────────────────────── */
         .main {
             position: relative; width: 100%; height: 100%; display: flex;
             justify-content: center; align-items: center; z-index: 10;
-            perspective: 1200px; opacity: 0; transition: opacity 1s ease-in;
+            perspective: 1200px; opacity: 0; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
         }
         .main.loaded { opacity: 1; }
 
+        /* ── Glass card ────────────────────────────────────────── */
         .glass-card {
             position: relative; pointer-events: auto;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 24px; padding: 50px 80px;
+            background: linear-gradient(135deg,
+                rgba(30, 20, 60, 0.45) 0%,
+                rgba(20, 15, 50, 0.35) 50%,
+                rgba(15, 10, 40, 0.45) 100%);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px; padding: 50px 80px;
             display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            transition: transform 0.1s ease-out;
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.08),
+                0 0 0 2px rgba(100, 100, 200, 0.06),
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 30px 60px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            transition: transform 0.15s ease-out, box-shadow 0.5s ease;
             max-width: 90%; will-change: transform;
         }
+        .glass-card::before {
+            content: ''; position: absolute; inset: -1px; border-radius: 29px;
+            padding: 1px;
+            background: linear-gradient(135deg,
+                rgba(255,255,255,0.12) 0%, transparent 40%,
+                transparent 60%, rgba(100,200,255,0.15) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            pointer-events: none;
+        }
 
+        /* ── Avatar ────────────────────────────────────────────── */
         .avatar-container {
-            position: relative; width: 130px; height: 130px;
-            margin-bottom: 25px; display: flex; justify-content: center;
-            align-items: center; cursor: pointer; transition: transform 0.3s;
+            position: relative; width: 144px; height: 144px;
+            margin-bottom: 28px; display: flex; justify-content: center;
+            align-items: center; cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             pointer-events: auto;
         }
-        .avatar-container:hover { transform: scale(1.05); }
-        .avatar-container:active { transform: scale(0.95); }
+        .avatar-container:hover { transform: scale(1.06); }
+        .avatar-container:active { transform: scale(0.94); }
+
+        .avatar-glow {
+            position: absolute; width: 120px; height: 120px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 150, 220, 0.35) 0%, transparent 70%);
+            z-index: 0; animation: glowPulse 4s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.25); opacity: 0.35; }
+        }
+
         .avatar-img {
-            width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6);
-            z-index: 2; transition: transform 1s; background: #fff;
-            will-change: transform;
+            width: 126px; height: 126px; border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            box-shadow:
+                0 0 0 6px rgba(255, 150, 210, 0.2),
+                0 0 30px rgba(255, 180, 230, 0.5),
+                0 0 60px rgba(200, 100, 180, 0.25);
+            z-index: 2; transition: transform 1s, border-color 0.5s, box-shadow 0.5s;
+            background: #1a1040; will-change: transform;
         }
         .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
 
         .orbit-ring {
-            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
-            border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3);
-            animation: spin 20s linear infinite; transition: all 0.5s;
-            will-change: transform;
+            position: absolute; top: -14px; left: -14px; right: -14px; bottom: -14px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 180, 230, 0.25);
+            animation: spin 18s linear infinite; transition: all 0.5s ease;
+            will-change: transform; z-index: 1;
         }
-        .warp-active .orbit-ring {
-            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
-            animation: spin 0.5s linear infinite;
+        .orbit-dot {
+            position: absolute; width: 6px; height: 6px; border-radius: 50%;
+            background: #ffc8f5; box-shadow: 0 0 8px #ffc8f5, 0 0 16px #ff64c8;
+            pointer-events: none; z-index: 1;
         }
-        .warp-active .avatar-img {
-            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
+        .warp-active .orbit-ring { border-color: var(--cyan); box-shadow: 0 0 60px var(--cyan); animation: spin 0.4s linear infinite; }
+        .warp-active .avatar-img { border-color: var(--cyan); box-shadow: 0 0 0 8px rgba(80,255,255,0.3), 0 0 50px var(--cyan), 0 0 80px rgba(80,255,255,0.4); }
+        .warp-active .avatar-glow { background: radial-gradient(circle, rgba(80,255,255,0.5) 0%, transparent 70%); animation-duration: 0.6s; }
+
+        /* ── Text ──────────────────────────────────────────────── */
+        .name {
+            font-size: 2.8rem; font-weight: bold; letter-spacing: 3px;
+            margin-bottom: 8px; text-align: center; white-space: nowrap;
+            background: linear-gradient(135deg, #fff 0%, #ffc8f5 30%, #c8b8ff 60%, #fff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+            filter: drop-shadow(0 0 15px rgba(200, 130, 220, 0.6));
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
-        .name { font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8); margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
-        .role { font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 35px; text-align: center; display: flex; gap: 8px; justify-content: center; }
-        .separator { color: #ff64c8; }
+        .role {
+            font-size: 0.85rem; color: rgba(200, 210, 240, 0.75);
+            letter-spacing: 2px; text-transform: uppercase;
+            margin-bottom: 36px; text-align: center;
+            display: flex; gap: 10px; justify-content: center;
+        }
+        .separator { color: var(--pink); opacity: 0.7; }
 
-        .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
+        .divider-line {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            margin-bottom: 32px;
+        }
+
+        /* ── Buttons ───────────────────────────────────────────── */
+        .btns { display: flex; gap: 20px; pointer-events: auto; flex-direction: row; }
+
         .btn {
-            position: relative; padding: 12px 36px; border-radius: 50px;
-            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ffc8f5; text-decoration: none; font-size: 1.2rem;
-            overflow: hidden; transition: all 0.3s; cursor: pointer;
+            position: relative; padding: 13px 38px; border-radius: 50px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #e0c0f0; text-decoration: none; font-size: 1.1rem;
+            letter-spacing: 1.5px; overflow: hidden; cursor: pointer;
             white-space: nowrap; display: flex; justify-content: center;
             align-items: center; pointer-events: auto;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
         }
         .btn:hover {
-            background: rgba(255, 200, 245, 0.2);
-            box-shadow: 0 0 25px rgba(255, 100, 200, 0.5);
-            border-color: #ffc8f5; transform: translateY(-3px); color: #fff;
+            background: rgba(200, 150, 230, 0.18);
+            box-shadow:
+                0 0 30px rgba(200, 120, 220, 0.4),
+                0 0 60px rgba(180, 100, 210, 0.15),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            border-color: rgba(220, 170, 240, 0.5);
+            transform: translateY(-4px); color: #fff;
+            letter-spacing: 2.5px;
         }
         .btn::after {
-            content: ''; position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transform: skewX(-20deg); animation: shine 4s infinite;
+            content: ''; position: absolute; top: 0; left: -150%; width: 80%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transform: skewX(-25deg); animation: btnShine 5s infinite;
+        }
+        @keyframes btnShine {
+            0% { left: -150%; }
+            15% { left: 200%; }
+            100% { left: 200%; }
         }
 
-        /* Hint corner */
+        /* ── Corner HUD ────────────────────────────────────────── */
         .hint-corner {
-            position: fixed; bottom: 20px; right: 25px; z-index: 50;
+            position: fixed; bottom: 24px; right: 28px; z-index: 50;
             display: flex; align-items: center; justify-content: flex-end;
-            gap: 20px; opacity: 0; transition: opacity 1s; pointer-events: none;
+            gap: 22px; opacity: 0; transition: opacity 1s ease 0.3s; pointer-events: none;
         }
         .hint-corner.show { opacity: 1; }
 
         .icon-btn {
-            font-size: 24px; color: rgba(255, 255, 255, 0.4);
-            cursor: pointer; transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5); pointer-events: auto;
+            font-size: 22px; color: rgba(255, 255, 255, 0.3);
+            cursor: pointer; transition: all 0.35s ease;
+            text-shadow: 0 0 6px rgba(0,0,0,0.5); pointer-events: auto;
         }
-        .icon-btn:hover { color: #fff; transform: scale(1.2); text-shadow: 0 0 15px #50ffff; }
-        .icon-btn.active { color: #50ffff; text-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
+        .icon-btn:hover { color: #fff; transform: scale(1.25); text-shadow: 0 0 18px var(--cyan), 0 0 6px var(--cyan); }
+        .icon-btn.active { color: var(--cyan); text-shadow: 0 0 22px var(--cyan), 0 0 8px var(--cyan); transform: scale(1.12); }
 
         .kb-group { position: relative; display: flex; align-items: center; pointer-events: auto; }
 
         .hint-box {
             position: absolute; right: 100%; top: 50%;
-            transform: translateY(-50%) translateX(10px); margin-right: 15px;
-            background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px; color: #50ffff;
-            font-family: 'Courier New', monospace; font-size: 12px;
-            opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none;
+            transform: translateY(-50%) translateX(8px); margin-right: 16px;
+            background: rgba(0, 16, 32, 0.92); border: 1px solid rgba(80, 255, 255, 0.25);
+            padding: 9px 14px; border-radius: 10px; color: var(--cyan);
+            font-family: 'Courier New', monospace; font-size: 11px;
+            opacity: 0; transition: all 0.3s ease; white-space: nowrap; pointer-events: none;
+            letter-spacing: 0.5px;
         }
         .kb-group:hover .hint-box, .hint-box.typing-active {
             opacity: 1; transform: translateY(-50%) translateX(0);
         }
 
         kbd {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-weight: bold;
-            transition: all 0.1s;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px; padding: 2px 5px; margin: 0 1px; font-weight: bold;
+            transition: all 0.12s ease; font-size: 10px;
         }
-        kbd.active { background: #50ffff; color: #000; box-shadow: 0 0 10px #50ffff; }
+        kbd.active { background: var(--cyan); color: #000; box-shadow: 0 0 12px var(--cyan); border-color: var(--cyan); }
 
+        /* ── Toast notifications ────────────────────────────────── */
         #toast {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); border: 1px solid #50ffff;
-            color: #50ffff; padding: 10px 20px; border-radius: 5px;
-            opacity: 0; transition: opacity 0.5s; pointer-events: none;
-            font-family: monospace; z-index: 100; white-space: nowrap;
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(0, 10, 20, 0.9); border: 1px solid rgba(80, 255, 255, 0.35);
+            color: var(--cyan); padding: 10px 24px; border-radius: 8px;
+            opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none; font-family: 'Courier New', monospace;
+            font-size: 13px; letter-spacing: 1px; z-index: 100; white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 15px rgba(80,255,255,0.1);
         }
-        #toast.show { opacity: 1; }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* ── Boot screen ────────────────────────────────────────── */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 999; display: flex; justify-content: center;
-            align-items: center; font-family: monospace; cursor: pointer;
+            background: #020108; z-index: 999; display: flex; justify-content: center;
+            align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
+            overflow: hidden;
+        }
+        /* CRT scanlines */
+        #boot-screen::before {
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none; z-index: 1;
+        }
+        /* CRT vignette */
+        #boot-screen::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
+            pointer-events: none; z-index: 1;
         }
         .terminal-text {
-            color: #50ffff; font-size: 14px; line-height: 1.6;
-            text-shadow: 0 0 5px #50ffff; padding: 20px; max-width: 600px;
+            position: relative; z-index: 2;
+            color: #50ffff; font-size: 14px; line-height: 1.7;
+            text-shadow: 0 0 8px rgba(80,255,255,0.6), 0 0 2px rgba(80,255,255,0.8);
+            padding: 24px; max-width: 620px;
         }
         .system-off {
-            animation: tvOff 0.6s ease-in-out forwards; pointer-events: none;
+            animation: tvOff 0.5s ease-in-out forwards; pointer-events: none;
         }
-        .highlight { color: #ffc8f5; font-weight: bold; }
-        .blink { animation: blink 1s infinite; }
+        .terminal-text .cmd-line {
+            text-shadow: 0 0 6px rgba(80,255,255,0.4);
+        }
+        .highlight { color: #ffb8e8; font-weight: bold; text-shadow: 0 0 10px rgba(255,180,230,0.6); }
+        .blink { animation: blink 1s step-end infinite; }
 
-        /* Context menu */
+        /* ── Context menu ──────────────────────────────────────── */
         #context-menu {
-            position: fixed; top: 0; left: 0; width: 160px; height: 160px;
+            position: fixed; top: 0; left: 0; width: 180px; height: 180px;
             border-radius: 50%; pointer-events: none; z-index: 999;
-            opacity: 0; transform: scale(0.5);
-            transition: opacity 0.2s, transform 0.2s;
+            opacity: 0; transform: scale(0.4);
+            transition: opacity 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex; justify-content: center; align-items: center;
         }
         #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
         .ctx-center {
-            position: absolute; width: 10px; height: 10px;
-            background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff;
+            position: absolute; width: 8px; height: 8px;
+            background: var(--cyan); border-radius: 50%;
+            box-shadow: 0 0 16px var(--cyan), 0 0 32px rgba(80,255,255,0.5);
         }
+        /* Crosshair lines */
+        .ctx-crosshair {
+            position: absolute; background: rgba(80, 255, 255, 0.15);
+            pointer-events: none;
+        }
+        .ctx-crosshair.h { width: 100%; height: 1px; top: 50%; }
+        .ctx-crosshair.v { width: 1px; height: 100%; left: 50%; }
         .ctx-ring {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 1px dashed rgba(80, 255, 255, 0.3);
-            animation: spin 10s linear infinite;
+            border: 1px dashed rgba(80, 255, 255, 0.2);
+            animation: spin 8s linear infinite;
         }
         .ctx-item {
-            position: absolute; width: 50px; height: 50px;
+            position: absolute; width: 52px; height: 52px;
             display: flex; justify-content: center; align-items: center;
-            background: rgba(0, 20, 40, 0.8);
-            border: 1px solid rgba(80, 255, 255, 0.4);
-            border-radius: 50%; color: #50ffff;
-            font-family: monospace; font-size: 10px; font-weight: bold;
-            cursor: pointer; transition: all 0.2s;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            background: rgba(5, 15, 35, 0.9);
+            border: 1px solid rgba(80, 255, 255, 0.3);
+            border-radius: 50%; color: var(--cyan);
+            font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 0 12px rgba(0,0,0,0.6), inset 0 0 8px rgba(80,255,255,0.05);
         }
         .ctx-item:hover {
-            background: #50ffff; color: #000;
-            box-shadow: 0 0 20px #50ffff; transform: scale(1.1);
+            background: var(--cyan); color: #000;
+            box-shadow: 0 0 30px var(--cyan), 0 0 50px rgba(80,255,255,0.4);
+            transform: scale(1.15); border-color: var(--cyan);
         }
         .ctx-top { top: 0; } .ctx-bottom { bottom: 0; }
         .ctx-left { left: 0; } .ctx-right { right: 0; }
 
+        /* ── Speed HUD ─────────────────────────────────────────── */
         .speed-hud {
-            position: fixed; bottom: 20px; left: 25px; z-index: 50;
-            font-family: monospace; color: rgba(255,255,255,0.5);
-            font-size: 12px; pointer-events: none;
-            display: flex; flex-direction: column; gap: 5px;
-            opacity: 0; transition: opacity 1s;
+            position: fixed; bottom: 24px; left: 28px; z-index: 50;
+            font-family: 'Courier New', monospace; color: rgba(200,220,240,0.45);
+            font-size: 11px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 6px;
+            opacity: 0; transition: opacity 1s ease 0.3s;
+            letter-spacing: 1px;
         }
         .speed-hud.show { opacity: 1; }
         .speed-bar-container {
-            width: 150px; height: 4px; background: rgba(255,255,255,0.1);
+            width: 140px; height: 3px; background: rgba(255,255,255,0.06);
             border-radius: 2px; overflow: hidden;
         }
         .speed-bar {
-            height: 100%; background: #50ffff; width: 50%;
-            transition: width 0.1s linear, background 0.3s;
-            box-shadow: 0 0 5px #50ffff;
+            height: 100%; width: 50%;
+            background: linear-gradient(90deg, rgba(80,255,255,0.4), var(--cyan));
+            border-radius: 2px;
+            transition: width 0.08s linear, background 0.3s ease;
+            box-shadow: 0 0 8px rgba(80,255,255,0.5);
         }
 
-        /* Keyframes */
+        /* ── Animations (consolidated) ─────────────────────────── */
         @keyframes tvOff {
-            0% { transform: scale(1, 1); opacity: 1; }
-            100% { transform: scale(0, 0.005); opacity: 0; }
+            0% { transform: scale(1, 1); opacity: 1; filter: brightness(1); }
+            60% { filter: brightness(3); }
+            100% { transform: scale(0.8, 0.003); opacity: 0; filter: brightness(0); }
         }
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes shine {
-            0% { left: -100%; }
-            20% { left: 200%; }
-            100% { left: 200%; }
-        }
         @keyframes warpSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(1080deg); }
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(540deg) scale(1.08); }
+            100% { transform: rotate(1080deg) scale(1); }
         }
 
-        /* Mobile */
+        /* ── Mobile ────────────────────────────────────────────── */
         @media (max-width: 700px) {
-            .glass-card { width: 85%; padding: 40px 20px; max-height: 90vh; overflow-y: auto; }
-            .name { font-size: 2rem; }
-            .role { flex-direction: column; gap: 5px; }
+            .glass-card { width: 88%; padding: 36px 22px; max-height: 92vh; overflow-y: auto; }
+            .name { font-size: 2rem; white-space: normal; }
+            .role { flex-direction: column; gap: 4px; }
             .separator { display: none; }
-            .btns { flex-direction: column; width: 100%; gap: 15px; }
-            .btn { width: 100%; text-align: center; }
-            .hint-corner { right: 15px; bottom: 15px; }
+            .btns { flex-direction: column; width: 100%; gap: 12px; }
+            .btn { width: 100%; text-align: center; padding: 12px 24px; }
+            .hint-corner { right: 16px; bottom: 16px; }
             .kb-group, .speed-hud, #context-menu { display: none !important; }
+            .divider-line { margin-bottom: 24px; }
         }
     </style>
 </head>
@@ -299,10 +444,11 @@
     <div class="main" id="main-content">
         <div class="glass-card" id="tilt-card">
             <div class="avatar-container" id="avatar-btn">
+                <div class="avatar-glow"></div>
                 <div class="orbit-ring" id="orbit-ring"></div>
                 <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg"
                      class="avatar-img" id="avatar-img"
-                     alt="头像" loading="lazy" width="130" height="130">
+                     alt="头像" loading="lazy" width="126" height="126">
             </div>
             <div class="name">嘎嘎sama | 今予</div>
             <div class="role">
@@ -310,6 +456,7 @@
                 <span class="separator">|</span>
                 <span>Mechanical Engineering</span>
             </div>
+            <div class="divider-line"></div>
             <div class="btns">
                 <a href="https://gagasama.vercel.app" target="_blank" rel="noopener" class="btn">博客</a>
                 <a href="https://github.com/JYbestow" target="_blank" rel="noopener" class="btn">Github</a>
@@ -319,19 +466,21 @@
     </div>
 
     <div class="speed-hud" id="ui-hud">
-        <div class="hud-text" id="speed-text">TIME: 1.0x</div>
+        <div class="hud-text" id="speed-text">TIME  ·  1.00x</div>
         <div class="speed-bar-container"><div class="speed-bar" id="speed-bar"></div></div>
     </div>
 
     <div class="hint-corner" id="ui-hint">
         <div class="kb-group">
-            <div class="hint-box" id="konami-hint">Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></div>
-            <div class="icon-btn" id="kb-icon" aria-label="Konami Code hint">⌨️</div>
+            <div class="hint-box" id="konami-hint">Code <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></div>
+            <div class="icon-btn" id="kb-icon" aria-label="Konami Code hint">⌨</div>
         </div>
-        <div class="icon-btn" id="hand-btn" title="Toggle Hand Control" aria-label="Toggle Hand Control">🖐️</div>
+        <div class="icon-btn" id="hand-btn" title="Hand Control" aria-label="Toggle Hand Control">🖐</div>
     </div>
 
     <div id="context-menu">
+        <div class="ctx-crosshair h"></div>
+        <div class="ctx-crosshair v"></div>
         <div class="ctx-ring"></div><div class="ctx-center"></div>
         <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
         <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
@@ -340,28 +489,32 @@
     </div>
 
     <script>
-        console.log("%c Hello ZJU Engineer!", "font-size: 20px; color: #50ffff;");
+        console.log("%c🚀 Hello ZJU Engineer! %cNeural Link Online",
+            "font-size:18px;color:#50ffff;", "color:#ffc8f5;");
         var requestAnimFrame = (window.requestAnimationFrame || function(cb) { setTimeout(cb, 1000 / 60); }).bind(window);
         var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 700;
 
         $(function() {
-            // ── Boot Screen ────────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  BOOT SCREEN
+            // ═══════════════════════════════════════════════════════════
             var cmdLines = ["> [SCROLL] : TIME DILATION", "> [HOLD]   : SINGULARITY"];
             if (!isMobile) {
-                cmdLines.push("> [RIGHT CLICK] : TACTICAL MENU");
-                cmdLines.push("> [HAND]   : GOD MODE");
+                cmdLines.push("> [R-CLICK] : TACTICAL MENU");
+                cmdLines.push("> [HAND]    : GOD MODE");
             } else {
                 cmdLines.push("> [TAP AVATAR] : WARP DRIVE");
             }
 
             var lines = [
                 "INITIALIZING PHYSICS ENGINE...",
-                "LOADING NEURAL NETWORK... [OK]",
-                "--------------------------------",
+                "LOADING NEURAL NETWORK...  [OK]",
+                "CALIBRATING QUANTUM STATE... [OK]",
+                "───────────────────────────────",
                 "COMMANDS:"
             ].concat(cmdLines).concat([
-                "--------------------------------",
-                "CLICK TO START <span class='blink'>_</span>"
+                "───────────────────────────────",
+                "CLICK TO START <span class='blink'>█</span>"
             ]);
 
             var term = document.getElementById('terminal-content');
@@ -369,69 +522,57 @@
 
             function typeLine() {
                 if (lIdx >= lines.length) return;
-
-                // Last line (prompt) — render with HTML at once (contains span)
                 if (lIdx === lines.length - 1) {
-                    if (cIdx === 0) {
-                        term.innerHTML += '<div class="cmd-line highlight">' + lines[lIdx] + '</div>';
-                    }
-                    lIdx++;
-                    return;
+                    if (cIdx === 0) term.innerHTML += '<div class="cmd-line highlight">' + lines[lIdx] + '</div>';
+                    lIdx++; return;
                 }
-
-                if (cIdx === 0) {
-                    term.innerHTML += '<div class="cmd-line" id="l-' + lIdx + '"></div>';
-                }
-
+                if (cIdx === 0) term.innerHTML += '<div class="cmd-line" id="l-' + lIdx + '"></div>';
                 var el = document.getElementById('l-' + lIdx);
                 if (el) el.textContent += lines[lIdx].charAt(cIdx);
                 cIdx++;
-
-                if (cIdx < lines[lIdx].length) {
-                    setTimeout(typeLine, 15);
-                } else {
-                    cIdx = 0; lIdx++;
-                    setTimeout(typeLine, 50);
-                }
+                if (cIdx < lines[lIdx].length) setTimeout(typeLine, 15);
+                else { cIdx = 0; lIdx++; setTimeout(typeLine, 45); }
             }
-
-            setTimeout(typeLine, 500);
+            setTimeout(typeLine, 400);
 
             function closeBoot() {
-                var bs = document.getElementById('boot-screen');
-                bs.classList.add('system-off');
+                document.getElementById('boot-screen').classList.add('system-off');
                 document.getElementById('main-content').classList.add('loaded');
                 setTimeout(function() {
                     document.getElementById('ui-hint').classList.add('show');
                     document.getElementById('ui-hud').classList.add('show');
-                }, 800);
+                }, 700);
+                // Start particle loop only after boot to avoid wasting GPU behind opaque boot screen
+                if (!loopStarted) { loopStarted = true; loop(); }
             }
+            var loopStarted = false;
             document.getElementById('boot-screen').addEventListener('click', closeBoot);
             document.getElementById('boot-screen').addEventListener('touchend', function(e) { e.preventDefault(); closeBoot(); });
 
-            // ── Canvas Core ────────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  CANVAS SETUP
+            // ═══════════════════════════════════════════════════════════
             var canvas = document.getElementById('startrack');
             var ctx = canvas.getContext('2d');
-            var cw, ch;
+            var cw, ch, centerX, centerY;
 
             function resize() {
                 cw = window.innerWidth; ch = window.innerHeight;
-                var dpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
-                canvas.width = cw * dpr;
-                canvas.height = ch * dpr;
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                centerX = cw / 2; centerY = ch / 2;
+                canvas.width = cw; canvas.height = ch;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
             }
             resize();
             window.addEventListener('resize', resize, { passive: true });
 
-            // Mouse / tilt state
+            // Mouse / tilt
             var mx = 0, my = 0, rawMx = 0, rawMy = 0;
             function updateCoords(x, y) {
                 rawMx = x; rawMy = y;
-                mx = (x - cw / 2) / cw;
-                my = (y - ch / 2) / ch;
+                mx = (x - centerX) / cw;
+                my = (y - centerY) / ch;
                 var c = document.getElementById('tilt-card');
-                if (c) c.style.transform = 'perspective(1000px) rotateX(' + (-my * 15) + 'deg) rotateY(' + (mx * 15) + 'deg)';
+                if (c) c.style.transform = 'perspective(1000px) rotateX(' + (-my * 18).toFixed(2) + 'deg) rotateY(' + (mx * 18).toFixed(2) + 'deg)';
             }
             document.addEventListener('mousemove', function(e) { updateCoords(e.clientX, e.clientY); }, { passive: true });
             document.addEventListener('touchmove', function(e) {
@@ -443,7 +584,9 @@
             var rainbowMode = false, isSucking = false;
             var handExpansion = 0, targetExpansion = 0;
 
-            // ── Hand Control (Desktop Only) ────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  HAND CONTROL (Desktop only)
+            // ═══════════════════════════════════════════════════════════
             if (!isMobile) {
                 var videoEl = document.getElementById('input_video');
                 var overlayCanvas = document.getElementById('overlay_canvas');
@@ -453,31 +596,25 @@
                 var loadingBar = document.getElementById('loading-bar');
                 var isHandActive = false, handsModule, cameraFeed;
 
-                overlayCanvas.width = 320;
-                overlayCanvas.height = 240;
+                overlayCanvas.width = 320; overlayCanvas.height = 240;
 
                 window.onHandResults = function(results) {
                     loadingBar.style.width = '0%';
-
                     ctxOverlay.save();
                     ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
                     if (results.multiHandLandmarks) {
                         for (var i = 0; i < results.multiHandLandmarks.length; i++) {
-                            var landmarks = results.multiHandLandmarks[i];
-                            if (typeof drawConnectors === 'function') {
-                                drawConnectors(ctxOverlay, landmarks, HAND_CONNECTIONS, { color: '#50ffff', lineWidth: 2 });
-                            }
-                            if (typeof drawLandmarks === 'function') {
-                                drawLandmarks(ctxOverlay, landmarks, { color: '#ffc8f5', lineWidth: 1, radius: 2 });
-                            }
+                            var lm = results.multiHandLandmarks[i];
+                            if (typeof drawConnectors === 'function') drawConnectors(ctxOverlay, lm, HAND_CONNECTIONS, { color: '#50ffff', lineWidth: 2 });
+                            if (typeof drawLandmarks === 'function') drawLandmarks(ctxOverlay, lm, { color: '#ffc8f5', lineWidth: 1, radius: 2 });
                         }
                     }
                     ctxOverlay.restore();
 
                     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                        var lm = results.multiHandLandmarks[0];
-                        var dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
-                        var palm = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
+                        var lm0 = results.multiHandLandmarks[0];
+                        var dist = Math.hypot(lm0[4].x - lm0[20].x, lm0[4].y - lm0[20].y);
+                        var palm = Math.hypot(lm0[0].x - lm0[9].x, lm0[0].y - lm0[9].y);
                         var openness = dist / (palm * 1.6);
                         if (openness < 0.3) targetExpansion = -0.8;
                         else if (openness > 0.85) targetExpansion = 1.2;
@@ -489,17 +626,10 @@
                     if (!isHandActive) {
                         showToast("NEURAL LINK INITIALIZING...");
                         loadingBar.style.width = '30%';
-                        handsModule = new Hands({
-                            locateFile: function(file) {
-                                return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
-                            }
-                        });
+                        handsModule = new Hands({ locateFile: function(f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + f; } });
                         handsModule.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5 });
                         handsModule.onResults(window.onHandResults);
-                        cameraFeed = new Camera(videoEl, {
-                            onFrame: function() { handsModule.send({ image: videoEl }); },
-                            width: 320, height: 240
-                        });
+                        cameraFeed = new Camera(videoEl, { onFrame: function() { handsModule.send({ image: videoEl }); }, width: 320, height: 240 });
                         loadingBar.style.width = '60%';
                         cameraFeed.start().then(function() {
                             loadingBar.style.width = '100%';
@@ -513,27 +643,25 @@
                             showToast("CAMERA ACCESS DENIED");
                         });
                     } else {
-                        if (videoEl.srcObject) {
-                            videoEl.srcObject.getTracks().forEach(function(t) { t.stop(); });
-                        }
+                        if (videoEl.srcObject) videoEl.srcObject.getTracks().forEach(function(t) { t.stop(); });
                         videoEl.srcObject = null;
-                        cameraBox.classList.remove('active');
-                        handBtn.classList.remove('active');
-                        isHandActive = false;
-                        targetExpansion = 0;
+                        cameraBox.classList.remove('active'); handBtn.classList.remove('active');
+                        isHandActive = false; targetExpansion = 0;
                         ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                        showToast("NEURAL LINK OFF");
+                        showToast("NEURAL LINK OFFLINE");
                     }
                 };
                 handBtn.addEventListener('click', window.toggleHand);
             }
 
-            // ── Star System ────────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  STAR SYSTEM
+            // ═══════════════════════════════════════════════════════════
             var Star = function() {
-                this.reset();
                 this.angle = Math.random() * Math.PI * 2;
-                this.renderColor = 'rgba(200,200,255,0.5)'; // pre-allocate
                 this.hue = Math.random() * 360;
+                this.renderColor = 'rgba(200,200,255,0.5)';
+                this.reset();
             };
 
             Star.prototype.reset = function() {
@@ -541,31 +669,38 @@
                 this.r = Math.random() * limit + 50;
                 this.baseR = this.r;
                 this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
-                this.baseSize = Math.random() * 2 + 0.5;
+                this.baseSize = Math.random() * 2.2 + 0.4;
                 this.size = this.baseSize;
-                this.x = cw / 2 + Math.cos(this.angle) * this.r;
-                this.y = ch / 2 + Math.sin(this.angle) * this.r;
+                this.x = centerX + Math.cos(this.angle) * this.r;
+                this.y = centerY + Math.sin(this.angle) * this.r;
                 this.vx = 0; this.vy = 0;
-                var ratio = (this.r - 50) / limit;
+                var ratio = Math.min(1, (this.r - 50) / limit);
+                // Color zones: inner=blueish, mid=purple, outer=pink
                 this.baseColor = {
-                    r: 200 + Math.floor(55 * ratio),
-                    g: 200 - Math.floor(100 * ratio),
-                    b: 255,
-                    a: Math.random() * 0.8 + 0.2
+                    r: 160 + Math.floor(100 * ratio),
+                    g: 140 + Math.floor(60 * (1 - ratio)),
+                    b: 220 + Math.floor(35 * ratio),
+                    baseAlpha: 0.25 + Math.random() * 0.55
                 };
+                this._dirty = true;
             };
 
             Star.prototype.updateColor = function() {
                 if (isWarping) {
-                    this.renderColor = 'rgba(100,255,255,1)';
+                    this.renderColor = 'rgba(80,255,255,1)';
                 } else if (rainbowMode) {
-                    this.hue = (this.hue + 2) % 360;
-                    // Pre-compute HSL → easy with hsla string (slightly slower but acceptable)
-                    this.renderColor = 'hsla(' + this.hue + ',100%,70%,0.8)';
-                } else {
+                    this.hue = (this.hue + 2.5) % 360;
+                } else if (this._dirty) {
                     var c = this.baseColor;
-                    this.renderColor = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + c.a + ')';
+                    this.renderColor = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + c.baseAlpha + ')';
+                    this._dirty = false;
                 }
+            };
+
+            Star.prototype.getColor = function() {
+                if (isWarping) return this.renderColor;
+                if (rainbowMode) return 'hsla(' + Math.floor(this.hue) + ',100%,70%,0.8)';
+                return this.renderColor;
             };
 
             Star.prototype.update = function() {
@@ -573,8 +708,8 @@
 
                 var expansionFactor = 1 + handExpansion * 1.5;
                 var targetR = this.baseR * expansionFactor;
-                var tx = cw / 2 + Math.cos(this.angle) * targetR;
-                var ty = ch / 2 + Math.sin(this.angle) * targetR;
+                var tx = centerX + Math.cos(this.angle) * targetR;
+                var ty = centerY + Math.sin(this.angle) * targetR;
 
                 if (handExpansion > 0.8) {
                     var jitter = handExpansion * 8;
@@ -587,10 +722,8 @@
 
                 if (isSucking) {
                     var dx = rawMx - this.x, dy = rawMy - this.y;
-                    var distSq = dx * dx + dy * dy;
-                    var force = 2000 / (distSq + 100);
-                    ax += dx * force;
-                    ay += dy * force;
+                    var force = 2000 / (dx * dx + dy * dy + 100);
+                    ax += dx * force; ay += dy * force;
                 }
 
                 this.vx += ax; this.vy += ay;
@@ -603,48 +736,51 @@
 
                 this.updateColor();
 
-                if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) {
-                    this.reset();
-                }
+                if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) this.reset();
             };
 
             Star.prototype.draw = function() {
-                var dx = this.x - mx * 30;
-                var dy = this.y - my * 30;
+                var dx = this.x - mx * 35;
+                var dy = this.y - my * 35;
                 if (isSucking) {
-                    var d2Hole = (dx - rawMx) * (dx - rawMx) + (dy - rawMy) * (dy - rawMy);
-                    if (d2Hole < 400) { this.reset(); return; }
+                    var d2 = (dx - rawMx) * (dx - rawMx) + (dy - rawMy) * (dy - rawMy);
+                    if (d2 < 400) { this.reset(); return; }
                 }
                 ctx.beginPath();
                 ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.renderColor;
+                ctx.fillStyle = this.getColor();
                 ctx.fill();
             };
 
-            var PARTICLE_COUNT = isMobile ? 500 : 1000;
+            var PARTICLE_COUNT = isMobile ? 250 : 500;
             var stars = new Array(PARTICLE_COUNT);
             for (var i = 0; i < PARTICLE_COUNT; i++) stars[i] = new Star();
 
-            // ── Toast ──────────────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  TOAST
+            // ═══════════════════════════════════════════════════════════
             var toastTimeout;
             function showToast(msg) {
                 var t = document.getElementById('toast');
-                t.innerText = msg;
-                t.classList.add('show');
+                t.innerText = msg; t.classList.add('show');
                 clearTimeout(toastTimeout);
-                toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 2500);
+                toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 2600);
             }
 
-            // ── Time Dilation (Scroll) ────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  TIME DILATION (Scroll)
+            // ═══════════════════════════════════════════════════════════
             document.addEventListener('wheel', function(e) {
                 globalSpeed -= e.deltaY * 0.001;
                 if (globalSpeed > 5) globalSpeed = 5;
                 if (globalSpeed < -2) globalSpeed = -2;
-                document.getElementById('speed-text').innerText = 'TIME: ' + globalSpeed.toFixed(2) + 'x';
+                document.getElementById('speed-text').innerText = 'TIME  ·  ' + globalSpeed.toFixed(2) + 'x';
                 document.getElementById('speed-bar').style.width = Math.max(0, Math.min(100, (globalSpeed + 2) / 7 * 100)) + '%';
             }, { passive: false });
 
-            // ── Singularity (Mousedown / Touch) ────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  SINGULARITY (Mouse/Touch hold)
+            // ═══════════════════════════════════════════════════════════
             document.addEventListener('mousedown', function(e) {
                 if (e.target.closest('.icon-btn, #context-menu, #avatar-btn')) return;
                 if (e.button === 0) isSucking = true;
@@ -656,7 +792,9 @@
             }, { passive: false });
             document.addEventListener('touchend', function() { isSucking = false; });
 
-            // ── Warp Drive ────────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  WARP DRIVE (Avatar click)
+            // ═══════════════════════════════════════════════════════════
             document.getElementById('avatar-btn').addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (isWarping) return;
@@ -664,19 +802,15 @@
                 document.getElementById('avatar-btn').classList.add('warp-active');
                 document.getElementById('avatar-img').classList.add('spin-warp');
 
-                var accel = setInterval(function() {
-                    if (warpSpeed < 20) warpSpeed += 1;
-                }, 50);
-
-                showToast("WARP ENGAGED");
+                var accel = setInterval(function() { if (warpSpeed < 20) warpSpeed += 1; }, 50);
+                showToast("WARP DRIVE ENGAGED");
 
                 setTimeout(function() {
                     clearInterval(accel);
                     var decel = setInterval(function() {
                         if (warpSpeed > 1) warpSpeed -= 1;
                         else {
-                            warpSpeed = 1;
-                            isWarping = false;
+                            warpSpeed = 1; isWarping = false;
                             document.getElementById('avatar-btn').classList.remove('warp-active');
                             document.getElementById('avatar-img').classList.remove('spin-warp');
                             clearInterval(decel);
@@ -685,63 +819,59 @@
                 }, 2500);
             });
 
-            // ── Context Menu ──────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  CONTEXT MENU
+            // ═══════════════════════════════════════════════════════════
             var ctxMenu = document.getElementById('context-menu');
             document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 if (isMobile) return;
-                ctxMenu.style.left = (e.clientX - 80) + 'px';
-                ctxMenu.style.top = (e.clientY - 80) + 'px';
+                ctxMenu.style.left = (e.clientX - 90) + 'px';
+                ctxMenu.style.top = (e.clientY - 90) + 'px';
                 ctxMenu.classList.add('visible');
             });
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
             });
 
-            document.getElementById('ctx-warp').onclick = function() {
-                document.getElementById('avatar-btn').click();
-                ctxMenu.classList.remove('visible');
-            };
-            document.getElementById('ctx-rgb').onclick = function() {
-                rainbowMode = !rainbowMode;
-                showToast(rainbowMode ? "RGB: ON" : "RGB: OFF");
-                ctxMenu.classList.remove('visible');
-            };
+            document.getElementById('ctx-warp').onclick = function() { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); };
+            document.getElementById('ctx-rgb').onclick = function() { rainbowMode = !rainbowMode; showToast(rainbowMode ? "RAINBOW MODE: ON" : "RAINBOW MODE: OFF"); ctxMenu.classList.remove('visible'); };
             document.getElementById('ctx-freeze').onclick = function() {
                 globalSpeed = 0;
-                document.getElementById('speed-text').innerText = 'TIME: 0.00x';
+                document.getElementById('speed-text').innerText = 'TIME  ·  0.00x';
                 document.getElementById('speed-bar').style.width = '0%';
-                showToast("FROZEN");
+                showToast("TIME FROZEN");
                 ctxMenu.classList.remove('visible');
             };
             document.getElementById('ctx-reset').onclick = function() {
-                globalSpeed = 1;
-                rainbowMode = false;
-                document.getElementById('speed-text').innerText = 'TIME: 1.00x';
+                globalSpeed = 1; rainbowMode = false;
+                document.getElementById('speed-text').innerText = 'TIME  ·  1.00x';
                 document.getElementById('speed-bar').style.width = '50%';
-                showToast("RESET");
+                showToast("SYSTEM RESET");
                 ctxMenu.classList.remove('visible');
             };
 
-            // ── Konami Code ───────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  KONAMI CODE
+            // ═══════════════════════════════════════════════════════════
             if (!isMobile) {
-                var konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+                var konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
                 var kIdx = 0;
                 var allKbds = document.querySelectorAll('#konami-hint kbd');
                 document.addEventListener('keydown', function(e) {
                     if (e.key === konamiCode[kIdx]) {
+                        e.preventDefault();
                         if (kIdx === 0) document.getElementById('konami-hint').classList.add('typing-active');
                         if (allKbds[kIdx]) allKbds[kIdx].classList.add('active');
                         kIdx++;
                         if (kIdx === konamiCode.length) {
                             rainbowMode = !rainbowMode;
-                            showToast(rainbowMode ? "RGB: ON" : "RGB: OFF");
+                            showToast(rainbowMode ? "RAINBOW MODE: ON" : "RAINBOW MODE: OFF");
                             setTimeout(function() {
                                 kIdx = 0;
                                 for (var i = 0; i < allKbds.length; i++) allKbds[i].classList.remove('active');
                                 document.getElementById('konami-hint').classList.remove('typing-active');
-                            }, 800);
+                            }, 900);
                         }
                     } else {
                         kIdx = 0;
@@ -751,14 +881,15 @@
                 });
             }
 
-            // ── Main Loop ─────────────────────────────────────────────
+            // ═══════════════════════════════════════════════════════════
+            //  MAIN LOOP
+            // ═══════════════════════════════════════════════════════════
             function loop() {
-                handExpansion += (targetExpansion - handExpansion) * 0.1;
+                handExpansion += (targetExpansion - handExpansion) * 0.08;
 
-                // Trail effect
+                // Trail fade
                 ctx.globalCompositeOperation = 'destination-out';
-                var alpha = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 0.1 : 0.15;
-                ctx.fillStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+                ctx.fillStyle = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.13)';
                 ctx.fillRect(0, 0, cw, ch);
 
                 ctx.globalCompositeOperation = 'lighter';
@@ -767,21 +898,29 @@
                     stars[i].draw();
                 }
 
+                // Draw singularity ring
                 if (isSucking) {
                     ctx.globalCompositeOperation = 'source-over';
+                    // Outer glow ring
                     ctx.beginPath();
-                    ctx.arc(rawMx, rawMy, 20, 0, Math.PI * 2);
-                    ctx.fillStyle = '#000';
-                    ctx.fill();
-                    ctx.strokeStyle = '#50ffff';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    ctx.arc(rawMx, rawMy, 28, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(80,255,255,0.4)';
+                    ctx.lineWidth = 1.5; ctx.stroke();
+                    // Inner ring
+                    ctx.beginPath();
+                    ctx.arc(rawMx, rawMy, 16, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(80,255,255,0.7)';
+                    ctx.lineWidth = 2; ctx.stroke();
+                    // Core dot
+                    ctx.beginPath();
+                    ctx.arc(rawMx, rawMy, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#50ffff'; ctx.fill();
                     ctx.globalCompositeOperation = 'lighter';
                 }
+
                 requestAnimFrame(loop);
             }
-
-            loop();
+            // loop() deferred until boot screen dismissed — see closeBoot()
         });
     </script>
 </body>
