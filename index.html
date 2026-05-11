@@ -1,57 +1,74 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="嘎嘎's Homepage — Zhejiang University, Mechanical Engineering. Neural Link interactive experience.">
+    <meta name="keywords" content="嘎嘎,今予,Zhejiang University,Mechanical Engineering,Neural Link">
+    <meta property="og:title" content="嘎嘎's Homepage - Neural Link">
+    <meta property="og:description" content="Interactive neural link experience with gesture control and warp drive.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0f0c29">
     <title>嘎嘎's Homepage - Neural Link</title>
     <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
 
     <style>
-        @font-face { font-family: "sakura"; src: url("./sakura.min.ttf") format("truetype"); }
+        @font-face { font-family: "sakura"; src: url("./sakura.min.ttf") format("truetype"); font-display: swap; }
+
+        *, *::before, *::after { box-sizing: border-box; }
 
         body {
             margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
+            background: #0f0c29;
             background: linear-gradient(125deg, #0f0c29, #302b63, #24243e, #1b2735, #090a0f);
             background-size: 400% 400%;
             animation: aurora 20s ease infinite;
             font-family: 'sakura', sans-serif;
             user-select: none; -webkit-user-select: none;
-            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none;
+            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         @keyframes aurora {
-            0% { background-position: 0% 50%; }
+            0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
-        canvas#startrack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        canvas#startrack {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none; display: block; will-change: transform;
+        }
 
-        /* --- 📷 摄像头与骨骼绘制容器 (左下角) --- */
+        /* Camera box */
         .camera-box {
             position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
             border: 1px solid rgba(80, 255, 255, 0.3); border-radius: 8px;
-            z-index: 900; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.5s;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); background: rgba(0,0,0,0.5);
+            z-index: 900; overflow: hidden; opacity: 0; pointer-events: none;
+            transition: opacity 0.5s; box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
         }
         .camera-box.active { opacity: 1; }
-        
-        /* 视频和绘图层重叠，并做镜像翻转 */
+
         #input_video, #overlay_canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             transform: scaleX(-1); object-fit: cover;
         }
-        #input_video { opacity: 0.5; } /* 视频半透明，突出骨骼 */
+        #input_video { opacity: 0.5; }
 
-        #loading-bar { position: fixed; top: 0; left: 0; height: 3px; background: #50ffff; width: 0%; z-index: 2000; transition: width 0.3s; box-shadow: 0 0 10px #50ffff; }
+        #loading-bar {
+            position: fixed; top: 0; left: 0; height: 3px; background: #50ffff;
+            width: 0%; z-index: 2000; transition: width 0.3s;
+            box-shadow: 0 0 10px #50ffff; pointer-events: none;
+        }
 
-        .main { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10; perspective: 1200px; opacity: 0; transition: opacity 1s ease-in; pointer-events: none; }
+        .main {
+            position: relative; width: 100%; height: 100%; display: flex;
+            justify-content: center; align-items: center; z-index: 10;
+            perspective: 1200px; opacity: 0; transition: opacity 1s ease-in;
+            pointer-events: none;
+        }
         .main.loaded { opacity: 1; }
 
         .glass-card {
@@ -63,31 +80,70 @@
             display: flex; flex-direction: column; align-items: center;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s ease-out;
-            max-width: 90%; box-sizing: border-box;
+            max-width: 90%; will-change: transform;
         }
 
-        .avatar-container { position: relative; width: 130px; height: 130px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.3s; pointer-events: auto; }
+        .avatar-container {
+            position: relative; width: 130px; height: 130px;
+            margin-bottom: 25px; display: flex; justify-content: center;
+            align-items: center; cursor: pointer; transition: transform 0.3s;
+            pointer-events: auto;
+        }
         .avatar-container:hover { transform: scale(1.05); }
         .avatar-container:active { transform: scale(0.95); }
-        .avatar-img { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255, 255, 255, 0.9); box-shadow: 0 0 30px rgba(255, 200, 245, 0.6); z-index: 2; transition: transform 1s; }
+        .avatar-img {
+            width: 130px; height: 130px; border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 30px rgba(255, 200, 245, 0.6);
+            z-index: 2; transition: transform 1s; background: #fff;
+            will-change: transform;
+        }
         .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
-        .orbit-ring { position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px; border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3); animation: spin 20s linear infinite; transition: all 0.5s; }
-        .warp-active .orbit-ring { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; animation: spin 0.5s linear infinite; }
-        .warp-active .avatar-img { border-color: #50ffff; box-shadow: 0 0 50px #50ffff; }
+
+        .orbit-ring {
+            position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px;
+            border-radius: 50%; border: 2px dashed rgba(255, 200, 245, 0.3);
+            animation: spin 20s linear infinite; transition: all 0.5s;
+            will-change: transform;
+        }
+        .warp-active .orbit-ring {
+            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
+            animation: spin 0.5s linear infinite;
+        }
+        .warp-active .avatar-img {
+            border-color: #50ffff; box-shadow: 0 0 50px #50ffff;
+        }
 
         .name { font-size: 2.8rem; color: #fff; text-shadow: 0 0 15px rgba(255, 100, 200, 0.8); margin-bottom: 10px; text-align: center; font-weight: bold; letter-spacing: 2px; white-space: nowrap; }
-        .role { font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 35px; text-align: center; display: flex; flex-direction: row; gap: 8px; justify-content: center; }
+        .role { font-size: 0.9rem; color: rgba(220, 230, 255, 0.8); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 35px; text-align: center; display: flex; gap: 8px; justify-content: center; }
         .separator { color: #ff64c8; }
-        .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
-        .btn { position: relative; padding: 12px 36px; border-radius: 50px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffc8f5; text-decoration: none; font-size: 1.2rem; overflow: hidden; transition: all 0.3s; cursor: pointer; white-space: nowrap; display: flex; justify-content: center; align-items: center; pointer-events: auto; }
-        .btn:hover { background: rgba(255, 200, 245, 0.2); box-shadow: 0 0 25px rgba(255, 100, 200, 0.5); border-color: #ffc8f5; transform: translateY(-3px); color: #fff; }
-        .btn::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: shine 4s infinite; }
 
-        /* --- 🔧 右下角控制区 (布局修复) --- */
+        .btns { display: flex; gap: 25px; pointer-events: auto; flex-direction: row; }
+        .btn {
+            position: relative; padding: 12px 36px; border-radius: 50px;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffc8f5; text-decoration: none; font-size: 1.2rem;
+            overflow: hidden; transition: all 0.3s; cursor: pointer;
+            white-space: nowrap; display: flex; justify-content: center;
+            align-items: center; pointer-events: auto;
+        }
+        .btn:hover {
+            background: rgba(255, 200, 245, 0.2);
+            box-shadow: 0 0 25px rgba(255, 100, 200, 0.5);
+            border-color: #ffc8f5; transform: translateY(-3px); color: #fff;
+        }
+        .btn::after {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg); animation: shine 4s infinite;
+        }
+
+        /* Hint corner */
         .hint-corner {
-            position: fixed; bottom: 20px; right: 25px; z-index: 50; 
-            display: flex; align-items: center; justify-content: flex-end; gap: 20px; /* 按钮间距 */
-            opacity: 0; transition: opacity 1s; pointer-events: none;
+            position: fixed; bottom: 20px; right: 25px; z-index: 50;
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 20px; opacity: 0; transition: opacity 1s; pointer-events: none;
         }
         .hint-corner.show { opacity: 1; }
 
@@ -99,49 +155,122 @@
         .icon-btn:hover { color: #fff; transform: scale(1.2); text-shadow: 0 0 15px #50ffff; }
         .icon-btn.active { color: #50ffff; text-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
 
-        /* 键盘组：隔离 hover 事件 */
         .kb-group { position: relative; display: flex; align-items: center; pointer-events: auto; }
-        
-        /* 提示框：位于键盘图标的左侧 */
+
         .hint-box {
-            position: absolute; right: 100%; top: 50%; transform: translateY(-50%) translateX(10px); margin-right: 15px;
+            position: absolute; right: 100%; top: 50%;
+            transform: translateY(-50%) translateX(10px); margin-right: 15px;
             background: rgba(0, 20, 40, 0.9); border: 1px solid rgba(80, 255, 255, 0.3);
-            padding: 8px 12px; border-radius: 8px; color: #50ffff; font-family: 'Courier New', monospace; font-size: 12px;
+            padding: 8px 12px; border-radius: 8px; color: #50ffff;
+            font-family: 'Courier New', monospace; font-size: 12px;
             opacity: 0; transition: all 0.3s; white-space: nowrap; pointer-events: none;
         }
-        
-        /* 只有悬停在键盘组时，才显示提示框 */
-        .kb-group:hover .hint-box, .hint-box.typing-active { opacity: 1; transform: translateY(-50%) translateX(0); }
+        .kb-group:hover .hint-box, .hint-box.typing-active {
+            opacity: 1; transform: translateY(-50%) translateX(0);
+        }
 
-        kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-weight: bold; transition: all 0.1s; }
+        kbd {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 3px; padding: 2px 4px; margin: 0 2px; font-weight: bold;
+            transition: all 0.1s;
+        }
         kbd.active { background: #50ffff; color: #000; box-shadow: 0 0 10px #50ffff; }
 
-        /* UI Common */
-        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #50ffff; color: #50ffff; padding: 10px 20px; border-radius: 5px; opacity: 0; transition: opacity 0.5s; pointer-events: none; font-family: monospace; z-index: 100; white-space: nowrap; }
+        #toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); border: 1px solid #50ffff;
+            color: #50ffff; padding: 10px 20px; border-radius: 5px;
+            opacity: 0; transition: opacity 0.5s; pointer-events: none;
+            font-family: monospace; z-index: 100; white-space: nowrap;
+        }
         #toast.show { opacity: 1; }
-        #boot-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; font-family: monospace; cursor: pointer; }
-        .terminal-text { color: #50ffff; font-size: 14px; line-height: 1.6; text-shadow: 0 0 5px #50ffff; padding: 20px; max-width: 600px; }
-        .system-off { animation: tvOff 0.6s ease-in-out forwards; pointer-events: none; }
-        @keyframes tvOff { 0% { transform: scale(1); opacity: 1; } 100% { transform: scaleY(0.005) scaleX(0); opacity: 0; } }
+
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999; display: flex; justify-content: center;
+            align-items: center; font-family: monospace; cursor: pointer;
+        }
+        .terminal-text {
+            color: #50ffff; font-size: 14px; line-height: 1.6;
+            text-shadow: 0 0 5px #50ffff; padding: 20px; max-width: 600px;
+        }
+        .system-off {
+            animation: tvOff 0.6s ease-in-out forwards; pointer-events: none;
+        }
         .highlight { color: #ffc8f5; font-weight: bold; }
-        .blink { animation: blink 1s infinite; } @keyframes blink { 50% { opacity: 0; } }
-        @keyframes spin { 100% { transform: rotate(360deg); } } @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } } @keyframes warpSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
+        .blink { animation: blink 1s infinite; }
 
-        /* 右键菜单 */
-        #context-menu { position: fixed; top: 0; left: 0; width: 160px; height: 160px; border-radius: 50%; pointer-events: none; z-index: 999; opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s; display: flex; justify-content: center; align-items: center; }
+        /* Context menu */
+        #context-menu {
+            position: fixed; top: 0; left: 0; width: 160px; height: 160px;
+            border-radius: 50%; pointer-events: none; z-index: 999;
+            opacity: 0; transform: scale(0.5);
+            transition: opacity 0.2s, transform 0.2s;
+            display: flex; justify-content: center; align-items: center;
+        }
         #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-        .ctx-center { position: absolute; width: 10px; height: 10px; background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff; }
-        .ctx-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1px dashed rgba(80, 255, 255, 0.3); animation: spin 10s linear infinite; }
-        .ctx-item { position: absolute; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; background: rgba(0, 20, 40, 0.8); border: 1px solid rgba(80, 255, 255, 0.4); border-radius: 50%; color: #50ffff; font-family: monospace; font-size: 10px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .ctx-item:hover { background: #50ffff; color: #000; box-shadow: 0 0 20px #50ffff; transform: scale(1.1); }
-        .ctx-top { top: 0; } .ctx-bottom { bottom: 0; } .ctx-left { left: 0; } .ctx-right { right: 0; }
+        .ctx-center {
+            position: absolute; width: 10px; height: 10px;
+            background: #50ffff; border-radius: 50%; box-shadow: 0 0 10px #50ffff;
+        }
+        .ctx-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border: 1px dashed rgba(80, 255, 255, 0.3);
+            animation: spin 10s linear infinite;
+        }
+        .ctx-item {
+            position: absolute; width: 50px; height: 50px;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid rgba(80, 255, 255, 0.4);
+            border-radius: 50%; color: #50ffff;
+            font-family: monospace; font-size: 10px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .ctx-item:hover {
+            background: #50ffff; color: #000;
+            box-shadow: 0 0 20px #50ffff; transform: scale(1.1);
+        }
+        .ctx-top { top: 0; } .ctx-bottom { bottom: 0; }
+        .ctx-left { left: 0; } .ctx-right { right: 0; }
 
-        .speed-hud { position: fixed; bottom: 20px; left: 25px; z-index: 50; font-family: monospace; color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none; display: flex; flex-direction: column; gap: 5px; opacity: 0; transition: opacity 1s; }
+        .speed-hud {
+            position: fixed; bottom: 20px; left: 25px; z-index: 50;
+            font-family: monospace; color: rgba(255,255,255,0.5);
+            font-size: 12px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 5px;
+            opacity: 0; transition: opacity 1s;
+        }
         .speed-hud.show { opacity: 1; }
-        .speed-bar-container { width: 150px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-        .speed-bar { height: 100%; background: #50ffff; width: 50%; transition: width 0.1s linear, background 0.3s; box-shadow: 0 0 5px #50ffff; }
+        .speed-bar-container {
+            width: 150px; height: 4px; background: rgba(255,255,255,0.1);
+            border-radius: 2px; overflow: hidden;
+        }
+        .speed-bar {
+            height: 100%; background: #50ffff; width: 50%;
+            transition: width 0.1s linear, background 0.3s;
+            box-shadow: 0 0 5px #50ffff;
+        }
 
-        /* 移动端 */
+        /* Keyframes */
+        @keyframes tvOff {
+            0% { transform: scale(1, 1); opacity: 1; }
+            100% { transform: scale(0, 0.005); opacity: 0; }
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+        @keyframes warpSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(1080deg); }
+        }
+
+        /* Mobile */
         @media (max-width: 700px) {
             .glass-card { width: 85%; padding: 40px 20px; max-height: 90vh; overflow-y: auto; }
             .name { font-size: 2rem; }
@@ -150,14 +279,14 @@
             .btns { flex-direction: column; width: 100%; gap: 15px; }
             .btn { width: 100%; text-align: center; }
             .hint-corner { right: 15px; bottom: 15px; }
-            .kb-group, .speed-hud, #context-menu { display: none !important; } 
+            .kb-group, .speed-hud, #context-menu { display: none !important; }
         }
     </style>
 </head>
 <body>
 
     <canvas id="startrack"></canvas>
-    
+
     <div class="camera-box" id="camera-box">
         <video id="input_video" autoplay playsinline></video>
         <canvas id="overlay_canvas"></canvas>
@@ -171,7 +300,9 @@
         <div class="glass-card" id="tilt-card">
             <div class="avatar-container" id="avatar-btn">
                 <div class="orbit-ring" id="orbit-ring"></div>
-                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg" class="avatar-img" id="avatar-img" alt="头像">
+                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg"
+                     class="avatar-img" id="avatar-img"
+                     alt="头像" loading="lazy" width="130" height="130">
             </div>
             <div class="name">嘎嘎sama | 今予</div>
             <div class="role">
@@ -180,9 +311,9 @@
                 <span>Mechanical Engineering</span>
             </div>
             <div class="btns">
-                <a href="https://gagasama.vercel.app" target="_blank" class="btn">博客</a>
-                <a href="https://github.com/JYbestow" target="_blank" class="btn">Github</a>
-                <a href="https://space.bilibili.com/402611949?spm_id_from=333.1007.0.0" target="_blank" class="btn">bilibili</a>
+                <a href="https://gagasama.vercel.app" target="_blank" rel="noopener" class="btn">博客</a>
+                <a href="https://github.com/JYbestow" target="_blank" rel="noopener" class="btn">Github</a>
+                <a href="https://space.bilibili.com/402611949" target="_blank" rel="noopener" class="btn">bilibili</a>
             </div>
         </div>
     </div>
@@ -195,10 +326,9 @@
     <div class="hint-corner" id="ui-hint">
         <div class="kb-group">
             <div class="hint-box" id="konami-hint">Code: <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></div>
-            <div class="icon-btn" id="kb-icon">⌨️</div>
+            <div class="icon-btn" id="kb-icon" aria-label="Konami Code hint">⌨️</div>
         </div>
-        
-        <div class="icon-btn" id="hand-btn" title="Toggle Hand Control">🖐️</div>
+        <div class="icon-btn" id="hand-btn" title="Toggle Hand Control" aria-label="Toggle Hand Control">🖐️</div>
     </div>
 
     <div id="context-menu">
@@ -211,278 +341,446 @@
 
     <script>
         console.log("%c Hello ZJU Engineer!", "font-size: 20px; color: #50ffff;");
-        window.requestAnimFrame = (function() { return window.requestAnimationFrame || function(callback) { window.setTimeout(callback, 1000 / 60); }; })();
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 700;
+        var requestAnimFrame = (window.requestAnimationFrame || function(cb) { setTimeout(cb, 1000 / 60); }).bind(window);
+        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 700;
 
         $(function() {
-            // --- 引导 ---
-            let cmdLines = ["> [SCROLL] : TIME DILATION", "> [HOLD]   : SINGULARITY"];
-            if (!isMobile) { cmdLines.push("> [RIGHT CLICK] : TACTICAL MENU"); cmdLines.push("> [HAND]   : GOD MODE"); } 
-            else { cmdLines.push("> [TAP AVATAR] : WARP DRIVE"); }
-            const lines = ["INITIALIZING PHYSICS ENGINE...", "LOADING NEURAL NETWORK... [OK]", "--------------------------------", "COMMANDS:", ...cmdLines, "--------------------------------", "CLICK TO START <span class='blink'>_</span>"];
-            const term = document.getElementById('terminal-content');
-            let lIdx = 0, cIdx = 0;
-            function type() {
-                if(lIdx < lines.length) {
-                    if(lIdx === lines.length - 1) { term.innerHTML += `<div class='cmd-line highlight'>${lines[lIdx]}</div>`; lIdx++; } 
-                    else {
-                        if(cIdx===0) term.innerHTML += `<div class='cmd-line' id='l-${lIdx}'></div>`;
-                        document.getElementById('l-'+lIdx).textContent += lines[lIdx].charAt(cIdx); cIdx++;
-                        if(cIdx < lines[lIdx].length) setTimeout(type, 15); else { cIdx=0; lIdx++; setTimeout(type, 50); }
+            // ── Boot Screen ────────────────────────────────────────────
+            var cmdLines = ["> [SCROLL] : TIME DILATION", "> [HOLD]   : SINGULARITY"];
+            if (!isMobile) {
+                cmdLines.push("> [RIGHT CLICK] : TACTICAL MENU");
+                cmdLines.push("> [HAND]   : GOD MODE");
+            } else {
+                cmdLines.push("> [TAP AVATAR] : WARP DRIVE");
+            }
+
+            var lines = [
+                "INITIALIZING PHYSICS ENGINE...",
+                "LOADING NEURAL NETWORK... [OK]",
+                "--------------------------------",
+                "COMMANDS:"
+            ].concat(cmdLines).concat([
+                "--------------------------------",
+                "CLICK TO START <span class='blink'>_</span>"
+            ]);
+
+            var term = document.getElementById('terminal-content');
+            var lIdx = 0, cIdx = 0;
+
+            function typeLine() {
+                if (lIdx >= lines.length) return;
+
+                // Last line (prompt) — render with HTML at once (contains span)
+                if (lIdx === lines.length - 1) {
+                    if (cIdx === 0) {
+                        term.innerHTML += '<div class="cmd-line highlight">' + lines[lIdx] + '</div>';
                     }
+                    lIdx++;
+                    return;
+                }
+
+                if (cIdx === 0) {
+                    term.innerHTML += '<div class="cmd-line" id="l-' + lIdx + '"></div>';
+                }
+
+                var el = document.getElementById('l-' + lIdx);
+                if (el) el.textContent += lines[lIdx].charAt(cIdx);
+                cIdx++;
+
+                if (cIdx < lines[lIdx].length) {
+                    setTimeout(typeLine, 15);
+                } else {
+                    cIdx = 0; lIdx++;
+                    setTimeout(typeLine, 50);
                 }
             }
-            setTimeout(type, 500);
-            
+
+            setTimeout(typeLine, 500);
+
             function closeBoot() {
-                document.getElementById('boot-screen').classList.add('system-off');
+                var bs = document.getElementById('boot-screen');
+                bs.classList.add('system-off');
                 document.getElementById('main-content').classList.add('loaded');
-                setTimeout(() => { document.getElementById('ui-hint').classList.add('show'); document.getElementById('ui-hud').classList.add('show'); }, 800);
+                setTimeout(function() {
+                    document.getElementById('ui-hint').classList.add('show');
+                    document.getElementById('ui-hud').classList.add('show');
+                }, 800);
             }
             document.getElementById('boot-screen').addEventListener('click', closeBoot);
-            document.getElementById('boot-screen').addEventListener('touchstart', closeBoot);
+            document.getElementById('boot-screen').addEventListener('touchend', function(e) { e.preventDefault(); closeBoot(); });
 
-            // --- Canvas Core ---
-            const canvas = document.getElementById('startrack');
-            const ctx = canvas.getContext('2d');
-            let cw, ch;
-            function resize() { 
-                cw = window.innerWidth; ch = window.innerHeight; 
-                const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2); 
-                canvas.width = cw * dpr; canvas.height = ch * dpr;
-                ctx.scale(dpr, dpr);
+            // ── Canvas Core ────────────────────────────────────────────
+            var canvas = document.getElementById('startrack');
+            var ctx = canvas.getContext('2d');
+            var cw, ch;
+
+            function resize() {
+                cw = window.innerWidth; ch = window.innerHeight;
+                var dpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
+                canvas.width = cw * dpr;
+                canvas.height = ch * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             }
-            resize(); window.addEventListener('resize', resize);
+            resize();
+            window.addEventListener('resize', resize, { passive: true });
 
-            let mx = 0, my = 0, rawMx = 0, rawMy = 0;
-            function updateCoords(x, y) { rawMx = x; rawMy = y; mx = (x - cw/2)/cw; my = (y - ch/2)/ch; 
-                const c = document.getElementById('tilt-card'); if(c) c.style.transform = `perspective(1000px) rotateX(${-my*15}deg) rotateY(${mx*15}deg)`; }
-            document.addEventListener('mousemove', e=>updateCoords(e.clientX, e.clientY));
-            document.addEventListener('touchmove', e=>{if(e.touches.length) updateCoords(e.touches[0].clientX, e.touches[0].clientY);});
+            // Mouse / tilt state
+            var mx = 0, my = 0, rawMx = 0, rawMy = 0;
+            function updateCoords(x, y) {
+                rawMx = x; rawMy = y;
+                mx = (x - cw / 2) / cw;
+                my = (y - ch / 2) / ch;
+                var c = document.getElementById('tilt-card');
+                if (c) c.style.transform = 'perspective(1000px) rotateX(' + (-my * 15) + 'deg) rotateY(' + (mx * 15) + 'deg)';
+            }
+            document.addEventListener('mousemove', function(e) { updateCoords(e.clientX, e.clientY); }, { passive: true });
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length) updateCoords(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
 
-            // 状态
-            let globalSpeed=1.0, warpSpeed=1.0, isWarping=false, rainbowMode=false, isSucking=false, handExpansion=0, targetExpansion=0;
+            // State
+            var globalSpeed = 1, warpSpeed = 1, isWarping = false;
+            var rainbowMode = false, isSucking = false;
+            var handExpansion = 0, targetExpansion = 0;
 
-            // --- Hand Control (PC Only) ---
+            // ── Hand Control (Desktop Only) ────────────────────────────
             if (!isMobile) {
-                const videoElement = document.getElementById('input_video');
-                const overlayCanvas = document.getElementById('overlay_canvas');
-                const ctxOverlay = overlayCanvas.getContext('2d'); // 获取绘图层
-                const handBtn = document.getElementById('hand-btn');
-                const cameraBox = document.getElementById('camera-box');
-                const loadingBar = document.getElementById('loading-bar');
-                let isHandActive = false, hands, cameraFeed;
+                var videoEl = document.getElementById('input_video');
+                var overlayCanvas = document.getElementById('overlay_canvas');
+                var ctxOverlay = overlayCanvas.getContext('2d');
+                var handBtn = document.getElementById('hand-btn');
+                var cameraBox = document.getElementById('camera-box');
+                var loadingBar = document.getElementById('loading-bar');
+                var isHandActive = false, handsModule, cameraFeed;
 
-                // 初始化绘图 Canvas 尺寸 (对应 Camera 的 320x240)
-                overlayCanvas.width = 320; 
+                overlayCanvas.width = 320;
                 overlayCanvas.height = 240;
 
                 window.onHandResults = function(results) {
                     loadingBar.style.width = '0%';
-                    
-                    // --- 骨骼绘制 ---
+
                     ctxOverlay.save();
                     ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
                     if (results.multiHandLandmarks) {
-                        for (const landmarks of results.multiHandLandmarks) {
-                            // 绘制连线 (青色)
-                            drawConnectors(ctxOverlay, landmarks, HAND_CONNECTIONS, {color: '#50ffff', lineWidth: 2});
-                            // 绘制节点 (粉色)
-                            drawLandmarks(ctxOverlay, landmarks, {color: '#ffc8f5', lineWidth: 1, radius: 2});
+                        for (var i = 0; i < results.multiHandLandmarks.length; i++) {
+                            var landmarks = results.multiHandLandmarks[i];
+                            if (typeof drawConnectors === 'function') {
+                                drawConnectors(ctxOverlay, landmarks, HAND_CONNECTIONS, { color: '#50ffff', lineWidth: 2 });
+                            }
+                            if (typeof drawLandmarks === 'function') {
+                                drawLandmarks(ctxOverlay, landmarks, { color: '#ffc8f5', lineWidth: 1, radius: 2 });
+                            }
                         }
                     }
                     ctxOverlay.restore();
 
-                    // --- 物理控制 ---
                     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                        const lm = results.multiHandLandmarks[0];
-                        const dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
-                        const palm = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
-                        const openness = dist / (palm * 1.6);
+                        var lm = results.multiHandLandmarks[0];
+                        var dist = Math.hypot(lm[4].x - lm[20].x, lm[4].y - lm[20].y);
+                        var palm = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
+                        var openness = dist / (palm * 1.6);
                         if (openness < 0.3) targetExpansion = -0.8;
                         else if (openness > 0.85) targetExpansion = 1.2;
-                        else targetExpansion = (openness - 0.3) * 1.5; 
+                        else targetExpansion = (openness - 0.3) * 1.5;
                     } else targetExpansion = 0;
-                }
+                };
 
-                window.toggleHand = async function() {
+                window.toggleHand = function() {
                     if (!isHandActive) {
-                        showToast("🧠 NEURAL LINK INITIALIZING...");
+                        showToast("NEURAL LINK INITIALIZING...");
                         loadingBar.style.width = '30%';
-                        hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-                        hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5});
-                        hands.onResults(window.onHandResults);
-                        cameraFeed = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 320, height: 240 });
+                        handsModule = new Hands({
+                            locateFile: function(file) {
+                                return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
+                            }
+                        });
+                        handsModule.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5 });
+                        handsModule.onResults(window.onHandResults);
+                        cameraFeed = new Camera(videoEl, {
+                            onFrame: function() { handsModule.send({ image: videoEl }); },
+                            width: 320, height: 240
+                        });
                         loadingBar.style.width = '60%';
-                        await cameraFeed.start();
-                        loadingBar.style.width = '100%';
-                        setTimeout(()=>loadingBar.style.width='0%', 500);
-                        
-                        cameraBox.classList.add('active'); // 显示摄像头框
-                        handBtn.classList.add('active'); 
-                        isHandActive = true;
-                        showToast("🖐️ HAND CONTROL ACTIVE");
+                        cameraFeed.start().then(function() {
+                            loadingBar.style.width = '100%';
+                            setTimeout(function() { loadingBar.style.width = '0%'; }, 500);
+                            cameraBox.classList.add('active');
+                            handBtn.classList.add('active');
+                            isHandActive = true;
+                            showToast("HAND CONTROL ACTIVE");
+                        }).catch(function() {
+                            loadingBar.style.width = '0%';
+                            showToast("CAMERA ACCESS DENIED");
+                        });
                     } else {
-                        if(videoElement.srcObject) videoElement.srcObject.getTracks().forEach(t=>t.stop());
-                        videoElement.srcObject = null;
-                        
-                        cameraBox.classList.remove('active'); // 隐藏摄像头框
-                        handBtn.classList.remove('active'); 
-                        isHandActive = false; targetExpansion = 0;
-                        ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // 清空绘图
-                        showToast("🔌 NEURAL LINK OFF");
+                        if (videoEl.srcObject) {
+                            videoEl.srcObject.getTracks().forEach(function(t) { t.stop(); });
+                        }
+                        videoEl.srcObject = null;
+                        cameraBox.classList.remove('active');
+                        handBtn.classList.remove('active');
+                        isHandActive = false;
+                        targetExpansion = 0;
+                        ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                        showToast("NEURAL LINK OFF");
                     }
-                }
+                };
                 handBtn.addEventListener('click', window.toggleHand);
             }
 
-            // --- 物理引擎 ---
-            class Star {
-                constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; }
-                reset() {
-                    const limit = Math.sqrt(cw*cw + ch*ch) / 2;
-                    this.r = Math.random() * limit + 50; this.baseR = this.r;
-                    this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
-                    this.baseSize = Math.random() * 2 + 0.5; this.size = this.baseSize;
-                    this.x = cw/2 + Math.cos(this.angle) * this.r;
-                    this.y = ch/2 + Math.sin(this.angle) * this.r;
-                    this.vx = 0; this.vy = 0;
-                    const ratio = (this.r - 50) / limit;
-                    this.baseColor = { r: 200+Math.floor(55*ratio), g: 200-Math.floor(100*ratio), b: 255, a: Math.random()*0.8+0.2 };
-                    this.hue = Math.random() * 360;
+            // ── Star System ────────────────────────────────────────────
+            var Star = function() {
+                this.reset();
+                this.angle = Math.random() * Math.PI * 2;
+                this.renderColor = 'rgba(200,200,255,0.5)'; // pre-allocate
+                this.hue = Math.random() * 360;
+            };
+
+            Star.prototype.reset = function() {
+                var limit = Math.sqrt(cw * cw + ch * ch) / 2;
+                this.r = Math.random() * limit + 50;
+                this.baseR = this.r;
+                this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
+                this.baseSize = Math.random() * 2 + 0.5;
+                this.size = this.baseSize;
+                this.x = cw / 2 + Math.cos(this.angle) * this.r;
+                this.y = ch / 2 + Math.sin(this.angle) * this.r;
+                this.vx = 0; this.vy = 0;
+                var ratio = (this.r - 50) / limit;
+                this.baseColor = {
+                    r: 200 + Math.floor(55 * ratio),
+                    g: 200 - Math.floor(100 * ratio),
+                    b: 255,
+                    a: Math.random() * 0.8 + 0.2
+                };
+            };
+
+            Star.prototype.updateColor = function() {
+                if (isWarping) {
+                    this.renderColor = 'rgba(100,255,255,1)';
+                } else if (rainbowMode) {
+                    this.hue = (this.hue + 2) % 360;
+                    // Pre-compute HSL → easy with hsla string (slightly slower but acceptable)
+                    this.renderColor = 'hsla(' + this.hue + ',100%,70%,0.8)';
+                } else {
+                    var c = this.baseColor;
+                    this.renderColor = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + c.a + ')';
                 }
-                update() {
-                    this.angle += this.orbitalSpeed * warpSpeed * globalSpeed;
-                    
-                    let expansionFactor = 1 + handExpansion * 1.5;
-                    let targetR = this.baseR * expansionFactor;
-                    let tx = cw/2 + Math.cos(this.angle) * targetR;
-                    let ty = ch/2 + Math.sin(this.angle) * targetR;
+            };
 
-                    if (handExpansion > 0.8) {
-                        const jitter = handExpansion * 8;
-                        tx += (Math.random() - 0.5) * jitter;
-                        ty += (Math.random() - 0.5) * jitter;
-                    }
+            Star.prototype.update = function() {
+                this.angle += this.orbitalSpeed * warpSpeed * globalSpeed;
 
-                    let ax = (tx - this.x) * (0.05 + Math.abs(handExpansion)*0.02);
-                    let ay = (ty - this.y) * (0.05 + Math.abs(handExpansion)*0.02);
-                    
-                    if (isSucking) {
-                        let dx = rawMx - this.x, dy = rawMy - this.y;
-                        let distSq = dx*dx + dy*dy;
-                        let force = 2000 / (distSq + 100);
-                        ax += dx * force; ay += dy * force;
-                    }
+                var expansionFactor = 1 + handExpansion * 1.5;
+                var targetR = this.baseR * expansionFactor;
+                var tx = cw / 2 + Math.cos(this.angle) * targetR;
+                var ty = ch / 2 + Math.sin(this.angle) * targetR;
 
-                    this.vx += ax; this.vy += ay;
-                    this.vx *= 0.9; this.vy *= 0.9;
-                    this.x += this.vx; this.y += this.vy;
-
-                    let dist = 1 - handExpansion * 0.7; 
-                    if(dist < 0.1) dist = 0.1;
-                    let brightness = 1 / (dist * dist);
-                    this.size = this.baseSize * (1 / dist);
-
-                    // 颜色逻辑修复：优先判断 Warp Drive
-                    if (isWarping) {
-                        this.renderColor = `rgba(100, 255, 255, 1)`; // 强制青色
-                    } else if (rainbowMode) {
-                        this.hue+=2; this.renderColor = `hsla(${this.hue}, 100%, 70%, 0.8)`;
-                    } else if (handExpansion > 0.5) {
-                        this.renderColor = `rgba(255, 255, 255, ${Math.min(1, brightness * 0.5)})`;
-                    } else {
-                        let alpha = this.baseColor.a * Math.min(1, brightness);
-                        this.renderColor = `rgba(${this.baseColor.r}, ${this.baseColor.g}, ${this.baseColor.b}, ${alpha})`;
-                    }
-
-                    if (this.x < -cw || this.x > cw*2 || this.y < -ch || this.y > ch*2 || isNaN(this.x)) this.reset();
+                if (handExpansion > 0.8) {
+                    var jitter = handExpansion * 8;
+                    tx += (Math.random() - 0.5) * jitter;
+                    ty += (Math.random() - 0.5) * jitter;
                 }
-                draw() {
-                    let dx = this.x - mx * 30; let dy = this.y - my * 30;
-                    if (isSucking) {
-                        let d2Hole = (dx - rawMx)**2 + (dy - rawMy)**2;
-                        if (d2Hole < 400) { this.reset(); return; }
-                    }
-                    ctx.beginPath(); ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = this.renderColor;
-                    ctx.fill();
-                }
-            }
-            
-            const PARTICLE_COUNT = isMobile ? 600 : 1200;
-            const stars = []; for (let i = 0; i < PARTICLE_COUNT; i++) stars.push(new Star());
 
+                var ax = (tx - this.x) * (0.05 + Math.abs(handExpansion) * 0.02);
+                var ay = (ty - this.y) * (0.05 + Math.abs(handExpansion) * 0.02);
+
+                if (isSucking) {
+                    var dx = rawMx - this.x, dy = rawMy - this.y;
+                    var distSq = dx * dx + dy * dy;
+                    var force = 2000 / (distSq + 100);
+                    ax += dx * force;
+                    ay += dy * force;
+                }
+
+                this.vx += ax; this.vy += ay;
+                this.vx *= 0.9; this.vy *= 0.9;
+                this.x += this.vx; this.y += this.vy;
+
+                var dist = 1 - handExpansion * 0.7;
+                if (dist < 0.1) dist = 0.1;
+                this.size = this.baseSize * (1 / dist);
+
+                this.updateColor();
+
+                if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) {
+                    this.reset();
+                }
+            };
+
+            Star.prototype.draw = function() {
+                var dx = this.x - mx * 30;
+                var dy = this.y - my * 30;
+                if (isSucking) {
+                    var d2Hole = (dx - rawMx) * (dx - rawMx) + (dy - rawMy) * (dy - rawMy);
+                    if (d2Hole < 400) { this.reset(); return; }
+                }
+                ctx.beginPath();
+                ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.renderColor;
+                ctx.fill();
+            };
+
+            var PARTICLE_COUNT = isMobile ? 500 : 1000;
+            var stars = new Array(PARTICLE_COUNT);
+            for (var i = 0; i < PARTICLE_COUNT; i++) stars[i] = new Star();
+
+            // ── Toast ──────────────────────────────────────────────────
+            var toastTimeout;
             function showToast(msg) {
-                const t = document.getElementById('toast');
-                t.innerText = msg; t.classList.add('show');
-                setTimeout(() => t.classList.remove('show'), 2500);
+                var t = document.getElementById('toast');
+                t.innerText = msg;
+                t.classList.add('show');
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 2500);
             }
-            
-            document.addEventListener('wheel', e => { globalSpeed -= e.deltaY * 0.001; if(globalSpeed>5)globalSpeed=5; if(globalSpeed<-2)globalSpeed=-2; 
-                document.getElementById('speed-text').innerText=`TIME: ${globalSpeed.toFixed(2)}x`;
-                document.getElementById('speed-bar').style.width = `${Math.max(0,Math.min(100, (globalSpeed+2)/7*100))}%`;
-            }, {passive:false});
-            
-            document.addEventListener('mousedown', e => { if(e.target.closest('.icon-btn')||e.target.closest('#context-menu')||e.target.closest('#avatar-btn'))return; if(e.button===0) isSucking=true; });
-            document.addEventListener('mouseup', () => isSucking=false);
-            
-            document.addEventListener('touchstart', e => { 
-                if(e.target.closest('.icon-btn')||e.target.closest('.btn')||e.target.closest('#avatar-btn'))return; 
-                if(e.touches.length===1) isSucking=true; 
-            }, {passive:false});
-            document.addEventListener('touchend', () => isSucking=false);
 
-            document.getElementById('avatar-btn').addEventListener('click', e => {
-                e.stopPropagation(); if(isWarping) return;
-                isWarping = true; document.getElementById('avatar-btn').classList.add('warp-active'); document.getElementById('avatar-img').classList.add('spin-warp');
-                let t = setInterval(()=>{if(warpSpeed<20)warpSpeed+=1},50); showToast("⚡ WARP ENGAGED");
-                setTimeout(()=>{ clearInterval(t); const d = setInterval(()=>{if(warpSpeed>1)warpSpeed-=1;else{warpSpeed=1;isWarping=false;document.getElementById('avatar-btn').classList.remove('warp-active');document.getElementById('avatar-img').classList.remove('spin-warp');clearInterval(d)}},50) }, 2500);
+            // ── Time Dilation (Scroll) ────────────────────────────────
+            document.addEventListener('wheel', function(e) {
+                globalSpeed -= e.deltaY * 0.001;
+                if (globalSpeed > 5) globalSpeed = 5;
+                if (globalSpeed < -2) globalSpeed = -2;
+                document.getElementById('speed-text').innerText = 'TIME: ' + globalSpeed.toFixed(2) + 'x';
+                document.getElementById('speed-bar').style.width = Math.max(0, Math.min(100, (globalSpeed + 2) / 7 * 100)) + '%';
+            }, { passive: false });
+
+            // ── Singularity (Mousedown / Touch) ────────────────────────
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.icon-btn, #context-menu, #avatar-btn')) return;
+                if (e.button === 0) isSucking = true;
+            });
+            document.addEventListener('mouseup', function() { isSucking = false; });
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.icon-btn, .btn, #avatar-btn')) return;
+                if (e.touches.length === 1) isSucking = true;
+            }, { passive: false });
+            document.addEventListener('touchend', function() { isSucking = false; });
+
+            // ── Warp Drive ────────────────────────────────────────────
+            document.getElementById('avatar-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (isWarping) return;
+                isWarping = true;
+                document.getElementById('avatar-btn').classList.add('warp-active');
+                document.getElementById('avatar-img').classList.add('spin-warp');
+
+                var accel = setInterval(function() {
+                    if (warpSpeed < 20) warpSpeed += 1;
+                }, 50);
+
+                showToast("WARP ENGAGED");
+
+                setTimeout(function() {
+                    clearInterval(accel);
+                    var decel = setInterval(function() {
+                        if (warpSpeed > 1) warpSpeed -= 1;
+                        else {
+                            warpSpeed = 1;
+                            isWarping = false;
+                            document.getElementById('avatar-btn').classList.remove('warp-active');
+                            document.getElementById('avatar-img').classList.remove('spin-warp');
+                            clearInterval(decel);
+                        }
+                    }, 50);
+                }, 2500);
             });
 
-            const ctxMenu = document.getElementById('context-menu');
-            document.addEventListener('contextmenu', e => {
-                e.preventDefault(); e.stopPropagation();
-                if(!isMobile) {
-                    ctxMenu.style.left = (e.clientX - 80) + 'px'; ctxMenu.style.top = (e.clientY - 80) + 'px'; ctxMenu.classList.add('visible');
-                }
+            // ── Context Menu ──────────────────────────────────────────
+            var ctxMenu = document.getElementById('context-menu');
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isMobile) return;
+                ctxMenu.style.left = (e.clientX - 80) + 'px';
+                ctxMenu.style.top = (e.clientY - 80) + 'px';
+                ctxMenu.classList.add('visible');
             });
-            document.addEventListener('click', e => { if(!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible'); });
-            document.getElementById('ctx-warp').onclick = () => { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); };
-            document.getElementById('ctx-rgb').onclick = () => { rainbowMode = !rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); ctxMenu.classList.remove('visible'); };
-            document.getElementById('ctx-freeze').onclick = () => { globalSpeed=0; showToast("❄️ FROZEN"); ctxMenu.classList.remove('visible'); };
-            document.getElementById('ctx-reset').onclick = () => { globalSpeed=1; rainbowMode=false; showToast("♻️ RESET"); ctxMenu.classList.remove('visible'); };
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
+            });
 
-            if(!isMobile) {
-                const kCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-                let kIdx = 0;
-                document.addEventListener('keydown', e => {
-                    if(e.key === kCode[kIdx]) {
-                        if(kIdx===0) document.getElementById('konami-hint').classList.add('typing-active');
-                        document.querySelectorAll('kbd')[kIdx].classList.add('active'); kIdx++;
-                        if(kIdx===kCode.length) { rainbowMode=!rainbowMode; showToast(rainbowMode?"🌈 RGB: ON":"🌑 RGB: OFF"); setTimeout(()=>{kIdx=0;document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active'));document.getElementById('konami-hint').classList.remove('typing-active')},800); }
-                    } else { if(kIdx>0) { kIdx=0; document.querySelectorAll('kbd').forEach(k=>k.classList.remove('active')); document.getElementById('konami-hint').classList.remove('typing-active'); } }
+            document.getElementById('ctx-warp').onclick = function() {
+                document.getElementById('avatar-btn').click();
+                ctxMenu.classList.remove('visible');
+            };
+            document.getElementById('ctx-rgb').onclick = function() {
+                rainbowMode = !rainbowMode;
+                showToast(rainbowMode ? "RGB: ON" : "RGB: OFF");
+                ctxMenu.classList.remove('visible');
+            };
+            document.getElementById('ctx-freeze').onclick = function() {
+                globalSpeed = 0;
+                document.getElementById('speed-text').innerText = 'TIME: 0.00x';
+                document.getElementById('speed-bar').style.width = '0%';
+                showToast("FROZEN");
+                ctxMenu.classList.remove('visible');
+            };
+            document.getElementById('ctx-reset').onclick = function() {
+                globalSpeed = 1;
+                rainbowMode = false;
+                document.getElementById('speed-text').innerText = 'TIME: 1.00x';
+                document.getElementById('speed-bar').style.width = '50%';
+                showToast("RESET");
+                ctxMenu.classList.remove('visible');
+            };
+
+            // ── Konami Code ───────────────────────────────────────────
+            if (!isMobile) {
+                var konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+                var kIdx = 0;
+                var allKbds = document.querySelectorAll('#konami-hint kbd');
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === konamiCode[kIdx]) {
+                        if (kIdx === 0) document.getElementById('konami-hint').classList.add('typing-active');
+                        if (allKbds[kIdx]) allKbds[kIdx].classList.add('active');
+                        kIdx++;
+                        if (kIdx === konamiCode.length) {
+                            rainbowMode = !rainbowMode;
+                            showToast(rainbowMode ? "RGB: ON" : "RGB: OFF");
+                            setTimeout(function() {
+                                kIdx = 0;
+                                for (var i = 0; i < allKbds.length; i++) allKbds[i].classList.remove('active');
+                                document.getElementById('konami-hint').classList.remove('typing-active');
+                            }, 800);
+                        }
+                    } else {
+                        kIdx = 0;
+                        for (var j = 0; j < allKbds.length; j++) allKbds[j].classList.remove('active');
+                        document.getElementById('konami-hint').classList.remove('typing-active');
+                    }
                 });
             }
 
+            // ── Main Loop ─────────────────────────────────────────────
             function loop() {
                 handExpansion += (targetExpansion - handExpansion) * 0.1;
+
+                // Trail effect
                 ctx.globalCompositeOperation = 'destination-out';
-                let alpha = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 0.1 : 0.15;
-                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+                var alpha = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 0.1 : 0.15;
+                ctx.fillStyle = 'rgba(0, 0, 0, ' + alpha + ')';
                 ctx.fillRect(0, 0, cw, ch);
 
                 ctx.globalCompositeOperation = 'lighter';
-                stars.forEach(s => { s.update(); s.draw(); });
+                for (var i = 0; i < PARTICLE_COUNT; i++) {
+                    stars[i].update();
+                    stars[i].draw();
+                }
 
-                if(isSucking) {
+                if (isSucking) {
                     ctx.globalCompositeOperation = 'source-over';
-                    ctx.beginPath(); ctx.arc(rawMx, rawMy, 20, 0, Math.PI*2); ctx.fillStyle = '#000'; ctx.fill();
-                    ctx.strokeStyle = '#50ffff'; ctx.lineWidth=2; ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(rawMx, rawMy, 20, 0, Math.PI * 2);
+                    ctx.fillStyle = '#000';
+                    ctx.fill();
+                    ctx.strokeStyle = '#50ffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                     ctx.globalCompositeOperation = 'lighter';
                 }
                 requestAnimFrame(loop);
             }
+
             loop();
         });
     </script>
