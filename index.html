@@ -1,927 +1,329 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="description" content="嘎嘎's Homepage — Zhejiang University, Mechanical Engineering. Neural Link interactive experience.">
-    <meta name="keywords" content="嘎嘎,今予,Zhejiang University,Mechanical Engineering,Neural Link">
-    <meta property="og:title" content="嘎嘎's Homepage - Neural Link">
-    <meta property="og:description" content="Interactive neural link experience with gesture control and warp drive.">
-    <meta property="og:type" content="website">
-    <meta name="theme-color" content="#0f0c29">
-    <title>嘎嘎's Homepage - Neural Link</title>
-    <link rel="icon" type="image/jpeg" href="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>嘎嘎sama | 今予 — 个人档案 · Zhejiang University</title>
+<meta name="description" content="嘎嘎sama（今予）的个人档案 — Zhejiang University, Mechanical Engineering。包含博客、GitHub 与 Bilibili 入口索引。">
+<meta name="keywords" content="嘎嘎sama,今予,Zhejiang University,机械工程,Mechanical Engineering,个人主页,博客,GitHub">
+<meta name="author" content="嘎嘎sama">
+<meta name="theme-color" content="#fafafa">
+<link rel="canonical" href="https://jybestow.github.io/">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="嘎嘎sama — 个人档案">
+<meta property="og:title" content="嘎嘎sama | 今予 — 个人档案">
+<meta property="og:description" content="Zhejiang University · Mechanical Engineering。个人档案与入口索引。">
+<meta property="og:url" content="https://jybestow.github.io/">
+<meta property="og:image" content="https://jybestow.github.io/assets/img/avatar.jpg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="嘎嘎sama | 今予 — 个人档案">
+<meta name="twitter:description" content="Zhejiang University · Mechanical Engineering。个人档案与入口索引。">
+<meta name="twitter:image" content="https://jybestow.github.io/assets/img/avatar.jpg">
 
-    <style>
-        @font-face { font-family: "sakura"; src: url("./sakura.min.ttf") format("truetype"); font-display: swap; }
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 
-        *, *::before, *::after { box-sizing: border-box; }
+<!-- Self-hosted fonts: no third-party runtime dependency -->
+<link rel="preload" href="assets/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 
-        :root {
-            --cyan: #50ffff;
-            --pink: #ff64c8;
-            --pink-light: #ffc8f5;
-            --bg-deep: #0f0c29;
-            --card-bg: rgba(15, 12, 45, 0.35);
-        }
-
-        body {
-            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-            background: #0f0c29;
-            background: linear-gradient(135deg, #0f0c29 0%, #1a1040 25%, #302b63 50%, #1b2735 75%, #090a0f 100%);
-            background-size: 400% 400%;
-            animation: aurora 25s ease infinite;
-            font-family: 'sakura', sans-serif;
-            user-select: none; -webkit-user-select: none;
-            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
-        @keyframes aurora {
-            0%, 100% { background-position: 0% 50%; }
-            25% { background-position: 100% 0%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
-        }
-
-        /* ── Vignette overlay ──────────────────────────────────── */
-        body::after {
-            content: ''; position: fixed; inset: 0; z-index: 2;
-            background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%);
-            pointer-events: none;
-        }
-
-        canvas#startrack {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none; display: block;
-        }
-
-        /* ── Camera box ────────────────────────────────────────── */
-        .camera-box {
-            position: fixed; bottom: 24px; left: 24px; width: 160px; height: 120px;
-            border: 1px solid rgba(80, 255, 255, 0.25); border-radius: 10px;
-            z-index: 900; overflow: hidden; opacity: 0; pointer-events: none;
-            transition: opacity 0.5s ease;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
-            background: rgba(0,0,0,0.6);
-        }
-        .camera-box.active { opacity: 1; }
-        .camera-box::after {
-            content: 'NEURAL FEED'; position: absolute; bottom: 4px; left: 6px;
-            font-family: monospace; font-size: 8px; color: rgba(80,255,255,0.5);
-            z-index: 2; pointer-events: none; letter-spacing: 1px;
-        }
-
-        #input_video, #overlay_canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            transform: scaleX(-1); object-fit: cover;
-        }
-        #input_video { opacity: 0.45; }
-
-        #loading-bar {
-            position: fixed; top: 0; left: 0; height: 2px; z-index: 2000;
-            pointer-events: none;
-            background: linear-gradient(90deg, transparent, var(--cyan), var(--pink-light), var(--cyan), transparent);
-            width: 0%; transition: width 0.25s ease-out;
-            box-shadow: 0 0 12px var(--cyan), 0 0 4px var(--cyan);
-            animation: barPulse 2s ease-in-out infinite;
-        }
-        @keyframes barPulse {
-            0%, 100% { box-shadow: 0 0 12px var(--cyan), 0 0 4px var(--cyan); }
-            50% { box-shadow: 0 0 20px var(--cyan), 0 0 8px var(--pink-light); }
-        }
-
-        /* ── Main content ──────────────────────────────────────── */
-        .main {
-            position: relative; width: 100%; height: 100%; display: flex;
-            justify-content: center; align-items: center; z-index: 10;
-            perspective: 1200px; opacity: 0; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-        }
-        .main.loaded { opacity: 1; }
-
-        /* ── Glass card ────────────────────────────────────────── */
-        .glass-card {
-            position: relative; pointer-events: auto;
-            background: linear-gradient(135deg,
-                rgba(30, 20, 60, 0.45) 0%,
-                rgba(20, 15, 50, 0.35) 50%,
-                rgba(15, 10, 40, 0.45) 100%);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 28px; padding: 50px 80px;
-            display: flex; flex-direction: column; align-items: center;
-            box-shadow:
-                0 0 0 1px rgba(255, 255, 255, 0.08),
-                0 0 0 2px rgba(100, 100, 200, 0.06),
-                0 8px 32px rgba(0, 0, 0, 0.4),
-                0 30px 60px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.04);
-            transition: transform 0.15s ease-out, box-shadow 0.5s ease;
-            max-width: 90%; will-change: transform;
-        }
-        .glass-card::before {
-            content: ''; position: absolute; inset: -1px; border-radius: 29px;
-            padding: 1px;
-            background: linear-gradient(135deg,
-                rgba(255,255,255,0.12) 0%, transparent 40%,
-                transparent 60%, rgba(100,200,255,0.15) 100%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            pointer-events: none;
-        }
-
-        /* ── Avatar ────────────────────────────────────────────── */
-        .avatar-container {
-            position: relative; width: 144px; height: 144px;
-            margin-bottom: 28px; display: flex; justify-content: center;
-            align-items: center; cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: auto;
-        }
-        .avatar-container:hover { transform: scale(1.06); }
-        .avatar-container:active { transform: scale(0.94); }
-
-        .avatar-glow {
-            position: absolute; width: 120px; height: 120px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 150, 220, 0.35) 0%, transparent 70%);
-            z-index: 0; animation: glowPulse 4s ease-in-out infinite;
-        }
-        @keyframes glowPulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.25); opacity: 0.35; }
-        }
-
-        .avatar-img {
-            width: 126px; height: 126px; border-radius: 50%; object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.85);
-            box-shadow:
-                0 0 0 6px rgba(255, 150, 210, 0.2),
-                0 0 30px rgba(255, 180, 230, 0.5),
-                0 0 60px rgba(200, 100, 180, 0.25);
-            z-index: 2; transition: transform 1s, border-color 0.5s, box-shadow 0.5s;
-            background: #1a1040; will-change: transform;
-        }
-        .spin-warp { animation: warpSpin 1s cubic-bezier(0.5, 0, 0.5, 1) forwards; }
-
-        .orbit-ring {
-            position: absolute; top: -14px; left: -14px; right: -14px; bottom: -14px;
-            border-radius: 50%;
-            border: 2px dashed rgba(255, 180, 230, 0.25);
-            animation: spin 18s linear infinite; transition: all 0.5s ease;
-            will-change: transform; z-index: 1;
-        }
-        .orbit-dot {
-            position: absolute; width: 6px; height: 6px; border-radius: 50%;
-            background: #ffc8f5; box-shadow: 0 0 8px #ffc8f5, 0 0 16px #ff64c8;
-            pointer-events: none; z-index: 1;
-        }
-        .warp-active .orbit-ring { border-color: var(--cyan); box-shadow: 0 0 60px var(--cyan); animation: spin 0.4s linear infinite; }
-        .warp-active .avatar-img { border-color: var(--cyan); box-shadow: 0 0 0 8px rgba(80,255,255,0.3), 0 0 50px var(--cyan), 0 0 80px rgba(80,255,255,0.4); }
-        .warp-active .avatar-glow { background: radial-gradient(circle, rgba(80,255,255,0.5) 0%, transparent 70%); animation-duration: 0.6s; }
-
-        /* ── Text ──────────────────────────────────────────────── */
-        .name {
-            font-size: 2.8rem; font-weight: bold; letter-spacing: 3px;
-            margin-bottom: 8px; text-align: center; white-space: nowrap;
-            background: linear-gradient(135deg, #fff 0%, #ffc8f5 30%, #c8b8ff 60%, #fff 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: shimmer 3s linear infinite;
-            filter: drop-shadow(0 0 15px rgba(200, 130, 220, 0.6));
-        }
-        @keyframes shimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-
-        .role {
-            font-size: 0.85rem; color: rgba(200, 210, 240, 0.75);
-            letter-spacing: 2px; text-transform: uppercase;
-            margin-bottom: 36px; text-align: center;
-            display: flex; gap: 10px; justify-content: center;
-        }
-        .separator { color: var(--pink); opacity: 0.7; }
-
-        .divider-line {
-            width: 60px; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            margin-bottom: 32px;
-        }
-
-        /* ── Buttons ───────────────────────────────────────────── */
-        .btns { display: flex; gap: 20px; pointer-events: auto; flex-direction: row; }
-
-        .btn {
-            position: relative; padding: 13px 38px; border-radius: 50px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            color: #e0c0f0; text-decoration: none; font-size: 1.1rem;
-            letter-spacing: 1.5px; overflow: hidden; cursor: pointer;
-            white-space: nowrap; display: flex; justify-content: center;
-            align-items: center; pointer-events: auto;
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-        }
-        .btn:hover {
-            background: rgba(200, 150, 230, 0.18);
-            box-shadow:
-                0 0 30px rgba(200, 120, 220, 0.4),
-                0 0 60px rgba(180, 100, 210, 0.15),
-                inset 0 1px 0 rgba(255,255,255,0.1);
-            border-color: rgba(220, 170, 240, 0.5);
-            transform: translateY(-4px); color: #fff;
-            letter-spacing: 2.5px;
-        }
-        .btn::after {
-            content: ''; position: absolute; top: 0; left: -150%; width: 80%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-            transform: skewX(-25deg); animation: btnShine 5s infinite;
-        }
-        @keyframes btnShine {
-            0% { left: -150%; }
-            15% { left: 200%; }
-            100% { left: 200%; }
-        }
-
-        /* ── Corner HUD ────────────────────────────────────────── */
-        .hint-corner {
-            position: fixed; bottom: 24px; right: 28px; z-index: 50;
-            display: flex; align-items: center; justify-content: flex-end;
-            gap: 22px; opacity: 0; transition: opacity 1s ease 0.3s; pointer-events: none;
-        }
-        .hint-corner.show { opacity: 1; }
-
-        .icon-btn {
-            font-size: 22px; color: rgba(255, 255, 255, 0.3);
-            cursor: pointer; transition: all 0.35s ease;
-            text-shadow: 0 0 6px rgba(0,0,0,0.5); pointer-events: auto;
-        }
-        .icon-btn:hover { color: #fff; transform: scale(1.25); text-shadow: 0 0 18px var(--cyan), 0 0 6px var(--cyan); }
-        .icon-btn.active { color: var(--cyan); text-shadow: 0 0 22px var(--cyan), 0 0 8px var(--cyan); transform: scale(1.12); }
-
-        .kb-group { position: relative; display: flex; align-items: center; pointer-events: auto; }
-
-        .hint-box {
-            position: absolute; right: 100%; top: 50%;
-            transform: translateY(-50%) translateX(8px); margin-right: 16px;
-            background: rgba(0, 16, 32, 0.92); border: 1px solid rgba(80, 255, 255, 0.25);
-            padding: 9px 14px; border-radius: 10px; color: var(--cyan);
-            font-family: 'Courier New', monospace; font-size: 11px;
-            opacity: 0; transition: all 0.3s ease; white-space: nowrap; pointer-events: none;
-            letter-spacing: 0.5px;
-        }
-        .kb-group:hover .hint-box, .hint-box.typing-active {
-            opacity: 1; transform: translateY(-50%) translateX(0);
-        }
-
-        kbd {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 4px; padding: 2px 5px; margin: 0 1px; font-weight: bold;
-            transition: all 0.12s ease; font-size: 10px;
-        }
-        kbd.active { background: var(--cyan); color: #000; box-shadow: 0 0 12px var(--cyan); border-color: var(--cyan); }
-
-        /* ── Toast notifications ────────────────────────────────── */
-        #toast {
-            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(10px);
-            background: rgba(0, 10, 20, 0.9); border: 1px solid rgba(80, 255, 255, 0.35);
-            color: var(--cyan); padding: 10px 24px; border-radius: 8px;
-            opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: none; font-family: 'Courier New', monospace;
-            font-size: 13px; letter-spacing: 1px; z-index: 100; white-space: nowrap;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 15px rgba(80,255,255,0.1);
-        }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        /* ── Boot screen ────────────────────────────────────────── */
-        #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #020108; z-index: 999; display: flex; justify-content: center;
-            align-items: center; font-family: 'Courier New', monospace; cursor: pointer;
-            overflow: hidden;
-        }
-        /* CRT scanlines */
-        #boot-screen::before {
-            content: ''; position: absolute; inset: 0;
-            background: repeating-linear-gradient(
-                0deg, transparent, transparent 2px,
-                rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
-            );
-            pointer-events: none; z-index: 1;
-        }
-        /* CRT vignette */
-        #boot-screen::after {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
-            pointer-events: none; z-index: 1;
-        }
-        .terminal-text {
-            position: relative; z-index: 2;
-            color: #50ffff; font-size: 14px; line-height: 1.7;
-            text-shadow: 0 0 8px rgba(80,255,255,0.6), 0 0 2px rgba(80,255,255,0.8);
-            padding: 24px; max-width: 620px;
-        }
-        .system-off {
-            animation: tvOff 0.5s ease-in-out forwards; pointer-events: none;
-        }
-        .terminal-text .cmd-line {
-            text-shadow: 0 0 6px rgba(80,255,255,0.4);
-        }
-        .highlight { color: #ffb8e8; font-weight: bold; text-shadow: 0 0 10px rgba(255,180,230,0.6); }
-        .blink { animation: blink 1s step-end infinite; }
-
-        /* ── Context menu ──────────────────────────────────────── */
-        #context-menu {
-            position: fixed; top: 0; left: 0; width: 180px; height: 180px;
-            border-radius: 50%; pointer-events: none; z-index: 999;
-            opacity: 0; transform: scale(0.4);
-            transition: opacity 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; justify-content: center; align-items: center;
-        }
-        #context-menu.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-        .ctx-center {
-            position: absolute; width: 8px; height: 8px;
-            background: var(--cyan); border-radius: 50%;
-            box-shadow: 0 0 16px var(--cyan), 0 0 32px rgba(80,255,255,0.5);
-        }
-        /* Crosshair lines */
-        .ctx-crosshair {
-            position: absolute; background: rgba(80, 255, 255, 0.15);
-            pointer-events: none;
-        }
-        .ctx-crosshair.h { width: 100%; height: 1px; top: 50%; }
-        .ctx-crosshair.v { width: 1px; height: 100%; left: 50%; }
-        .ctx-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 1px dashed rgba(80, 255, 255, 0.2);
-            animation: spin 8s linear infinite;
-        }
-        .ctx-item {
-            position: absolute; width: 52px; height: 52px;
-            display: flex; justify-content: center; align-items: center;
-            background: rgba(5, 15, 35, 0.9);
-            border: 1px solid rgba(80, 255, 255, 0.3);
-            border-radius: 50%; color: var(--cyan);
-            font-family: 'Courier New', monospace; font-size: 10px; font-weight: bold;
-            letter-spacing: 1px;
-            cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 0 12px rgba(0,0,0,0.6), inset 0 0 8px rgba(80,255,255,0.05);
-        }
-        .ctx-item:hover {
-            background: var(--cyan); color: #000;
-            box-shadow: 0 0 30px var(--cyan), 0 0 50px rgba(80,255,255,0.4);
-            transform: scale(1.15); border-color: var(--cyan);
-        }
-        .ctx-top { top: 0; } .ctx-bottom { bottom: 0; }
-        .ctx-left { left: 0; } .ctx-right { right: 0; }
-
-        /* ── Speed HUD ─────────────────────────────────────────── */
-        .speed-hud {
-            position: fixed; bottom: 24px; left: 28px; z-index: 50;
-            font-family: 'Courier New', monospace; color: rgba(200,220,240,0.45);
-            font-size: 11px; pointer-events: none;
-            display: flex; flex-direction: column; gap: 6px;
-            opacity: 0; transition: opacity 1s ease 0.3s;
-            letter-spacing: 1px;
-        }
-        .speed-hud.show { opacity: 1; }
-        .speed-bar-container {
-            width: 140px; height: 3px; background: rgba(255,255,255,0.06);
-            border-radius: 2px; overflow: hidden;
-        }
-        .speed-bar {
-            height: 100%; width: 50%;
-            background: linear-gradient(90deg, rgba(80,255,255,0.4), var(--cyan));
-            border-radius: 2px;
-            transition: width 0.08s linear, background 0.3s ease;
-            box-shadow: 0 0 8px rgba(80,255,255,0.5);
-        }
-
-        /* ── Animations (consolidated) ─────────────────────────── */
-        @keyframes tvOff {
-            0% { transform: scale(1, 1); opacity: 1; filter: brightness(1); }
-            60% { filter: brightness(3); }
-            100% { transform: scale(0.8, 0.003); opacity: 0; filter: brightness(0); }
-        }
-        @keyframes blink { 50% { opacity: 0; } }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes warpSpin {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(540deg) scale(1.08); }
-            100% { transform: rotate(1080deg) scale(1); }
-        }
-
-        /* ── Mobile ────────────────────────────────────────────── */
-        @media (max-width: 700px) {
-            .glass-card { width: 88%; padding: 36px 22px; max-height: 92vh; overflow-y: auto; }
-            .name { font-size: 2rem; white-space: normal; }
-            .role { flex-direction: column; gap: 4px; }
-            .separator { display: none; }
-            .btns { flex-direction: column; width: 100%; gap: 12px; }
-            .btn { width: 100%; text-align: center; padding: 12px 24px; }
-            .hint-corner { right: 16px; bottom: 16px; }
-            .kb-group, .speed-hud, #context-menu { display: none !important; }
-            .divider-line { margin-bottom: 24px; }
-        }
-    </style>
+<script>document.documentElement.className += ' js';</script>
+<link rel="stylesheet" href="assets/css/main.css">
 </head>
+
 <body>
 
-    <canvas id="startrack"></canvas>
+<a class="skip-link" href="#main">跳到主要内容</a>
 
-    <div class="camera-box" id="camera-box">
-        <video id="input_video" autoplay playsinline></video>
-        <canvas id="overlay_canvas"></canvas>
-    </div>
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 24 24">
+    <path d="M3 12h16M13 5.5 19.5 12 13 18.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+  <symbol id="i-down" viewBox="0 0 24 24">
+    <path d="M12 3v16M5.5 12.5 12 19l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+  <symbol id="i-up" viewBox="0 0 24 24">
+    <path d="M12 21V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24">
+    <path d="M5 5l14 14M19 5 5 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+</svg>
 
-    <div id="loading-bar"></div>
-    <div id="boot-screen"><div class="terminal-text" id="terminal-content"></div></div>
-    <div id="toast">SYSTEM: Warp Drive Engaged!</div>
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header class="hdr" id="hdr">
+  <div class="hdr__in">
+    <a class="mark" href="#top" aria-label="嘎嘎sama 个人档案 — 回到页面顶部">
+      <svg class="mark__gfx" viewBox="0 0 24 24" aria-hidden="true">
+        <rect width="24" height="24" fill="#000000"/>
+        <path d="M5 19 14.5 5H19L9.5 19Z" fill="#fffa00"/>
+        <rect x="17" y="15" width="4" height="4" fill="#ffffff"/>
+      </svg>
+      <span class="mark__tx">嘎嘎sama <span>/ 今予</span></span>
+    </a>
 
-    <div class="main" id="main-content">
-        <div class="glass-card" id="tilt-card">
-            <div class="avatar-container" id="avatar-btn">
-                <div class="avatar-glow"></div>
-                <div class="orbit-ring" id="orbit-ring"></div>
-                <img src="https://s2.loli.net/2024/08/14/UuaJ1elnkKgGChN.jpg"
-                     class="avatar-img" id="avatar-img"
-                     alt="头像" loading="lazy" width="126" height="126">
-            </div>
-            <div class="name">嘎嘎sama | 今予</div>
-            <div class="role">
-                <span>Zhejiang University</span>
-                <span class="separator">|</span>
-                <span>Mechanical Engineering</span>
-            </div>
-            <div class="divider-line"></div>
-            <div class="btns">
-                <a href="https://gagasama.vercel.app" target="_blank" rel="noopener" class="btn">博客</a>
-                <a href="https://github.com/JYbestow" target="_blank" rel="noopener" class="btn">Github</a>
-                <a href="https://space.bilibili.com/402611949" target="_blank" rel="noopener" class="btn">bilibili</a>
-            </div>
+    <nav class="hdr__nav nav" aria-label="主导航">
+      <a class="nav__link" href="#top"      data-spy="top"><span class="no">01</span>索引</a>
+      <a class="nav__link" href="#identity" data-spy="identity"><span class="no">02</span>身份</a>
+      <a class="nav__link" href="#channels" data-spy="channels"><span class="no">03</span>入口</a>
+    </nav>
+
+    <p class="status"><span class="status__dot" aria-hidden="true"></span>ONLINE</p>
+
+    <button class="burger" id="burger" type="button" aria-label="打开章节导航" aria-expanded="false" aria-controls="menu">
+      <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+      <span class="visually-hidden">菜单</span>
+    </button>
+  </div>
+</header>
+
+<!-- ── Mobile menu ────────────────────────────────────────────────────────── -->
+<nav class="menu is-dark" id="menu" aria-label="章节导航" hidden>
+  <button class="menu__close" id="menu-close" type="button" aria-label="关闭章节导航">
+    <svg aria-hidden="true"><use href="#i-x"/></svg>
+  </button>
+  <p class="mono txt-muted">INDEX / 索引</p>
+  <ul class="menu__list">
+    <li><a class="menu__item" href="#top"><span class="no">01</span><span class="tx">索引</span></a></li>
+    <li><a class="menu__item" href="#identity"><span class="no">02</span><span class="tx">身份</span></a></li>
+    <li><a class="menu__item" href="#channels"><span class="no">03</span><span class="tx">入口</span></a></li>
+  </ul>
+  <div class="menu__foot">
+    <a href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">博客 · BLOG ↗</a>
+    <a href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">GitHub · JYbestow ↗</a>
+    <a href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">Bilibili ↗</a>
+    <span>Zhejiang University — Mechanical Engineering</span>
+  </div>
+</nav>
+
+<!-- ── Section rail (desktop) ─────────────────────────────────────────────── -->
+<nav class="rail" id="rail" aria-label="章节进度">
+  <a class="rail__item" href="#top"      data-spy="top"      aria-label="索引 / INDEX"><span class="rail__bar" aria-hidden="true"></span><span class="rail__label" aria-hidden="true">INDEX</span></a>
+  <a class="rail__item" href="#identity" data-spy="identity" aria-label="身份 / IDENTITY"><span class="rail__bar" aria-hidden="true"></span><span class="rail__label" aria-hidden="true">IDENTITY</span></a>
+  <a class="rail__item" href="#channels" data-spy="channels" aria-label="入口 / CHANNELS"><span class="rail__bar" aria-hidden="true"></span><span class="rail__label" aria-hidden="true">CHANNELS</span></a>
+</nav>
+
+<main id="main" class="page">
+
+  <!-- ══ 01 · HERO ══════════════════════════════════════════════════════════ -->
+  <section class="hero" id="top" aria-labelledby="hero-name">
+    <span class="hero__mesh" aria-hidden="true"></span>
+
+    <div class="hero__grid">
+      <div class="hero__type">
+        <span class="cross hero__cross" aria-hidden="true"></span>
+
+        <p class="eyebrow mono anim" style="--d:40ms">
+          <span class="eyebrow__no"><span>01</span></span>
+          <span>PERSONAL DOSSIER</span>
+          <span class="eyebrow__line anim anim--wipe" style="--d:340ms"></span>
+        </p>
+
+        <div class="hero__wordmark">
+          <span class="ghost hero__ghost anim anim--ghost" style="--d:80ms" aria-hidden="true">GAGASAMA</span>
+          <h1 class="hero__name anim" id="hero-name" style="--d:140ms">嘎嘎<span class="lat">sama</span></h1>
         </div>
-    </div>
 
-    <div class="speed-hud" id="ui-hud">
-        <div class="hud-text" id="speed-text">TIME  ·  1.00x</div>
-        <div class="speed-bar-container"><div class="speed-bar" id="speed-bar"></div></div>
-    </div>
-
-    <div class="hint-corner" id="ui-hint">
-        <div class="kb-group">
-            <div class="hint-box" id="konami-hint">Code <kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></div>
-            <div class="icon-btn" id="kb-icon" aria-label="Konami Code hint">⌨</div>
+        <div class="hero__alias anim" style="--d:230ms">
+          <span class="chip"><span>今予</span></span>
+          <span class="tag mono">ALIAS</span>
         </div>
-        <div class="icon-btn" id="hand-btn" title="Hand Control" aria-label="Toggle Hand Control">🖐</div>
+
+        <p class="hero__affil mono anim" style="--d:310ms">
+          <span class="diamond" aria-hidden="true"></span>
+          <span>Zhejiang University</span>
+          <span class="sep" aria-hidden="true">//</span>
+          <span>Mechanical Engineering</span>
+        </p>
+
+        <ul class="entries anim" style="--d:400ms">
+          <li>
+            <a class="btn" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
+              <span class="btn__in">
+                <span class="btn__no">01</span><span class="btn__tx">博客</span>
+                <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a class="btn" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
+              <span class="btn__in">
+                <span class="btn__no">02</span><span class="btn__tx">GitHub</span>
+                <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a class="btn" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">
+              <span class="btn__in">
+                <span class="btn__no">03</span><span class="btn__tx">Bilibili</span>
+                <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+              </span>
+            </a>
+          </li>
+        </ul>
+
+        <p class="hero__scroll mono anim" style="--d:480ms">
+          <span class="line" aria-hidden="true"></span>SCROLL
+          <svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>
+        </p>
+      </div>
+
+      <div class="hero__spec">
+        <span class="hero__vlabel" aria-hidden="true">PERSONAL DOSSIER — 01</span>
+        <figure class="portrait">
+          <div class="portrait__frame">
+            <img class="portrait__img" src="assets/img/avatar.jpg"
+                 alt="嘎嘎sama（今予）的头像" width="300" height="300"
+                 decoding="async" fetchpriority="high">
+            <span class="portrait__wash"  aria-hidden="true"></span>
+            <span class="portrait__half"  aria-hidden="true"></span>
+            <span class="portrait__ruler" aria-hidden="true"></span>
+            <span class="portrait__brk portrait__brk--tl" aria-hidden="true"></span>
+            <span class="portrait__brk portrait__brk--tr" aria-hidden="true"></span>
+            <span class="portrait__brk portrait__brk--bl" aria-hidden="true"></span>
+            <span class="portrait__brk portrait__brk--br" aria-hidden="true"></span>
+          </div>
+          <figcaption class="portrait__cap">
+            <span class="portrait__who">嘎嘎sama <em>今予</em></span>
+            <span class="portrait__id mono">IMG.01<br>300 × 300</span>
+          </figcaption>
+        </figure>
+      </div>
     </div>
+  </section>
 
-    <div id="context-menu">
-        <div class="ctx-crosshair h"></div>
-        <div class="ctx-crosshair v"></div>
-        <div class="ctx-ring"></div><div class="ctx-center"></div>
-        <div class="ctx-item ctx-top" id="ctx-warp">WARP</div>
-        <div class="ctx-item ctx-right" id="ctx-rgb">RGB</div>
-        <div class="ctx-item ctx-bottom" id="ctx-reset">RESET</div>
-        <div class="ctx-item ctx-left" id="ctx-freeze">FREEZE</div>
+  <!-- ══ 02 · IDENTITY ══════════════════════════════════════════════════════ -->
+  <section class="band band--dark is-dark section" id="identity" aria-labelledby="identity-title">
+    <div class="shell">
+      <header class="shead rv">
+        <p class="eyebrow mono shead__top">
+          <span class="eyebrow__no"><span>02</span></span>
+          <span>IDENTITY</span>
+        </p>
+        <h2 class="shead__title" id="identity-title">身份档案</h2>
+        <span class="ghost ghost--section" aria-hidden="true">IDENTITY</span>
+        <div class="shead__rule" aria-hidden="true"></div>
+      </header>
+
+      <ul class="spec rv" style="--rv-delay:120ms">
+        <li class="spec__row">
+          <span class="spec__no">001</span>
+          <span class="spec__key mono">名称<span class="en">NAME</span></span>
+          <span class="spec__val">嘎嘎sama <em>今予</em></span>
+        </li>
+        <li class="spec__row">
+          <span class="spec__no">002</span>
+          <span class="spec__key mono">机构<span class="en">INSTITUTION</span></span>
+          <span class="spec__val">Zhejiang University<span class="sub">浙江大学</span></span>
+        </li>
+        <li class="spec__row">
+          <span class="spec__no">003</span>
+          <span class="spec__key mono">专业<span class="en">PROGRAMME</span></span>
+          <span class="spec__val">Mechanical Engineering<span class="sub">机械工程</span></span>
+        </li>
+        <li>
+          <a class="spec__row" href="#channels">
+            <span class="spec__no">004</span>
+            <span class="spec__key mono">入口<span class="en">CHANNELS</span></span>
+            <span class="spec__val">3<span class="sub">博客 · GitHub · Bilibili
+              <svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></span></span>
+          </a>
+        </li>
+      </ul>
     </div>
+  </section>
 
-    <script>
-        console.log("%c🚀 Hello ZJU Engineer! %cNeural Link Online",
-            "font-size:18px;color:#50ffff;", "color:#ffc8f5;");
-        var requestAnimFrame = (window.requestAnimationFrame || function(cb) { setTimeout(cb, 1000 / 60); }).bind(window);
-        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 700;
+  <!-- ══ 03 · CHANNELS ═════════════════════════════════════════════════════ -->
+  <section class="band band--white section" id="channels" aria-labelledby="channels-title">
+    <div class="shell">
+      <header class="shead rv">
+        <p class="eyebrow mono shead__top">
+          <span class="eyebrow__no"><span>03</span></span>
+          <span>CHANNELS</span>
+        </p>
+        <h2 class="shead__title" id="channels-title">入口索引</h2>
+        <span class="ghost ghost--section" aria-hidden="true">CHANNELS</span>
+        <div class="shead__rule" aria-hidden="true"></div>
+      </header>
 
-        $(function() {
-            // ═══════════════════════════════════════════════════════════
-            //  BOOT SCREEN
-            // ═══════════════════════════════════════════════════════════
-            var cmdLines = ["> [SCROLL] : TIME DILATION", "> [HOLD]   : SINGULARITY"];
-            if (!isMobile) {
-                cmdLines.push("> [R-CLICK] : TACTICAL MENU");
-                cmdLines.push("> [HAND]    : GOD MODE");
-            } else {
-                cmdLines.push("> [TAP AVATAR] : WARP DRIVE");
-            }
+      <ol class="chan rv" style="--rv-delay:120ms">
+        <li>
+          <a class="chan__item" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
+            <span class="chan__no">01</span>
+            <span class="chan__name">博客<span class="en">BLOG</span></span>
+            <span class="chan__url">gagasama.vercel.app</span>
+            <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
+            <span class="visually-hidden">（在新标签页打开）</span>
+          </a>
+        </li>
+        <li>
+          <a class="chan__item" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
+            <span class="chan__no">02</span>
+            <span class="chan__name">GitHub<span class="en">CODE</span></span>
+            <span class="chan__url">github.com/JYbestow</span>
+            <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
+            <span class="visually-hidden">（在新标签页打开）</span>
+          </a>
+        </li>
+        <li>
+          <a class="chan__item" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">
+            <span class="chan__no">03</span>
+            <span class="chan__name">Bilibili<span class="en">VIDEO</span></span>
+            <span class="chan__url">space.bilibili.com/402611949</span>
+            <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
+            <span class="visually-hidden">（在新标签页打开）</span>
+          </a>
+        </li>
+      </ol>
+    </div>
+  </section>
 
-            var lines = [
-                "INITIALIZING PHYSICS ENGINE...",
-                "LOADING NEURAL NETWORK...  [OK]",
-                "CALIBRATING QUANTUM STATE... [OK]",
-                "───────────────────────────────",
-                "COMMANDS:"
-            ].concat(cmdLines).concat([
-                "───────────────────────────────",
-                "CLICK TO START <span class='blink'>█</span>"
-            ]);
+  <!-- ══ Footer ═════════════════════════════════════════════════════════════ -->
+  <footer class="band band--dark is-dark foot" id="contact" aria-label="页脚">
+    <div class="shell">
+      <div class="foot__top rv">
+        <p class="foot__mark">JY<span>·BESTOW</span></p>
+        <nav class="foot__links" aria-label="外部入口">
+          <a class="foot__link" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">博客 ↗</a>
+          <a class="foot__link" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+          <a class="foot__link" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">Bilibili ↗</a>
+        </nav>
+      </div>
 
-            var term = document.getElementById('terminal-content');
-            var lIdx = 0, cIdx = 0;
+      <div class="foot__cols rv" style="--rv-delay:100ms">
+        <div class="foot__col">
+          <h3 class="mono">身份 / IDENTITY</h3>
+          <p>嘎嘎sama · 今予</p>
+        </div>
+        <div class="foot__col">
+          <h3 class="mono">机构 / INSTITUTION</h3>
+          <p>Zhejiang University<br>Mechanical Engineering</p>
+        </div>
+        <div class="foot__col">
+          <h3 class="mono">索引 / INDEX</h3>
+          <ul>
+            <li><a href="#top">01 索引</a></li>
+            <li><a href="#identity">02 身份</a></li>
+            <li><a href="#channels">03 入口</a></li>
+          </ul>
+        </div>
+      </div>
 
-            function typeLine() {
-                if (lIdx >= lines.length) return;
-                if (lIdx === lines.length - 1) {
-                    if (cIdx === 0) term.innerHTML += '<div class="cmd-line highlight">' + lines[lIdx] + '</div>';
-                    lIdx++; return;
-                }
-                if (cIdx === 0) term.innerHTML += '<div class="cmd-line" id="l-' + lIdx + '"></div>';
-                var el = document.getElementById('l-' + lIdx);
-                if (el) el.textContent += lines[lIdx].charAt(cIdx);
-                cIdx++;
-                if (cIdx < lines[lIdx].length) setTimeout(typeLine, 15);
-                else { cIdx = 0; lIdx++; setTimeout(typeLine, 45); }
-            }
-            setTimeout(typeLine, 400);
+      <div class="foot__bar mono rv" style="--rv-delay:160ms">
+        <p class="foot__sig">
+          <span class="bar" aria-hidden="true"></span>
+          <span>© <span id="year">2026</span> 嘎嘎sama — PERSONAL DOSSIER</span>
+        </p>
+        <a class="to-top" href="#top">回到顶部<svg aria-hidden="true"><use href="#i-up"/></svg></a>
+      </div>
+    </div>
+  </footer>
 
-            function closeBoot() {
-                document.getElementById('boot-screen').classList.add('system-off');
-                document.getElementById('main-content').classList.add('loaded');
-                setTimeout(function() {
-                    document.getElementById('ui-hint').classList.add('show');
-                    document.getElementById('ui-hud').classList.add('show');
-                }, 700);
-                // Start particle loop only after boot to avoid wasting GPU behind opaque boot screen
-                if (!loopStarted) { loopStarted = true; loop(); }
-            }
-            var loopStarted = false;
-            document.getElementById('boot-screen').addEventListener('click', closeBoot);
-            document.getElementById('boot-screen').addEventListener('touchend', function(e) { e.preventDefault(); closeBoot(); });
+</main>
 
-            // ═══════════════════════════════════════════════════════════
-            //  CANVAS SETUP
-            // ═══════════════════════════════════════════════════════════
-            var canvas = document.getElementById('startrack');
-            var ctx = canvas.getContext('2d');
-            var cw, ch, centerX, centerY;
-
-            function resize() {
-                cw = window.innerWidth; ch = window.innerHeight;
-                centerX = cw / 2; centerY = ch / 2;
-                canvas.width = cw; canvas.height = ch;
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-            }
-            resize();
-            window.addEventListener('resize', resize, { passive: true });
-
-            // Mouse / tilt
-            var mx = 0, my = 0, rawMx = 0, rawMy = 0;
-            function updateCoords(x, y) {
-                rawMx = x; rawMy = y;
-                mx = (x - centerX) / cw;
-                my = (y - centerY) / ch;
-                var c = document.getElementById('tilt-card');
-                if (c) c.style.transform = 'perspective(1000px) rotateX(' + (-my * 18).toFixed(2) + 'deg) rotateY(' + (mx * 18).toFixed(2) + 'deg)';
-            }
-            document.addEventListener('mousemove', function(e) { updateCoords(e.clientX, e.clientY); }, { passive: true });
-            document.addEventListener('touchmove', function(e) {
-                if (e.touches.length) updateCoords(e.touches[0].clientX, e.touches[0].clientY);
-            }, { passive: true });
-
-            // State
-            var globalSpeed = 1, warpSpeed = 1, isWarping = false;
-            var rainbowMode = false, isSucking = false;
-            var handExpansion = 0, targetExpansion = 0;
-
-            // ═══════════════════════════════════════════════════════════
-            //  HAND CONTROL (Desktop only)
-            // ═══════════════════════════════════════════════════════════
-            if (!isMobile) {
-                var videoEl = document.getElementById('input_video');
-                var overlayCanvas = document.getElementById('overlay_canvas');
-                var ctxOverlay = overlayCanvas.getContext('2d');
-                var handBtn = document.getElementById('hand-btn');
-                var cameraBox = document.getElementById('camera-box');
-                var loadingBar = document.getElementById('loading-bar');
-                var isHandActive = false, handsModule, cameraFeed;
-
-                overlayCanvas.width = 320; overlayCanvas.height = 240;
-
-                window.onHandResults = function(results) {
-                    loadingBar.style.width = '0%';
-                    ctxOverlay.save();
-                    ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                    if (results.multiHandLandmarks) {
-                        for (var i = 0; i < results.multiHandLandmarks.length; i++) {
-                            var lm = results.multiHandLandmarks[i];
-                            if (typeof drawConnectors === 'function') drawConnectors(ctxOverlay, lm, HAND_CONNECTIONS, { color: '#50ffff', lineWidth: 2 });
-                            if (typeof drawLandmarks === 'function') drawLandmarks(ctxOverlay, lm, { color: '#ffc8f5', lineWidth: 1, radius: 2 });
-                        }
-                    }
-                    ctxOverlay.restore();
-
-                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                        var lm0 = results.multiHandLandmarks[0];
-                        var dist = Math.hypot(lm0[4].x - lm0[20].x, lm0[4].y - lm0[20].y);
-                        var palm = Math.hypot(lm0[0].x - lm0[9].x, lm0[0].y - lm0[9].y);
-                        var openness = dist / (palm * 1.6);
-                        if (openness < 0.3) targetExpansion = -0.8;
-                        else if (openness > 0.85) targetExpansion = 1.2;
-                        else targetExpansion = (openness - 0.3) * 1.5;
-                    } else targetExpansion = 0;
-                };
-
-                window.toggleHand = function() {
-                    if (!isHandActive) {
-                        showToast("NEURAL LINK INITIALIZING...");
-                        loadingBar.style.width = '30%';
-                        handsModule = new Hands({ locateFile: function(f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + f; } });
-                        handsModule.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5 });
-                        handsModule.onResults(window.onHandResults);
-                        cameraFeed = new Camera(videoEl, { onFrame: function() { handsModule.send({ image: videoEl }); }, width: 320, height: 240 });
-                        loadingBar.style.width = '60%';
-                        cameraFeed.start().then(function() {
-                            loadingBar.style.width = '100%';
-                            setTimeout(function() { loadingBar.style.width = '0%'; }, 500);
-                            cameraBox.classList.add('active');
-                            handBtn.classList.add('active');
-                            isHandActive = true;
-                            showToast("HAND CONTROL ACTIVE");
-                        }).catch(function() {
-                            loadingBar.style.width = '0%';
-                            showToast("CAMERA ACCESS DENIED");
-                        });
-                    } else {
-                        if (videoEl.srcObject) videoEl.srcObject.getTracks().forEach(function(t) { t.stop(); });
-                        videoEl.srcObject = null;
-                        cameraBox.classList.remove('active'); handBtn.classList.remove('active');
-                        isHandActive = false; targetExpansion = 0;
-                        ctxOverlay.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                        showToast("NEURAL LINK OFFLINE");
-                    }
-                };
-                handBtn.addEventListener('click', window.toggleHand);
-            }
-
-            // ═══════════════════════════════════════════════════════════
-            //  STAR SYSTEM
-            // ═══════════════════════════════════════════════════════════
-            var Star = function() {
-                this.angle = Math.random() * Math.PI * 2;
-                this.hue = Math.random() * 360;
-                this.renderColor = 'rgba(200,200,255,0.5)';
-                this.reset();
-            };
-
-            Star.prototype.reset = function() {
-                var limit = Math.sqrt(cw * cw + ch * ch) / 2;
-                this.r = Math.random() * limit + 50;
-                this.baseR = this.r;
-                this.orbitalSpeed = (Math.random() * 0.5 + 0.5) * 0.005;
-                this.baseSize = Math.random() * 2.2 + 0.4;
-                this.size = this.baseSize;
-                this.x = centerX + Math.cos(this.angle) * this.r;
-                this.y = centerY + Math.sin(this.angle) * this.r;
-                this.vx = 0; this.vy = 0;
-                var ratio = Math.min(1, (this.r - 50) / limit);
-                // Color zones: inner=blueish, mid=purple, outer=pink
-                this.baseColor = {
-                    r: 160 + Math.floor(100 * ratio),
-                    g: 140 + Math.floor(60 * (1 - ratio)),
-                    b: 220 + Math.floor(35 * ratio),
-                    baseAlpha: 0.25 + Math.random() * 0.55
-                };
-                this._dirty = true;
-            };
-
-            Star.prototype.updateColor = function() {
-                if (isWarping) {
-                    this.renderColor = 'rgba(80,255,255,1)';
-                } else if (rainbowMode) {
-                    this.hue = (this.hue + 2.5) % 360;
-                } else if (this._dirty) {
-                    var c = this.baseColor;
-                    this.renderColor = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + c.baseAlpha + ')';
-                    this._dirty = false;
-                }
-            };
-
-            Star.prototype.getColor = function() {
-                if (isWarping) return this.renderColor;
-                if (rainbowMode) return 'hsla(' + Math.floor(this.hue) + ',100%,70%,0.8)';
-                return this.renderColor;
-            };
-
-            Star.prototype.update = function() {
-                this.angle += this.orbitalSpeed * warpSpeed * globalSpeed;
-
-                var expansionFactor = 1 + handExpansion * 1.5;
-                var targetR = this.baseR * expansionFactor;
-                var tx = centerX + Math.cos(this.angle) * targetR;
-                var ty = centerY + Math.sin(this.angle) * targetR;
-
-                if (handExpansion > 0.8) {
-                    var jitter = handExpansion * 8;
-                    tx += (Math.random() - 0.5) * jitter;
-                    ty += (Math.random() - 0.5) * jitter;
-                }
-
-                var ax = (tx - this.x) * (0.05 + Math.abs(handExpansion) * 0.02);
-                var ay = (ty - this.y) * (0.05 + Math.abs(handExpansion) * 0.02);
-
-                if (isSucking) {
-                    var dx = rawMx - this.x, dy = rawMy - this.y;
-                    var force = 2000 / (dx * dx + dy * dy + 100);
-                    ax += dx * force; ay += dy * force;
-                }
-
-                this.vx += ax; this.vy += ay;
-                this.vx *= 0.9; this.vy *= 0.9;
-                this.x += this.vx; this.y += this.vy;
-
-                var dist = 1 - handExpansion * 0.7;
-                if (dist < 0.1) dist = 0.1;
-                this.size = this.baseSize * (1 / dist);
-
-                this.updateColor();
-
-                if (this.x < -cw || this.x > cw * 2 || this.y < -ch || this.y > ch * 2 || isNaN(this.x)) this.reset();
-            };
-
-            Star.prototype.draw = function() {
-                var dx = this.x - mx * 35;
-                var dy = this.y - my * 35;
-                if (isSucking) {
-                    var d2 = (dx - rawMx) * (dx - rawMx) + (dy - rawMy) * (dy - rawMy);
-                    if (d2 < 400) { this.reset(); return; }
-                }
-                ctx.beginPath();
-                ctx.arc(dx, dy, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.getColor();
-                ctx.fill();
-            };
-
-            var PARTICLE_COUNT = isMobile ? 250 : 500;
-            var stars = new Array(PARTICLE_COUNT);
-            for (var i = 0; i < PARTICLE_COUNT; i++) stars[i] = new Star();
-
-            // ═══════════════════════════════════════════════════════════
-            //  TOAST
-            // ═══════════════════════════════════════════════════════════
-            var toastTimeout;
-            function showToast(msg) {
-                var t = document.getElementById('toast');
-                t.innerText = msg; t.classList.add('show');
-                clearTimeout(toastTimeout);
-                toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 2600);
-            }
-
-            // ═══════════════════════════════════════════════════════════
-            //  TIME DILATION (Scroll)
-            // ═══════════════════════════════════════════════════════════
-            document.addEventListener('wheel', function(e) {
-                globalSpeed -= e.deltaY * 0.001;
-                if (globalSpeed > 5) globalSpeed = 5;
-                if (globalSpeed < -2) globalSpeed = -2;
-                document.getElementById('speed-text').innerText = 'TIME  ·  ' + globalSpeed.toFixed(2) + 'x';
-                document.getElementById('speed-bar').style.width = Math.max(0, Math.min(100, (globalSpeed + 2) / 7 * 100)) + '%';
-            }, { passive: false });
-
-            // ═══════════════════════════════════════════════════════════
-            //  SINGULARITY (Mouse/Touch hold)
-            // ═══════════════════════════════════════════════════════════
-            document.addEventListener('mousedown', function(e) {
-                if (e.target.closest('.icon-btn, #context-menu, #avatar-btn')) return;
-                if (e.button === 0) isSucking = true;
-            });
-            document.addEventListener('mouseup', function() { isSucking = false; });
-            document.addEventListener('touchstart', function(e) {
-                if (e.target.closest('.icon-btn, .btn, #avatar-btn')) return;
-                if (e.touches.length === 1) isSucking = true;
-            }, { passive: false });
-            document.addEventListener('touchend', function() { isSucking = false; });
-
-            // ═══════════════════════════════════════════════════════════
-            //  WARP DRIVE (Avatar click)
-            // ═══════════════════════════════════════════════════════════
-            document.getElementById('avatar-btn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (isWarping) return;
-                isWarping = true;
-                document.getElementById('avatar-btn').classList.add('warp-active');
-                document.getElementById('avatar-img').classList.add('spin-warp');
-
-                var accel = setInterval(function() { if (warpSpeed < 20) warpSpeed += 1; }, 50);
-                showToast("WARP DRIVE ENGAGED");
-
-                setTimeout(function() {
-                    clearInterval(accel);
-                    var decel = setInterval(function() {
-                        if (warpSpeed > 1) warpSpeed -= 1;
-                        else {
-                            warpSpeed = 1; isWarping = false;
-                            document.getElementById('avatar-btn').classList.remove('warp-active');
-                            document.getElementById('avatar-img').classList.remove('spin-warp');
-                            clearInterval(decel);
-                        }
-                    }, 50);
-                }, 2500);
-            });
-
-            // ═══════════════════════════════════════════════════════════
-            //  CONTEXT MENU
-            // ═══════════════════════════════════════════════════════════
-            var ctxMenu = document.getElementById('context-menu');
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault(); e.stopPropagation();
-                if (isMobile) return;
-                ctxMenu.style.left = (e.clientX - 90) + 'px';
-                ctxMenu.style.top = (e.clientY - 90) + 'px';
-                ctxMenu.classList.add('visible');
-            });
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('#context-menu')) ctxMenu.classList.remove('visible');
-            });
-
-            document.getElementById('ctx-warp').onclick = function() { document.getElementById('avatar-btn').click(); ctxMenu.classList.remove('visible'); };
-            document.getElementById('ctx-rgb').onclick = function() { rainbowMode = !rainbowMode; showToast(rainbowMode ? "RAINBOW MODE: ON" : "RAINBOW MODE: OFF"); ctxMenu.classList.remove('visible'); };
-            document.getElementById('ctx-freeze').onclick = function() {
-                globalSpeed = 0;
-                document.getElementById('speed-text').innerText = 'TIME  ·  0.00x';
-                document.getElementById('speed-bar').style.width = '0%';
-                showToast("TIME FROZEN");
-                ctxMenu.classList.remove('visible');
-            };
-            document.getElementById('ctx-reset').onclick = function() {
-                globalSpeed = 1; rainbowMode = false;
-                document.getElementById('speed-text').innerText = 'TIME  ·  1.00x';
-                document.getElementById('speed-bar').style.width = '50%';
-                showToast("SYSTEM RESET");
-                ctxMenu.classList.remove('visible');
-            };
-
-            // ═══════════════════════════════════════════════════════════
-            //  KONAMI CODE
-            // ═══════════════════════════════════════════════════════════
-            if (!isMobile) {
-                var konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-                var kIdx = 0;
-                var allKbds = document.querySelectorAll('#konami-hint kbd');
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === konamiCode[kIdx]) {
-                        e.preventDefault();
-                        if (kIdx === 0) document.getElementById('konami-hint').classList.add('typing-active');
-                        if (allKbds[kIdx]) allKbds[kIdx].classList.add('active');
-                        kIdx++;
-                        if (kIdx === konamiCode.length) {
-                            rainbowMode = !rainbowMode;
-                            showToast(rainbowMode ? "RAINBOW MODE: ON" : "RAINBOW MODE: OFF");
-                            setTimeout(function() {
-                                kIdx = 0;
-                                for (var i = 0; i < allKbds.length; i++) allKbds[i].classList.remove('active');
-                                document.getElementById('konami-hint').classList.remove('typing-active');
-                            }, 900);
-                        }
-                    } else {
-                        kIdx = 0;
-                        for (var j = 0; j < allKbds.length; j++) allKbds[j].classList.remove('active');
-                        document.getElementById('konami-hint').classList.remove('typing-active');
-                    }
-                });
-            }
-
-            // ═══════════════════════════════════════════════════════════
-            //  MAIN LOOP
-            // ═══════════════════════════════════════════════════════════
-            function loop() {
-                handExpansion += (targetExpansion - handExpansion) * 0.08;
-
-                // Trail fade
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.fillStyle = (isWarping || Math.abs(globalSpeed) > 2 || handExpansion > 0.5) ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.13)';
-                ctx.fillRect(0, 0, cw, ch);
-
-                ctx.globalCompositeOperation = 'lighter';
-                for (var i = 0; i < PARTICLE_COUNT; i++) {
-                    stars[i].update();
-                    stars[i].draw();
-                }
-
-                // Draw singularity ring
-                if (isSucking) {
-                    ctx.globalCompositeOperation = 'source-over';
-                    // Outer glow ring
-                    ctx.beginPath();
-                    ctx.arc(rawMx, rawMy, 28, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(80,255,255,0.4)';
-                    ctx.lineWidth = 1.5; ctx.stroke();
-                    // Inner ring
-                    ctx.beginPath();
-                    ctx.arc(rawMx, rawMy, 16, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(80,255,255,0.7)';
-                    ctx.lineWidth = 2; ctx.stroke();
-                    // Core dot
-                    ctx.beginPath();
-                    ctx.arc(rawMx, rawMy, 4, 0, Math.PI * 2);
-                    ctx.fillStyle = '#50ffff'; ctx.fill();
-                    ctx.globalCompositeOperation = 'lighter';
-                }
-
-                requestAnimFrame(loop);
-            }
-            // loop() deferred until boot screen dismissed — see closeBoot()
-        });
-    </script>
+<script src="assets/js/main.js" defer></script>
 </body>
 </html>
