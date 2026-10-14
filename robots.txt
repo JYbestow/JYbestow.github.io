@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jybestow.github.io/sitemap.xml

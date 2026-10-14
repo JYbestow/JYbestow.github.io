@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 · 页面不存在 | 嘎嘎sama</title>
+<meta name="description" content="这个地址上不存在内容。返回嘎嘎sama 的个人档案首页，或使用博客、GitHub、Bilibili 入口。">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fafafa">
+
+<!-- GitHub Pages serves this file for ANY missing path, so every URL here is
+     root-absolute: a relative one would resolve against the requested path. -->
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+<link rel="preload" href="/assets/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+
+<script>document.documentElement.className += ' js';</script>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+
+<body>
+
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 24 24">
+    <path d="M3 12h16M13 5.5 19.5 12 13 18.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+  <symbol id="i-down" viewBox="0 0 24 24">
+    <path d="M12 3v16M5.5 12.5 12 19l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+  <symbol id="i-up" viewBox="0 0 24 24">
+    <path d="M12 21V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24">
+    <path d="M5 5l14 14M19 5 5 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+  </symbol>
+</svg>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header class="hdr" id="hdr">
+  <div class="hdr__in">
+    <a class="mark" href="/" aria-label="嘎嘎sama 个人档案 — 返回首页">
+      <svg class="mark__gfx" viewBox="0 0 24 24" aria-hidden="true">
+        <rect width="24" height="24" fill="#000000"/>
+        <path d="M5 19 14.5 5H19L9.5 19Z" fill="#fffa00"/>
+        <rect x="17" y="15" width="4" height="4" fill="#ffffff"/>
+      </svg>
+      <span class="mark__tx">嘎嘎sama <span>/ 今予</span></span>
+    </a>
+
+    <nav class="hdr__nav nav" aria-label="主导航">
+      <a class="nav__link" href="/#top"><span class="no">01</span>索引</a>
+      <a class="nav__link" href="/#identity"><span class="no">02</span>身份</a>
+      <a class="nav__link" href="/#channels"><span class="no">03</span>入口</a>
+    </nav>
+
+    <p class="status"><span class="status__dot" aria-hidden="true"></span>ONLINE</p>
+
+    <button class="burger" id="burger" type="button" aria-label="打开章节导航" aria-expanded="false" aria-controls="menu">
+      <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+      <span class="visually-hidden">菜单</span>
+    </button>
+  </div>
+</header>
+
+<!-- ── Mobile menu ────────────────────────────────────────────────────────── -->
+<nav class="menu is-dark" id="menu" aria-label="章节导航" hidden>
+  <button class="menu__close" id="menu-close" type="button" aria-label="关闭章节导航">
+    <svg aria-hidden="true"><use href="#i-x"/></svg>
+  </button>
+  <p class="mono txt-muted">INDEX / 索引</p>
+  <ul class="menu__list">
+    <li><a class="menu__item" href="/#top"><span class="no">01</span><span class="tx">索引</span></a></li>
+    <li><a class="menu__item" href="/#identity"><span class="no">02</span><span class="tx">身份</span></a></li>
+    <li><a class="menu__item" href="/#channels"><span class="no">03</span><span class="tx">入口</span></a></li>
+  </ul>
+  <div class="menu__foot">
+    <a href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">博客 · BLOG ↗</a>
+    <a href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">GitHub · JYbestow ↗</a>
+    <a href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">Bilibili ↗</a>
+    <span>Zhejiang University — Mechanical Engineering</span>
+  </div>
+</nav>
+
+<main id="main" class="page">
+
+  <!-- ══ 404 · NO RECORD AT THIS COORDINATE ════════════════════════════════ -->
+  <section class="band band--white section" aria-labelledby="err-title">
+    <div class="shell">
+
+      <p class="eyebrow mono">
+        <span class="eyebrow__no"><span>404</span></span>
+        <span>NO RECORD AT THIS COORDINATE</span>
+        <span class="eyebrow__line" aria-hidden="true"></span>
+      </p>
+
+      <h1 class="hero__name" id="err-title">404</h1>
+
+      <p>这个地址上没有内容 —— 页面可能已被移动、重命名，或从未存在过。</p>
+
+      <ul class="entries">
+        <li>
+          <a class="btn" href="/">
+            <span class="btn__in">
+              <span class="btn__no">01</span><span class="btn__tx">返回首页</span>
+              <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="btn" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
+            <span class="btn__in">
+              <span class="btn__no">02</span><span class="btn__tx">博客</span>
+              <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="btn" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
+            <span class="btn__in">
+              <span class="btn__no">03</span><span class="btn__tx">GitHub</span>
+              <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+            </span>
+          </a>
+        </li>
+      </ul>
+
+    </div>
+  </section>
+
+  <!-- ══ Footer ═════════════════════════════════════════════════════════════ -->
+  <footer class="band band--dark is-dark foot" aria-label="页脚">
+    <div class="shell">
+      <div class="foot__bar mono">
+        <p class="foot__sig">
+          <span class="bar" aria-hidden="true"></span>
+          <span>© <span id="year">2026</span> 嘎嘎sama — PERSONAL DOSSIER</span>
+        </p>
+        <a class="to-top" href="/">返回首页<svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </footer>
+
+</main>
+
+<script src="/assets/js/main.js" defer></script>
+</body>
+</html>
