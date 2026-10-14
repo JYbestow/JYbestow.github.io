@@ -958,6 +958,14 @@ section[id] { scroll-margin-top: var(--hdr-h); }
   .hero__alias { margin-top: 16px; }
   .hero__scroll { margin-top: 20px; padding-top: 0; }
 
+  /* The plate is capped against the room the fold actually leaves it, so its
+     bottom edge lands on screen instead of being sliced off. The frame keeps a
+     definite width, so the cap turns the square into a wide plate and object-fit
+     crops the picture: the screen ends on a finished shape with its own corner
+     brackets rather than on an accidental slice of a square. 456px is what the
+     phone hero spends above the plate (measured), plus a gutter. */
+  .portrait__frame { max-height: max(170px, calc(100svh - 456px)); }
+
   .portrait { width: 100%; max-width: none; }
   .portrait__id { text-align: right; }
 
@@ -971,6 +979,21 @@ section[id] { scroll-margin-top: var(--hdr-h); }
 
   .foot__top { align-items: flex-start; flex-direction: column; gap: var(--sp-4); }
   .foot__bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+/* Short phones (375x667, 320x568) have roughly 100px less to spend. Tighten the
+   hero rhythm and cap the plate harder, so the name, the identity lines and a
+   complete plate still share the first screen. Only short screens pay for this:
+   taller phones keep the roomier rhythm untouched. */
+@media (max-width: 720px) and (max-height: 700px) {
+  .hero__type { padding-block: 64px 20px; }
+  .hero__spec { padding-block: 20px; }
+  .hero__wordmark { margin-top: 14px; }
+  .hero__alias { margin-top: 12px; }
+  .hero__affil { margin-top: 14px; }
+  .hero__note { margin-top: 12px; }
+  .hero__scroll { margin-top: 14px; }
+  .portrait__frame { max-height: max(180px, calc(100svh - 382px)); }
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
