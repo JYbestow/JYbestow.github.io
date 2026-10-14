@@ -1,0 +1,3 @@
+# Local-only files — never deploy these to GitHub Pages
+.vision-review.md
+.claude/
