@@ -952,7 +952,7 @@ section[id] { scroll-margin-top: var(--hdr-h); }
     width: 44px; height: 44px;
     color: var(--ink);
   }
-  .burger svg { width: 20px; height: 20px; transform: rotate(90deg); }
+  .burger svg { width: 20px; height: 20px; }
 
   .hero__wordmark { margin-top: 20px; }
   .hero__alias { margin-top: 16px; }
