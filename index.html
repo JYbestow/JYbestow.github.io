@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>嘎嘎sama | 今予 — 个人档案 · Zhejiang University</title>
-<meta name="description" content="嘎嘎sama（今予）的个人档案 — Zhejiang University, Mechanical Engineering。包含博客、GitHub 与 Bilibili 入口索引。">
-<meta name="keywords" content="嘎嘎sama,今予,Zhejiang University,机械工程,Mechanical Engineering,个人主页,博客,GitHub">
+<meta name="description" content="嘎嘎sama（今予）的个人档案 —— Zhejiang University, Mechanical Engineering。身份记录与博客、GitHub、Bilibili 三个外部入口。">
+<meta name="keywords" content="嘎嘎sama,今予,Zhejiang University,机械工程,Mechanical Engineering,个人主页,博客,GitHub,Bilibili">
 <meta name="author" content="嘎嘎sama">
 <meta name="theme-color" content="#fafafa">
 <link rel="canonical" href="https://jybestow.github.io/">
@@ -13,12 +13,12 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="嘎嘎sama — 个人档案">
 <meta property="og:title" content="嘎嘎sama | 今予 — 个人档案">
-<meta property="og:description" content="Zhejiang University · Mechanical Engineering。个人档案与入口索引。">
+<meta property="og:description" content="Zhejiang University · Mechanical Engineering。身份记录与外部入口索引。">
 <meta property="og:url" content="https://jybestow.github.io/">
 <meta property="og:image" content="https://jybestow.github.io/assets/img/avatar.jpg">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="嘎嘎sama | 今予 — 个人档案">
-<meta name="twitter:description" content="Zhejiang University · Mechanical Engineering。个人档案与入口索引。">
+<meta name="twitter:description" content="Zhejiang University · Mechanical Engineering。身份记录与外部入口索引。">
 <meta name="twitter:image" content="https://jybestow.github.io/assets/img/avatar.jpg">
 
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
@@ -28,7 +28,15 @@
 <link rel="preload" href="assets/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 
-<script>document.documentElement.className += ' js';</script>
+<script>
+/* '.js' is set here (not by the bundle) so animation styles only ever apply
+   when the page can also remove them. The watchdog is the safety net: if
+   main.js fails to load or boot, every masked element is exposed again. */
+document.documentElement.className += ' js';
+window.setTimeout(function () {
+  if (!window.__dossierBooted) document.documentElement.classList.add('no-boot');
+}, 1500);
+</script>
 <link rel="stylesheet" href="assets/css/main.css">
 </head>
 
@@ -64,19 +72,18 @@
       <span class="mark__tx">嘎嘎sama <span>/ 今予</span></span>
     </a>
 
-    <nav class="hdr__nav nav" aria-label="主导航">
-      <a class="nav__link" href="#top"      data-spy="top"><span class="no">01</span>索引</a>
-      <a class="nav__link" href="#identity" data-spy="identity"><span class="no">02</span>身份</a>
-      <a class="nav__link" href="#channels" data-spy="channels"><span class="no">03</span>入口</a>
+    <nav class="nav" aria-label="章节导航">
+      <a class="nav__link" href="#top"     data-spy="top"><span class="no">01</span>身份</a>
+      <a class="nav__link" href="#dossier" data-spy="dossier"><span class="no">02</span>档案</a>
     </nav>
-
-    <p class="status"><span class="status__dot" aria-hidden="true"></span>ONLINE</p>
 
     <button class="burger" id="burger" type="button" aria-label="打开章节导航" aria-expanded="false" aria-controls="menu">
       <svg aria-hidden="true"><use href="#i-arrow"/></svg>
       <span class="visually-hidden">菜单</span>
     </button>
   </div>
+  <!-- reading progress — driven by one CSS custom property from JS -->
+  <span class="hdr__prog" aria-hidden="true"></span>
 </header>
 
 <!-- ── Mobile menu ────────────────────────────────────────────────────────── -->
@@ -86,28 +93,24 @@
   </button>
   <p class="mono txt-muted">INDEX / 索引</p>
   <ul class="menu__list">
-    <li><a class="menu__item" href="#top"><span class="no">01</span><span class="tx">索引</span></a></li>
-    <li><a class="menu__item" href="#identity"><span class="no">02</span><span class="tx">身份</span></a></li>
-    <li><a class="menu__item" href="#channels"><span class="no">03</span><span class="tx">入口</span></a></li>
+    <li><a class="menu__item" href="#top"><span class="no">01</span><span class="tx">身份</span></a></li>
+    <li><a class="menu__item" href="#dossier"><span class="no">02</span><span class="tx">档案</span></a></li>
   </ul>
   <div class="menu__foot">
-    <a href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">博客 · BLOG ↗</a>
-    <a href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">GitHub · JYbestow ↗</a>
-    <a href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">Bilibili ↗</a>
     <span>Zhejiang University — Mechanical Engineering</span>
   </div>
 </nav>
 
-<!-- ── Section rail (desktop) ─────────────────────────────────────────────── -->
-<nav class="rail" id="rail" aria-label="章节进度">
-  <a class="rail__item" href="#top"      data-spy="top"      aria-label="索引 / INDEX"><span class="rail__bar" aria-hidden="true"></span><span class="rail__label" aria-hidden="true">INDEX</span></a>
-  <a class="rail__item" href="#identity" data-spy="identity" aria-label="身份 / IDENTITY"><span class="rail__bar" aria-hidden="true"></span><span class="rail__label" aria-hidden="true">IDENTITY</span></a>
-  <a class="rail__item" href="#channels" data-spy="channels" aria-label="入口 / CHANNELS"><span class="rail__bar" aria-hidden="true"></span><span class="rail__label" aria-hidden="true">CHANNELS</span></a>
-</nav>
+<!-- ── Scroll readout (desktop): not a second copy of the nav, a progress meter ── -->
+<div class="rail" id="rail" aria-hidden="true">
+  <span class="rail__count"><b id="rail-no">01</b><i>/02</i></span>
+  <span class="rail__track"><span class="rail__fill" id="rail-fill"></span></span>
+  <span class="rail__name" id="rail-name">身份</span>
+</div>
 
 <main id="main" class="page">
 
-  <!-- ══ 01 · HERO ══════════════════════════════════════════════════════════ -->
+  <!-- ══ 01 · HERO — 个人身份 ═══════════════════════════════════════════════ -->
   <section class="hero" id="top" aria-labelledby="hero-name">
     <span class="hero__mesh" aria-hidden="true"></span>
 
@@ -117,7 +120,7 @@
 
         <p class="eyebrow mono anim" style="--d:40ms">
           <span class="eyebrow__no"><span>01</span></span>
-          <span>PERSONAL DOSSIER</span>
+          <span>IDENTITY</span>
           <span class="eyebrow__line anim anim--wipe" style="--d:340ms"></span>
         </p>
 
@@ -138,41 +141,16 @@
           <span>Mechanical Engineering</span>
         </p>
 
-        <ul class="entries anim" style="--d:400ms">
-          <li>
-            <a class="btn" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
-              <span class="btn__in">
-                <span class="btn__no">01</span><span class="btn__tx">博客</span>
-                <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
-              </span>
-            </a>
-          </li>
-          <li>
-            <a class="btn" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
-              <span class="btn__in">
-                <span class="btn__no">02</span><span class="btn__tx">GitHub</span>
-                <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
-              </span>
-            </a>
-          </li>
-          <li>
-            <a class="btn" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">
-              <span class="btn__in">
-                <span class="btn__no">03</span><span class="btn__tx">Bilibili</span>
-                <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
-              </span>
-            </a>
-          </li>
-        </ul>
+        <p class="hero__note anim" style="--d:370ms">身份档案主站 —— 文章与笔记在博客。</p>
 
-        <p class="hero__scroll mono anim" style="--d:480ms">
-          <span class="line" aria-hidden="true"></span>SCROLL
+        <a class="hero__scroll mono anim" href="#dossier" style="--d:450ms">
+          <span class="line" aria-hidden="true"></span>进入档案 · DOSSIER
           <svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>
-        </p>
+        </a>
       </div>
 
       <div class="hero__spec">
-        <span class="hero__vlabel" aria-hidden="true">PERSONAL DOSSIER — 01</span>
+        <span class="hero__vlabel" aria-hidden="true">DOSSIER — 01</span>
         <figure class="portrait">
           <div class="portrait__frame">
             <img class="portrait__img" src="assets/img/avatar.jpg"
@@ -195,129 +173,98 @@
     </div>
   </section>
 
-  <!-- ══ 02 · IDENTITY ══════════════════════════════════════════════════════ -->
-  <section class="band band--dark is-dark section" id="identity" aria-labelledby="identity-title">
-    <div class="shell">
-      <header class="shead rv">
-        <p class="eyebrow mono shead__top">
-          <span class="eyebrow__no"><span>02</span></span>
-          <span>IDENTITY</span>
-        </p>
-        <h2 class="shead__title" id="identity-title">身份档案</h2>
-        <span class="ghost ghost--section" aria-hidden="true">IDENTITY</span>
-        <div class="shead__rule" aria-hidden="true"></div>
-      </header>
+  <!-- ══ 02 · DOSSIER — 身份记录 + 外部入口（一个章节，双栏） ═══════════════ -->
+  <section class="dossier" id="dossier" aria-labelledby="record-title">
+    <div class="dossier__grid">
 
-      <ul class="spec rv" style="--rv-delay:120ms">
-        <li class="spec__row">
-          <span class="spec__no">001</span>
-          <span class="spec__key mono">名称<span class="en">NAME</span></span>
-          <span class="spec__val">嘎嘎sama <em>今予</em></span>
-        </li>
-        <li class="spec__row">
-          <span class="spec__no">002</span>
-          <span class="spec__key mono">机构<span class="en">INSTITUTION</span></span>
-          <span class="spec__val">Zhejiang University<span class="sub">浙江大学</span></span>
-        </li>
-        <li class="spec__row">
-          <span class="spec__no">003</span>
-          <span class="spec__key mono">专业<span class="en">PROGRAMME</span></span>
-          <span class="spec__val">Mechanical Engineering<span class="sub">机械工程</span></span>
-        </li>
-        <li>
-          <a class="spec__row" href="#channels">
-            <span class="spec__no">004</span>
-            <span class="spec__key mono">入口<span class="en">CHANNELS</span></span>
-            <span class="spec__val">3<span class="sub">博客 · GitHub · Bilibili
-              <svg class="go" aria-hidden="true"><use href="#i-arrow"/></svg></span></span>
-          </a>
-        </li>
-      </ul>
+      <!-- left · record (light) -->
+      <div class="dossier__rec">
+        <header class="shead rv">
+          <p class="eyebrow mono shead__top">
+            <span class="eyebrow__no"><span>02</span></span>
+            <span>IDENTITY RECORD</span>
+          </p>
+          <h2 class="shead__title" id="record-title">身份档案</h2>
+          <div class="shead__rule" aria-hidden="true"></div>
+        </header>
+
+        <dl class="rec rv" style="--rv-delay:80ms">
+          <div class="rec__row">
+            <dt class="rec__key mono">名称<span class="en">NAME</span></dt>
+            <dd class="rec__val">嘎嘎sama</dd>
+          </div>
+          <div class="rec__row">
+            <dt class="rec__key mono">别名<span class="en">ALIAS</span></dt>
+            <dd class="rec__val">今予</dd>
+          </div>
+          <div class="rec__row">
+            <dt class="rec__key mono">机构<span class="en">INSTITUTION</span></dt>
+            <dd class="rec__val">Zhejiang University<span class="sub">浙江大学</span></dd>
+          </div>
+          <div class="rec__row">
+            <dt class="rec__key mono">专业<span class="en">PROGRAMME</span></dt>
+            <dd class="rec__val">Mechanical Engineering<span class="sub">机械工程</span></dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- right · channels (dark) -->
+      <div class="dossier__chan is-dark">
+        <header class="shead rv">
+          <p class="eyebrow mono shead__top">
+            <span class="eyebrow__no"><span>02</span></span>
+            <span>CHANNELS</span>
+          </p>
+          <h2 class="shead__title" id="channels-title">入口索引</h2>
+          <div class="shead__rule" aria-hidden="true"></div>
+        </header>
+
+        <ol class="chan rv" style="--rv-delay:80ms" aria-labelledby="channels-title">
+          <li>
+            <a class="chan__item" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
+              <span class="chan__no">01</span>
+              <span class="chan__name">博客<span class="en">BLOG</span></span>
+              <span class="chan__url">gagasama.vercel.app</span>
+              <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
+              <span class="visually-hidden">（在新标签页打开）</span>
+            </a>
+          </li>
+          <li>
+            <a class="chan__item" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
+              <span class="chan__no">02</span>
+              <span class="chan__name">GitHub<span class="en">CODE</span></span>
+              <span class="chan__url">github.com/JYbestow</span>
+              <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
+              <span class="visually-hidden">（在新标签页打开）</span>
+            </a>
+          </li>
+          <li>
+            <a class="chan__item" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">
+              <span class="chan__no">03</span>
+              <span class="chan__name">Bilibili<span class="en">VIDEO</span></span>
+              <span class="chan__url">space.bilibili.com/402611949</span>
+              <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
+              <span class="visually-hidden">（在新标签页打开）</span>
+            </a>
+          </li>
+        </ol>
+      </div>
+
     </div>
   </section>
 
-  <!-- ══ 03 · CHANNELS ═════════════════════════════════════════════════════ -->
-  <section class="band band--white section" id="channels" aria-labelledby="channels-title">
-    <div class="shell">
-      <header class="shead rv">
-        <p class="eyebrow mono shead__top">
-          <span class="eyebrow__no"><span>03</span></span>
-          <span>CHANNELS</span>
-        </p>
-        <h2 class="shead__title" id="channels-title">入口索引</h2>
-        <span class="ghost ghost--section" aria-hidden="true">CHANNELS</span>
-        <div class="shead__rule" aria-hidden="true"></div>
-      </header>
-
-      <ol class="chan rv" style="--rv-delay:120ms">
-        <li>
-          <a class="chan__item" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
-            <span class="chan__no">01</span>
-            <span class="chan__name">博客<span class="en">BLOG</span></span>
-            <span class="chan__url">gagasama.vercel.app</span>
-            <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
-            <span class="visually-hidden">（在新标签页打开）</span>
-          </a>
-        </li>
-        <li>
-          <a class="chan__item" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
-            <span class="chan__no">02</span>
-            <span class="chan__name">GitHub<span class="en">CODE</span></span>
-            <span class="chan__url">github.com/JYbestow</span>
-            <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
-            <span class="visually-hidden">（在新标签页打开）</span>
-          </a>
-        </li>
-        <li>
-          <a class="chan__item" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">
-            <span class="chan__no">03</span>
-            <span class="chan__name">Bilibili<span class="en">VIDEO</span></span>
-            <span class="chan__url">space.bilibili.com/402611949</span>
-            <span class="chan__go" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></span>
-            <span class="visually-hidden">（在新标签页打开）</span>
-          </a>
-        </li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- ══ Footer ═════════════════════════════════════════════════════════════ -->
-  <footer class="band band--dark is-dark foot" id="contact" aria-label="页脚">
+  <!-- ══ 03 · FOOTER — 只是收尾 ═════════════════════════════════════════════ -->
+  <footer class="band band--dark is-dark foot" aria-label="页脚">
     <div class="shell">
       <div class="foot__top rv">
         <p class="foot__mark">JY<span>·BESTOW</span></p>
-        <nav class="foot__links" aria-label="外部入口">
-          <a class="foot__link" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">博客 ↗</a>
-          <a class="foot__link" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-          <a class="foot__link" href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">Bilibili ↗</a>
-        </nav>
+        <a class="to-top" href="#top">回到顶部<svg aria-hidden="true"><use href="#i-up"/></svg></a>
       </div>
-
-      <div class="foot__cols rv" style="--rv-delay:100ms">
-        <div class="foot__col">
-          <h3 class="mono">身份 / IDENTITY</h3>
-          <p>嘎嘎sama · 今予</p>
-        </div>
-        <div class="foot__col">
-          <h3 class="mono">机构 / INSTITUTION</h3>
-          <p>Zhejiang University<br>Mechanical Engineering</p>
-        </div>
-        <div class="foot__col">
-          <h3 class="mono">索引 / INDEX</h3>
-          <ul>
-            <li><a href="#top">01 索引</a></li>
-            <li><a href="#identity">02 身份</a></li>
-            <li><a href="#channels">03 入口</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="foot__bar mono rv" style="--rv-delay:160ms">
+      <div class="foot__bar mono rv" style="--rv-delay:80ms">
         <p class="foot__sig">
           <span class="bar" aria-hidden="true"></span>
           <span>© <span id="year">2026</span> 嘎嘎sama — PERSONAL DOSSIER</span>
         </p>
-        <a class="to-top" href="#top">回到顶部<svg aria-hidden="true"><use href="#i-up"/></svg></a>
       </div>
     </div>
   </footer>

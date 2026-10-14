@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>404 · 页面不存在 | 嘎嘎sama</title>
-<meta name="description" content="这个地址上不存在内容。返回嘎嘎sama 的个人档案首页，或使用博客、GitHub、Bilibili 入口。">
+<meta name="description" content="这个地址上不存在内容。返回嘎嘎sama 的个人档案首页，或前往博客与 GitHub。">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#fafafa">
 
@@ -52,19 +52,17 @@
       <span class="mark__tx">嘎嘎sama <span>/ 今予</span></span>
     </a>
 
-    <nav class="hdr__nav nav" aria-label="主导航">
-      <a class="nav__link" href="/#top"><span class="no">01</span>索引</a>
-      <a class="nav__link" href="/#identity"><span class="no">02</span>身份</a>
-      <a class="nav__link" href="/#channels"><span class="no">03</span>入口</a>
+    <nav class="nav" aria-label="章节导航">
+      <a class="nav__link" href="/#top"><span class="no">01</span>身份</a>
+      <a class="nav__link" href="/#dossier"><span class="no">02</span>档案</a>
     </nav>
-
-    <p class="status"><span class="status__dot" aria-hidden="true"></span>ONLINE</p>
 
     <button class="burger" id="burger" type="button" aria-label="打开章节导航" aria-expanded="false" aria-controls="menu">
       <svg aria-hidden="true"><use href="#i-arrow"/></svg>
       <span class="visually-hidden">菜单</span>
     </button>
   </div>
+  <span class="hdr__prog" aria-hidden="true"></span>
 </header>
 
 <!-- ── Mobile menu ────────────────────────────────────────────────────────── -->
@@ -74,14 +72,10 @@
   </button>
   <p class="mono txt-muted">INDEX / 索引</p>
   <ul class="menu__list">
-    <li><a class="menu__item" href="/#top"><span class="no">01</span><span class="tx">索引</span></a></li>
-    <li><a class="menu__item" href="/#identity"><span class="no">02</span><span class="tx">身份</span></a></li>
-    <li><a class="menu__item" href="/#channels"><span class="no">03</span><span class="tx">入口</span></a></li>
+    <li><a class="menu__item" href="/#top"><span class="no">01</span><span class="tx">身份</span></a></li>
+    <li><a class="menu__item" href="/#dossier"><span class="no">02</span><span class="tx">档案</span></a></li>
   </ul>
   <div class="menu__foot">
-    <a href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">博客 · BLOG ↗</a>
-    <a href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">GitHub · JYbestow ↗</a>
-    <a href="https://space.bilibili.com/402611949" target="_blank" rel="noopener noreferrer">Bilibili ↗</a>
     <span>Zhejiang University — Mechanical Engineering</span>
   </div>
 </nav>
@@ -89,7 +83,7 @@
 <main id="main" class="page">
 
   <!-- ══ 404 · NO RECORD AT THIS COORDINATE ════════════════════════════════ -->
-  <section class="band band--white section" aria-labelledby="err-title">
+  <section class="band band--white section err" aria-labelledby="err-title">
     <div class="shell">
 
       <p class="eyebrow mono">
@@ -98,33 +92,29 @@
         <span class="eyebrow__line" aria-hidden="true"></span>
       </p>
 
-      <h1 class="hero__name" id="err-title">404</h1>
+      <h1 class="err__title" id="err-title">404</h1>
 
-      <p>这个地址上没有内容 —— 页面可能已被移动、重命名，或从未存在过。</p>
+      <p class="err__note">这个地址上没有内容 —— 页面可能已被移动、重命名，或从未存在过。</p>
 
-      <ul class="entries">
+      <ul class="acts">
         <li>
-          <a class="btn" href="/">
-            <span class="btn__in">
-              <span class="btn__no">01</span><span class="btn__tx">返回首页</span>
-              <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
-            </span>
+          <a class="act" href="/">
+            <span class="act__no">01</span><span>返回首页</span>
+            <svg aria-hidden="true"><use href="#i-arrow"/></svg>
           </a>
         </li>
         <li>
-          <a class="btn" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
-            <span class="btn__in">
-              <span class="btn__no">02</span><span class="btn__tx">博客</span>
-              <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
-            </span>
+          <a class="act" href="https://gagasama.vercel.app" target="_blank" rel="noopener noreferrer">
+            <span class="act__no">02</span><span>博客</span>
+            <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+            <span class="visually-hidden">（在新标签页打开）</span>
           </a>
         </li>
         <li>
-          <a class="btn" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
-            <span class="btn__in">
-              <span class="btn__no">03</span><span class="btn__tx">GitHub</span>
-              <span class="btn__ar"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
-            </span>
+          <a class="act" href="https://github.com/JYbestow" target="_blank" rel="noopener noreferrer">
+            <span class="act__no">03</span><span>GitHub</span>
+            <svg aria-hidden="true"><use href="#i-arrow"/></svg>
+            <span class="visually-hidden">（在新标签页打开）</span>
           </a>
         </li>
       </ul>
